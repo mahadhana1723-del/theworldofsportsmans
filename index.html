@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dhana Badminton Manager</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Lottie Player -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <style>
+    :root{
+      --accent:#3a86ff;
+      --muted:#9aa4b2;
+      --white:#fff;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
+
+    body{
+      background: linear-gradient(-45deg, #0f1724, #1a1c40, #091428, #3a86ff);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+      width: 100%;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      color:var(--white);
+      padding:20px;
+    }
+    
+    @keyframes gradientBG {
+      0% {background-position:0% 50%;}
+      50% {background-position:100% 50%;}
+      100% {background-position:0% 50%;}
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      justify-content: space-between;
+      animation: fadeInUp 1s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeInUp {
+      0% { transform: translateY(40px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .login-animation {
+      flex: 1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .login-animation lottie-player {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+    }
+
+    .sign-in {
+      flex:1;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .sign-in h1 {margin-bottom:10px;}
+    .sign-in p.lead{color:var(--muted); margin-bottom:20px;}
+
+    .form-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 14px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #3a86ff;
+      box-shadow: 0 0 12px rgba(58,134,255,0.5);
+    }
+    .form-group label {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      font-size: 0.9rem;
+      color: #bbb;
+      pointer-events: none;
+      transition: 0.2s ease all;
+    }
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+      top: -8px;
+      left: 10px;
+      font-size: 0.75rem;
+      background: rgba(0,0,0,0.4);
+      padding: 0 6px;
+      border-radius: 6px;
+      color: #3a86ff;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #3a86ff, #7b61ff);
+      color: white;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 18px rgba(58,134,255,0.4);
+    }
+
+    .app {
+      display: none;
+      width: 100%;
+      height: 80vh;
+      min-height: 600px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));
+      flex-direction: column;
+    }
+    .app.fullscreen {
+      width: 100vw;
+      height: 100vh;
+      min-height: unset;
+    }
+
+    .topbar {display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.02);background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(255,255,255,0.01));}
+    .brand {font-weight:700; display:flex; gap:10px; align-items:center}
+    .brand .logo {width:36px;height:36px;border-radius:8px;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .tabs {display:flex; gap:8px; margin-left:24px; flex-wrap:wrap}
+    .tab{padding:8px 12px;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer;border:1px solid transparent;}
+    .tab.active{background:linear-gradient(90deg,var(--accent),#7b61ff); color:#fff; box-shadow:0 6px 18px rgba(58,134,255,0.14)}
+    .top-actions {margin-left:auto; display:flex; gap:8px; align-items:center}
+    .pane { height: calc(100% - 64px); display:flex; border-top:1px solid rgba(255,255,255,0.02);}
+    .pane iframe { width:100%; border:none; height:100%; background:white; }
+    .hidden{display:none}
+
+    @media (max-width:900px){
+      .login-container {flex-direction:column;max-width:95%}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="frame">
+
+    <!-- LOGIN AREA -->
+    <div id="signInView" class="login-container">
+      <div class="login-animation">
+        <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_kyu7xb1v.json"  background="transparent"  speed="1"  loop autoplay></lottie-player>
+      </div>
+
+      <div class="sign-in">
+        <h1>Welcome Back 👋</h1>
+        <p class="lead">Log in to continue managing your badminton tournaments.</p>
+
+        <div class="form-group">
+          <input id="username" type="text" placeholder=" " />
+          <label for="username">Username</label>
+        </div>
+
+        <div class="form-group">
+          <input id="password" type="password" placeholder=" " />
+          <label for="password">Password</label>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button id="signInBtn" class="btn btn-primary">Sign In</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APP AREA -->
+    <div id="appView" class="app hidden" aria-hidden="true">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">DP</div>
+          <div>
+            <div style="font-size:14px">Dhana Prasad</div>
+            <div style="font-size:12px;color:var(--muted)">Badminton Manager</div>
+          </div>
+        </div>
+
+        <div class="tabs" role="tablist">
+          <div class="tab active" data-target="dashboard">Dashboard</div>
+          <div class="tab" data-target="players">Players</div>
+          <div class="tab" data-target="tournament">Tournament</div>
+          <div class="tab" data-target="roundrobin">Round Robin</div>
+          <div class="tab" data-target="attendance">Attendance</div>
+          <div class="tab" data-target="bracket">Bracket</div>
+        </div>
+
+        <div class="top-actions">
+          <div id="currentUser" style="font-size:13px;color:var(--muted)">Signed in</div>
+          <button id="signOutBtn" class="btn btn-ghost" title="Sign out"><i class="fa fa-sign-out-alt"></i></button>
+        </div>
+      </div>
+
+      <div class="pane">
+        <iframe id="contentFrame" src="" frameborder="0" title="content"></iframe>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const FILES = {
+      dashboard: 'dashboard.html',
+      players: 'PlayerPage.html',
+      tournament: 'TournamentPage.html',
+      roundrobin: 'Round_Robin_updated.html',
+      attendance: 'Attendance_book.html',
+      bracket: 'Bracket_tournament.html'
+    };
+
+    const signInView = document.getElementById('signInView');
+    const appView = document.getElementById('appView');
+    const contentFrame = document.getElementById('contentFrame');
+    const signInBtn = document.getElementById('signInBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const tabs = document.querySelectorAll('.tab');
+    const currentUser = document.getElementById('currentUser');
+
+    // ---- Set your login credentials ----
+    const VALID_USER = "admin";
+    const VALID_PASS = "1234";
+
+    let loggedUser = null;
+
+    function doSignIn(username) {
+      loggedUser = username;
+      signInView.style.display = 'none';
+      appView.classList.remove('hidden');
+      appView.style.display = 'flex';
+      appView.classList.add('fullscreen');  
+      currentUser.textContent = `Signed in as ${username}`;
+      loadTab('dashboard');
+    }
+
+    signInBtn.addEventListener('click', () => {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+
+      if (user === VALID_USER && pass === VALID_PASS) {
+        doSignIn(user);
+      } else {
+        alert("Invalid username or password!");
+      }
+    });
+
+    signOutBtn.addEventListener('click', () => {
+      if (!confirm('Sign out and return to login?')) return;
+      appView.style.display = 'none';
+      appView.classList.add('hidden');
+      signInView.style.display = 'flex';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      currentUser.textContent = 'Signed in';
+      contentFrame.src = '';
+      window.scrollTo(0,0);
+      loggedUser = null;
+    });
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-target');
+        if (!loggedUser) {
+          alert("You must be logged in to access!");
+          return;
+        }
+        loadTab(target);
+      });
+    });
+
+    function setActiveTab(target) {
+      tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-target') === target));
+    }
+
+    function loadTab(target) {
+      const file = FILES[target];
+      if (!file) { alert('Page not found: ' + target); return; }
+      setActiveTab(target);
+      contentFrame.src = file;
+    }
+
+    // Force login view at start
+    window.addEventListener("DOMContentLoaded", () => {
+      signInView.style.display = 'flex';
+      appView.classList.add('hidden');
+      appView.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

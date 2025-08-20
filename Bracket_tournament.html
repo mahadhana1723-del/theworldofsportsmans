@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>🏸 Badminton Knockout</title>
+<style>
+  :root{
+    --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
+    --accent:#49a8ff; --win:#22c55e; --loss:#ef4444; --neutral:#7b88a8;
+    --box-w:180px; --box-h:48px; --col-gap:180px; --row-gap:28px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);}
+
+  /* Dart-style gradient header */
+  header{
+    position:sticky; top:0; z-index:50; padding:12px 14px; border-bottom:1px solid #1a2233;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:
+      radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
+      radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
+      linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
+    box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+
+
+
+  h1{margin:0 6px 0 0; font-size:18px; letter-spacing:.2px}
+  .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  input,textarea,select{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#0e1320; color:var(--text)}
+  textarea{width:220px; height:60px}
+  .btn{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#132037; color:var(--text); cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8}
+  .legend{font-size:12px; color:var(--muted); margin-left:4px}
+
+  /* Player list */
+
+#playerPanel {
+  position: fixed;
+  top: 15%;               /* medium from top */
+  left: 0;
+  height: 70%;            /* medium height */
+  width: 240px;           /* medium width */
+  background: var(--panel);
+  border-radius: 0 12px 12px 0;
+  overflow-y: auto;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 150;
+}
+
+#playerPanel.open {
+  transform: translateX(0);
+}
+
+#playerPanel .header {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  z-index: 10;
+}
+
+
+/* Player cards inside panel */
+.player-card {
+  background: #121a2b;
+  border: 1px solid #1f2738;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.player-card:hover {
+  background: #1b2338;
+}
+
+.player-card img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+
+.player-info {
+  flex: 1;
+}
+.player-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.player-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+
+
+#playerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#playerList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid #333;
+  font-size: 14px;
+  color: #eee;
+}
+#playerList li:last-child {
+  border-bottom: none;
+}
+
+/* Delete button */
+#playerList button {
+  background: #206ed3;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
+#playerList button:hover {
+  background: #d32f2f;
+}
+
+
+ main {
+  display: grid;
+  grid-template-columns: 1fr 260px; /* players | board | stats */
+  gap: 14px;
+  padding: 14px;
+}
+  .board{position:relative; overflow:auto; border:1px solid #1a2233; border-radius:14px; background:
+      radial-gradient(900px 260px at 25% 0%, rgba(73,168,255,.10), transparent),
+      radial-gradient(900px 260px at 70% 100%, rgba(123,220,255,.08), transparent),
+      linear-gradient(180deg,#0c111a,#0b0f17);}
+  .board-inner{position:relative; margin:28px; min-width:960px; min-height:620px}
+  svg#lines{position:absolute; inset:0; pointer-events:none}
+
+  .box{
+    width:var(--box-w); height:var(--box-h); position:absolute;
+    background:#121a2b; border:2px solid var(--accent); border-radius:10px;
+    display:flex; align-items:center; gap:8px; padding:0 10px; font-weight:700;
+    box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.03) inset;
+  }
+  .box.win{border-color:var(--win); background:rgba(34,197,94,.11)}
+  .box.loss{border-color:var(--loss); background:rgba(239,68,68,.10)}
+  .seed{font-size:11px; color:#b7c6ff; background:#0b1220; border:1px solid #1f2940; padding:3px 6px; border-radius:8px; min-width:34px; text-align:center}
+  .name{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .bye{opacity:.7; font-style:italic}
+
+  .scorecard{
+    position:absolute; transform:translate(-50%,-130%); /* keep away from line */
+    background:var(--panel); border:1px solid #202637; border-radius:10px;
+    display:flex; align-items:center; gap:6px; padding:6px 8px; z-index:10;
+    box-shadow:0 10px 24px rgba(0,0,0,.35);
+  }
+  .scorecard .lab{font-size:12px; color:#d9e6ff; max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .scorecard input{width:56px; text-align:center}
+  .scorecard .btn{padding:6px 10px}
+
+  .edge{stroke:var(--neutral); stroke-width:2; fill:none; vector-effect:non-scaling-stroke; shape-rendering:crispEdges}
+  .edge.win{stroke:var(--win)} .edge.loss{stroke:var(--loss)}
+
+  aside{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto}
+  aside h3{margin:6px 6px 10px; font-size:16px}
+  table{width:100%; border-collapse:separate; border-spacing:0 6px}
+  th,td{font-size:12px; padding:6px 8px; text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{background:#0e1422; color:var(--muted); position:sticky; top:0}
+  tr{background:#0e1320; border:1px solid #1f2633}
+  td.win{color:var(--win)} td.loss{color:var(--loss)}
+
+  .champ{border-color:gold; color:gold; background:#1e1a0f}
+  .confetti{position:absolute; width:8px; height:8px; background:gold; animation:fall 2.2s linear forwards}
+
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 200;
+}
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 14px;
+  width: 340px;
+  text-align: center;
+  color: var(--text);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+}
+.modal-content img {
+  width: 96px; height: 96px; border-radius: 50%;
+  object-fit: cover; border: 3px solid var(--accent);
+}
+.modal-content .close {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--text);
+}
+.modal-content input[type="text"],
+.modal-content input[type="file"],
+#modalNameInput {
+  padding: 8px 10px; border-radius: 10px; border: 1px solid #1f2738; background: #0e1320; color: var(--text);
+}
+
+
+  @keyframes fall{to{transform:translateY(220px) rotate(540deg); opacity:0}}
+
+  /* Print: only bracket, full to champion, colored lines, scale to fit A4 */
+  @media print {
+    header, aside { display:none !important; }
+    body{ background:#fff; color:#000 }
+    .board{ overflow:visible !important; border:none !important }
+    .board-inner{ margin:0 !important; transform:scale(0.70); transform-origin:top left }
+    .edge      { stroke-width:2; vector-effect:non-scaling-stroke; shape-rendering:crispEdges }
+    .edge.win  { stroke:#22c55e !important }
+    .edge.loss { stroke:#ef4444 !important }
+
+
+
+   .modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 200;
+}
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: var(--panel);
+  padding: 20px;
+  border-radius: 14px;
+  width: 320px;
+  text-align: center;
+  color: var(--text);
+}
+.modal-content img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+}
+.modal-content .close {
+  position: absolute;
+  top: 14px; right: 20px;
+  font-size: 22px;
+  cursor: pointer;
+}
+ 
+  }
+
+#playerSidebar {
+  position: fixed;
+  top: 15%;               /* medium from top */
+  left: 0;
+  height: 70%;            /* medium height */
+  width: 240px;           /* medium width */
+  background: var(--panel);
+  border-radius: 0 12px 12px 0;
+  overflow-y: auto;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+  transform: translateX(-100%);
+  transition: transform 0.7s ease;
+  z-index: 150;
+}
+
+#playerSidebar.active {
+  transform: translateX(0);
+}
+
+#playerSidebar .header {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  z-index: 10;
+}
+
+
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">🏸 Badminton Knockout</h1>
+
+  <div class="controls">
+    <button class="btn" id="togglePlayersBtn">👥 Players</button>
+
+    <select id="mode" title="Singles / Doubles / Auto Doubles">
+      <option value="singles">Singles</option>
+      <option value="doubles">Doubles</option>
+      <option value="auto_doubles">Auto Doubles</option>
+    </select>
+
+    <select id="format" title="Match format">
+      <option value="single">Single game</option>
+      <option value="bo3">Best of 3</option>
+    </select>
+
+    <input id="tName" placeholder="Tournament Name" style="width:190px">
+    <input id="tDate" type="date" style="width:155px">
+
+    <label><input type="checkbox" id="shuffle"> Randomize seeding</label>
+
+    <button class="btn primary" id="buildBtn">Generate Bracket</button>
+    <button class="btn" id="printBtn">Print Bracket</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <button class="btn" id="importBtn">Import</button>
+
+    <span class="legend" id="count">0 players</span>
+   
+
+
+    <!-- adding players placed LAST -->
+    <input id="playerName" placeholder="Add player or Team (A & B)">
+    <button class="btn" id="addBtn">＋ Add</button>
+    <textarea id="bulk" placeholder="Paste names/teams (comma / new lines)"></textarea>
+    <button class="btn" id="bulkBtn">Add List</button>
+    <button class="btn" id="clearBtn">Clear All</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Middle: Brackets -->
+  <section class="board">
+    <div class="board-inner" id="board">
+      <svg id="lines"></svg>
+    </div>
+  </section>
+
+  <!-- Right: Stats -->
+  <aside id="statsPanel">
+    <h3>Statistics</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>+/-</th>
+        </tr>
+      </thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </aside>
+</main>
+
+<aside id="playerSidebar">
+  <div class="header">
+    <h3 style="margin:0;font-size:16px;">Players</h3>
+    <button id="closeSidebarBtn"
+      style="background:none;border:0;font-size:20px;cursor:pointer;color:var(--text);">
+      ×
+    </button>
+  </div>
+  <div id="playerList"></div>
+</aside>
+
+
+
+
+<script>
+(function(){
+    const S={players:[],entries:[],rounds:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
+const q=id=>document.getElementById(id);
+const board=q('board'); let svg=q('lines'); const statsBody=q('statsBody');
+
+// UI refs
+const modeSel=q('mode'), formatSel=q('format');
+const tName=q('tName'), tDate=q('tDate'), title=q('title');
+const playerName=q('playerName'), addBtn=q('addBtn');
+const bulk=q('bulk'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
+const count=q('count'), shuffle=q('shuffle');
+const buildBtn=q('buildBtn'), resetBtn=q('resetBtn'), printBtn=q('printBtn');
+const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+
+let currentPlayerIndex = -1;
+
+
+const togglePlayersBtn = q('togglePlayersBtn');
+const closeSidebarBtn = q('closeSidebarBtn');
+const playerSidebar = q('playerSidebar');
+
+togglePlayersBtn.onclick = () => {
+  playerSidebar.classList.add('active');
+};
+
+closeSidebarBtn.onclick = () => {
+  playerSidebar.classList.remove('active');
+};
+
+
+// helpers
+const el=(t,c,s)=>{const x=document.createElement(t); if(c) x.className=c; if(s) Object.assign(x.style,s); return x};
+const esc = s => String(s).replace(/[&<>"']/g, m =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
+);
+function updateCount() {
+  count.textContent = `${S.players.length} player${S.players.length === 1 ? '' : 's'}`;
+
+  const list = q('playerList');
+  list.innerHTML = '';
+  S.players.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+
+    const img = document.createElement('img');
+    img.src = p.photo || 'https://via.placeholder.com/40';
+
+    const info = document.createElement('div');
+    info.className = 'player-info';
+    const name = document.createElement('div');
+    name.className = 'player-name';
+    name.textContent = p.name;
+    const meta = document.createElement('div');
+    meta.className = 'player-meta';
+    const st = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
+    meta.textContent = `P:${st.P} • W:${st.W} • L:${st.L}`;
+
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    const del = document.createElement('button');
+    del.textContent = '❌';
+    del.className = 'btn';
+    del.onclick = e => {
+      e.stopPropagation();
+      S.players.splice(i, 1);
+      updateCount();
+      renderStats();
+    };
+
+    card.appendChild(img);
+    card.appendChild(info);
+    card.appendChild(del);
+
+    // CLICK → open modal immediately (with edit)
+    card.onclick = () => showPlayerDetails(p, i);
+
+    list.appendChild(card);
+  });
+}
+
+
+function showPlayerDetails(p, idx) {
+  currentPlayerIndex = idx;  // remember which player is open
+
+  const modal = q('playerModal');
+  const nameInput = q('modalNameInput');
+  const photoInput = q('modalPhotoInput');
+  const saveBtn = q('modalSaveBtn');
+  const cancelBtn = q('modalCancelBtn');
+  const deleteBtn = q('modalDeleteBtn');
+  const prevBtn = q('modalPrevBtn');
+  const nextBtn = q('modalNextBtn');
+
+  // fill
+  q('modalPhoto').src = p.photo || 'https://via.placeholder.com/96';
+  nameInput.value = p.name;
+
+  const stats = S.stats.get(p.name) || { P:0, W:0, L:0, PF:0, PA:0 };
+  q('modalStats').innerHTML = `
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <tr><td style="text-align:left;">Played</td><td>${stats.P}</td></tr>
+      <tr><td style="text-align:left; color:var(--win);">Wins</td><td>${stats.W}</td></tr>
+      <tr><td style="text-align:left; color:var(--loss);">Losses</td><td>${stats.L}</td></tr>
+      <tr><td style="text-align:left;">Points For</td><td>${stats.PF}</td></tr>
+      <tr><td style="text-align:left;">Points Against</td><td>${stats.PA}</td></tr>
+      <tr><td style="text-align:left;">± Diff</td><td>${stats.PF - stats.PA}</td></tr>
+    </table>
+  `;
+
+  // live preview when picking a new photo
+  photoInput.value = '';
+  photoInput.onchange = () => {
+    
+  if (photoInput.files[0]) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    S.players[idx].photo = e.target.result; // Base64 string
+    q('modalPhoto').src = e.target.result; // Update preview immediately
+    // Update stats and count
+    updateCount();
+    renderStats();
+  };
+  reader.readAsDataURL(photoInput.files[0]);
+}
+  
+    
+    
+  };
+
+  // save changes
+  saveBtn.onclick = () => {
+    const oldName = S.players[idx].name;
+    const newName = nameInput.value.trim() || oldName;
+
+    if (newName !== oldName) {
+      S.players[idx].name = newName;
+      migrateStatsName(oldName, newName);
+      renameEverywhere(oldName, newName);
+    }
+
+    if (photoInput.files[0]) {
+      S.players[idx].photo = q('modalPhoto').src;
+    }
+
+    updateCount();
+    renderStats();
+    modal.classList.add('hidden');
+  };
+
+  cancelBtn.onclick = () => modal.classList.add('hidden');
+  modal.querySelector('.close').onclick = () => modal.classList.add('hidden');
+  modal.onclick = e => { if (e.target === modal) modal.classList.add('hidden'); };
+
+  deleteBtn.onclick = () => {
+    if (!confirm('Delete this player?')) return;
+    S.players.splice(idx, 1);
+    updateCount();
+    renderStats();
+    modal.classList.add('hidden');
+  };
+
+  // handle next/prev
+  prevBtn.disabled = (idx <= 0);
+  nextBtn.disabled = (idx >= S.players.length - 1);
+
+  prevBtn.onclick = () => {
+    if (idx > 0) {
+      showPlayerDetails(S.players[idx - 1], idx - 1);
+    }
+  };
+  nextBtn.onclick = () => {
+    if (idx < S.players.length - 1) {
+      showPlayerDetails(S.players[idx + 1], idx + 1);
+    }
+  };
+
+  modal.classList.remove('hidden');
+}
+
+
+function migrateStatsName(oldName, newName) {
+  if (oldName === newName) return;
+  const old = S.stats.get(oldName);
+  if (!old) return;
+  const tgt = S.stats.get(newName);
+  if (tgt) {
+    // merge if target exists
+    tgt.P += old.P; tgt.W += old.W; tgt.L += old.L;
+    tgt.PF += old.PF; tgt.PA += old.PA;
+    S.stats.set(newName, tgt);
+  } else {
+    S.stats.set(newName, old);
+  }
+  S.stats.delete(oldName);
+}
+
+function renameEverywhere(oldName, newName) {
+  // entries (exact matches)
+  if (Array.isArray(S.entries)) {
+    for (let i = 0; i < S.entries.length; i++) {
+      if (S.entries[i] === oldName) S.entries[i] = newName;
+    }
+  }
+
+  // bracket boxes (exact matches)
+  const boxes = board.querySelectorAll('.box');
+  boxes.forEach(b => {
+    if (b.dataset.name === oldName) {
+      b.dataset.name = newName;
+      const nm = b.querySelector('.name');
+      if (nm) nm.textContent = newName;
+    }
+  });
+
+  // refresh any scorecard labels to show new names
+  if (Array.isArray(S.rounds)) {
+    S.rounds.forEach(rnd => {
+      rnd.forEach(mo => {
+        if (mo && mo.card) {
+          const lab = mo.card.querySelector('.lab');
+          if (lab) {
+            lab.textContent = `${mo.A?.dataset.name || '—'} vs ${mo.B?.dataset.name || '—'}`;
+            lab.title = lab.textContent;
+          }
+        }
+      });
+    });
+  }
+}
+
+
+
+
+
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+const BW=180,BH=48,CG=180,RG=28; const cy=t=>t+BH/2;
+
+// Add players
+addBtn.onclick=()=>{const v=playerName.value.trim(); if(!v) return; S.players.push({name:v}); playerName.value=''; updateCount();};
+playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
+bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push({name:n})); bulk.value=''; updateCount();};
+clearBtn.onclick=()=>{S.players=[]; updateCount();};
+
+// Actions
+buildBtn.onclick=()=>buildFromPlayers();
+resetBtn.onclick=()=>{ board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); S.rounds=[]; S.stats.clear(); S.players=[]; S.entries=[]; statsBody.innerHTML=''; updateCount(); };
+printBtn.onclick=()=>window.print();
+
+function buildFromPlayers(){
+  if(S.players.length<2){alert('Add at least 2 entries');return;}
+  S.meta.name = tName.value||'Tournament';
+  S.meta.date = tDate.value||new Date().toISOString().slice(0,10);
+  S.meta.mode = modeSel.value;
+  S.meta.format = formatSel.value;
+  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
+
+  let entries;
+  if(S.meta.mode==='singles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
+  else if(S.meta.mode==='doubles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
+  else{
+    let singles=S.players.map(p=>p.name);
+    if(shuffle.checked) shuffleArr(singles);
+    if(singles.length%2===1) singles.push('BYE');
+    entries=[];
+    for(let i=0;i<singles.length;i+=2) entries.push(`${singles[i]} & ${singles[i+1]}`);
+  }
+
+  entries = padToPowerOfTwo(entries);
+  S.stats.clear();
+  entries.filter(n=>n!=='BYE').forEach(n=>S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0}));
+
+  S.entries = entries;
+  board.innerHTML='<svg id="lines"></svg>'; svg=q('lines');
+  layout(entries);
+  resizeSVG(); renderStats();
+}
+
+function padToPowerOfTwo(players){
+  let n = players.length, p = 1;
+  while (p < n) p <<= 1;
+  if (p === n) return players;
+
+  const need = p - n;
+  const filled = [...players];
+
+  // BYE seeding: assign BYEs so that top seeds get them
+  // Place BYEs evenly spaced in the bracket to avoid BYE vs BYE
+  for (let i = 0; i < need; i++) {
+    // Insert BYE at every other slot near the end
+    filled.splice(filled.length - (i * 2 + 1), 0, 'BYE');
+  }
+  return filled;
+}
+
+
+function layout(entries){
+  S.rounds=[]; const roundsCount=Math.log2(entries.length)|0;
+  let prev=[];
+  for(let i=0;i<entries.length;i++){
+    const left=0, top=i*(BH+RG);
+    prev.push(createBox(entries[i], left, top, false, false));
+  }
+  for(let r=0;r<roundsCount;r++){
+    const curr=[]; S.rounds[r]=[]; const isFinal=(r===roundsCount-1);
+    for(let m=0;m<prev.length/2;m++){
+      const A=prev[2*m], B=prev[2*m+1];
+      const yA=cy(parseFloat(A.style.top)), yB=cy(parseFloat(B.style.top)), midY=(yA+yB)/2;
+      const ax=parseFloat(A.style.left)+BW, bx=parseFloat(B.style.left)+BW, tx=(r+1)*(BW+CG);
+      const jx=(ax+tx)/2;
+      const hA=line(ax,yA,jx,yA); const vU=line(jx,yA,jx,midY);
+      const hB=line(bx,yB,jx,yB); const vL=line(jx,midY,jx,yB);
+      const hF=line(jx,midY,tx,midY);
+      const T=createBox('—',tx,midY-BH/2,false,isFinal);
+      curr.push(T);
+      const mo={A,B,T,lines:{hA,vU,hB,vL,hF},saved:false};
+
+      if(A.dataset.name==='BYE' && B.dataset.name!=='BYE'){ forwardWinner(mo,B.dataset.name,0,0,true); }
+      else if(B.dataset.name==='BYE' && A.dataset.name!=='BYE'){ forwardWinner(mo,A.dataset.name,0,0,true); }
+      else if(A.dataset.name==='BYE' && B.dataset.name==='BYE'){ /* skip completely */ }
+      else{ mo.card=createScoreCard(`${A.dataset.name} vs ${B.dataset.name}`,T,mo); }
+
+      S.rounds[r].push(mo);
+    }
+    prev=curr;
+  }
+}
+
+function createBox(name,left,top,isBye=false,isChamp=false){
+  const b=el('div','box'+(isChamp?' champ':''),{left:left+'px',top:top+'px',width:BW+'px',height:BH+'px'});
+  const seed=el('div','seed'); seed.textContent=isChamp?'🏆':(name==='BYE'?'—':'');
+  const nm=el('div','name'+(name==='BYE'?' bye':'')); nm.textContent=name;
+  b.dataset.name=name; b.append(seed,nm); 
+  board.appendChild(b); return b;
+}
+
+function line(x1,y1,x2,y2){
+  const L=document.createElementNS('http://www.w3.org/2000/svg','line');
+  L.setAttribute('x1',x1);L.setAttribute('y1',y1);L.setAttribute('x2',x2);L.setAttribute('y2',y2);
+  L.setAttribute('class','edge');svg.appendChild(L);return L;
+}
+
+function createScoreCard(label,T,mo){
+  const card=el('div','scorecard',{left:(parseFloat(T.style.left)+BW/2+16)+'px', top:T.style.top});
+  const lab=el('span','lab'); lab.textContent=label; lab.title=label; card.appendChild(lab);
+
+  if(S.meta.format==='bo3'){
+    const A1=inp(),B1=inp(),A2=inp(),B2=inp(),A3=inp(),B3=inp();
+    const save=btn('Save'); card.append(A1,B1,A2,B2,A3,B3,save); board.appendChild(card);
+    save.onclick=()=>{
+      const sets=[[A1,B1],[A2,B2],[A3,B3]];
+      let wSets=0,lSets=0,pf=0,pa=0;
+      for(const [ai,bi] of sets){
+        const a=val(ai), b=val(bi);
+        if(a===null&&b===null) continue;
+        if(a===b){alert('Set cannot be tied'); return;}
+        if(a===null||b===null){alert('Fill both scores'); return;}
+        pf+=a; pa+=b; if(a>b) wSets++; else lSets++;
+      }
+      if(wSets<2&&lSets<2){alert('Enter enough sets');return;}
+      const winner=(wSets>=2)?mo.A.dataset.name:mo.B.dataset.name;
+      forwardWinner(mo,winner,pf,pa,false);
+      disable([A1,B1,A2,B2,A3,B3,save]);
+    };
+  } else {
+    const A=inp(),B=inp(),save=btn('Save');
+    card.append(A,B,save); board.appendChild(card);
+    save.onclick=()=>{
+      const a=val(A), b=val(B);
+      if(a===null||b===null||a===b){alert('Enter valid non-tied scores');return;}
+      const winner=(a>b)?mo.A.dataset.name:mo.B.dataset.name;
+      forwardWinner(mo,winner,a,b,false);
+      disable([A,B,save]);
+    };
+  }
+  return card;
+
+  function inp(){const i=el('input'); i.type='number'; i.min='0'; i.step='1'; i.inputMode='numeric'; return i;}
+  function btn(t){const b=el('button','btn'); b.textContent=t; return b;}
+  function val(i){const v=i.value.trim(); if(v==='') return null; const n=parseInt(v,10); return Number.isNaN(n)?null:n;}
+  function disable(arr){arr.forEach(x=>x.disabled=true); mo.saved=true;}
+}
+
+function forwardWinner(mo,winner,sa,sb,isBye,restoring=false){
+  const loser = winner===mo.A.dataset.name ? mo.B.dataset.name : mo.A.dataset.name;
+
+  // forward name
+  mo.T.dataset.name=winner; mo.T.querySelector('.name').textContent=winner;
+
+  // colour path
+  const {hA,vU,hB,vL,hF}=mo.lines;
+  if(winner===mo.A.dataset.name){
+    hA.classList.add('win'); vU.classList.add('win');
+    hB.classList.add('loss'); vL.classList.add('loss');
+    hF.classList.add('win');
+    mo.A.classList.add('win'); if(mo.B.dataset.name!=='BYE') mo.B.classList.add('loss');
+  }else{
+    hB.classList.add('win'); vL.classList.add('win');
+    hA.classList.add('loss'); vU.classList.add('loss');
+    hF.classList.add('win');
+    mo.B.classList.add('win'); if(mo.A.dataset.name!=='BYE') mo.A.classList.add('loss');
+  }
+
+  // stats
+  if(!restoring){
+    if(!isBye && winner!=='BYE' && loser!=='BYE'){
+      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
+      const L=S.stats.get(loser)||{P:0,W:0,L:0,PF:0,PA:0};
+      W.P++;W.W++;W.PF+=Math.max(sa,sb);W.PA+=Math.min(sa,sb);
+      L.P++;L.L++;L.PF+=Math.min(sa,sb);L.PA+=Math.max(sa,sb);
+      S.stats.set(winner,W); S.stats.set(loser,L);
+    } else if(isBye && winner!=='BYE'){
+      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
+      S.stats.set(winner,W);
+    }
+    renderStats();
+  }
+
+  // update downstream labels
+  for(const rnd of S.rounds){
+    for(const node of rnd){
+      if(node.card&&(node.A===mo.T||node.B===mo.T)){
+        const text=`${node.A.dataset.name} vs ${node.B.dataset.name}`;
+        node.card.querySelector('.lab').textContent=text;
+        node.card.querySelector('.lab').title=text;
+      }
+    }
+  }
+
+  // champion?
+  let usedLater=false;
+  for(const rnd of S.rounds){
+    for(const node of rnd){
+      if(node!==mo&&(node.A===mo.T||node.B===mo.T)){usedLater=true;break;}
+    }
+    if(usedLater) break;
+  }
+  if(!usedLater){sprinkleConfetti(mo.T); mo.T.classList.add('champ');}
+}
+
+function renderStats(){
+  statsBody.innerHTML='';
+  const sorted=[...S.stats.entries()]
+    .sort((a,b)=>(b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
+  sorted.forEach(([name,s],i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td>${esc(name)}</td><td>${s.P}</td><td class="win">${s.W}</td><td class="loss">${s.L}</td><td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
+    statsBody.appendChild(tr);
+  });
+}
+
+function resizeSVG(){
+  const boxes=[...board.querySelectorAll('.box')];
+  if(!boxes.length){svg.setAttribute('width',1200);svg.setAttribute('height',800);return;}
+  let maxX=0,maxY=0;
+  boxes.forEach(b=>{
+    const x=parseFloat(b.style.left)+BW, y=parseFloat(b.style.top)+BH;
+    if(x>maxX) maxX=x; if(y>maxY) maxY=y;
+  });
+  svg.setAttribute('width',Math.max(800,maxX+80));
+  svg.setAttribute('height',Math.max(600,maxY+80));
+}
+
+function sprinkleConfetti(box){
+  const rect=box.getBoundingClientRect(), off=board.getBoundingClientRect();
+  const x=rect.left-off.left+rect.width/2, y=rect.top-off.top+rect.height/2;
+  for(let i=0;i<25;i++){
+    const c=el('div','confetti',{
+      left:(x+(Math.random()*40-20))+'px',
+      top:y+'px',
+      background:`hsl(${Math.random()*360},100%,50%)`,
+      animationDuration:(1+Math.random()*2)+'s'
+    });
+    board.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
+}
+
+// Export / Import
+exportBtn.onclick = () => {
+  const rounds = S.rounds.map(rnd =>
+    rnd.map(mo => ({
+      A: mo.A?.dataset.name,
+      B: mo.B?.dataset.name,
+      T: mo.T?.dataset.name,
+      winner: mo.T?.dataset.name,
+      saved: mo.saved || false,
+      scores: mo.card
+        ? [...mo.card.querySelectorAll("input")].map(i => i.value)
+        : null
+    }))
+  );
+
+  const data = JSON.stringify({
+    players: S.players,
+    entries: S.entries,
+    meta: S.meta,
+    stats: [...S.stats],   // save as array of [name, obj]
+    rounds: rounds
+  }, null, 2);
+
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${S.meta.name || "tournament"}.json`;
+  a.click();
+};
+
+importBtn.onclick=()=>importFile.click();
+importFile.onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+
+      S.players = Array.isArray(o.players) ? o.players : [];
+      S.entries = Array.isArray(o.entries) ? o.entries : [];
+      S.meta = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
+      S.stats = new Map(o.stats || []);
+
+      // restore UI
+      tName.value = S.meta.name || "";
+      tDate.value = S.meta.date || "";
+      modeSel.value = S.meta.mode || "singles";
+      formatSel.value = S.meta.format || "single";
+      updateCount();
+      renderStats();
+
+      // rebuild layout
+      if (S.entries.length >= 2) {
+        board.innerHTML = '<svg id="lines"></svg>';
+        svg = q("lines");
+        layout(S.entries);
+
+        if (o.rounds) {
+          S.rounds.forEach((rnd, i) => {
+            rnd.forEach((mo, j) => {
+              const saved = o.rounds[i]?.[j];
+              if (saved) {
+                if (saved.winner && saved.winner !== "BYE") {
+                  forwardWinner(mo, saved.winner, 0, 0, true, true);
+                  mo.saved = saved.saved;
+                }
+                // restore scores if available
+                if (saved.scores && mo.card) {
+                  const inputs = mo.card.querySelectorAll("input");
+                  saved.scores.forEach((val, idx) => {
+                    if (inputs[idx]) inputs[idx].value = val;
+                  });
+                  if (saved.saved) {
+                    inputs.forEach(inp => inp.disabled = true);
+                    const btn = mo.card.querySelector("button");
+                    if (btn) btn.disabled = true;
+                  }
+                }
+              }
+            });
+          });
+        }
+        resizeSVG();
+        renderStats();
+      } else {
+        alert("Imported file has no players/entries");
+      }
+    } catch (err) {
+      alert("Bad file");
+    }
+  };
+  r.readAsText(f);
+};
+
+
+})();
+
+  
+</script>
+
+
+<!-- Player details / edit modal -->
+<div id="playerModal" class="modal hidden">
+  <div class="modal-content" style="position:relative">
+    <button class="close" title="Close">×</button>
+
+    <img id="modalPhoto" src="" alt="Player" />
+
+    <div style="margin-top:12px; display:grid; gap:8px;">
+      <input id="modalNameInput" placeholder="Player name" />
+      <input type="file" id="modalPhotoInput" accept="image/*" />
+    </div>
+
+    <div id="modalStats" style="margin-top:12px;"></div>
+
+        <div style="margin-top:12px; display:flex; justify-content:space-between;">
+      <button class="btn" id="modalPrevBtn">⟵ Prev</button>
+      <button class="btn" id="modalNextBtn">Next ⟶</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:14px; display:flex; gap:8px; justify-content:center;">
+      <button class="btn primary" id="modalSaveBtn">Save</button>
+      <button class="btn" id="modalCancelBtn">Cancel</button>
+      <button class="btn" id="modalDeleteBtn" style="border-color:#7a1f1f;background:#2a1313;">Delete</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

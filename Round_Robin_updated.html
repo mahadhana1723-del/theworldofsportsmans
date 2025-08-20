@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>🏸 Badminton Round Robin</title>
+<style>
+  :root{
+    --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
+    --accent:#49a8ff; --win:#22c55e; --loss:#ef4444; --neutral:#7b88a8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);}
+  header{
+    position:sticky; top:0; z-index:5; padding:12px 14px; border-bottom:1px solid #1a2233;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:
+      radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
+      radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
+      linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
+    box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+  h1{margin:0 6px 0 0; font-size:18px; letter-spacing:.2px}
+  .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  input,textarea,select{padding:6px 2px; border-radius:10px; border:1px solid #1f2738; background:#0e1320; color:var(--text)}
+  textarea{width:220px; height:60px}
+  .btn{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#132037; color:var(--text); cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8}
+  .legend{font-size:12px; color:var(--muted); margin-left:4px}
+
+  main{display:grid; grid-template-columns:1fr 320px; gap:14px; padding:14px}
+  .board{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:14px; overflow:auto}
+
+  table.matches{width:100%; border-collapse:collapse; margin-top:8px}
+  table.matches th,table.matches td{border:1px solid #1f2738; padding:6px 8px; font-size:13px}
+  table.matches th{background:#0e1422; color:var(--muted)}
+  table.matches td input{width:40px;text-align:center}
+
+  aside{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto}
+  aside h3{margin:6px 6px 10px; font-size:16px}
+  table.stats{width:100%; border-collapse:separate; border-spacing:0 6px}
+  th,td{font-size:12px; padding:6px 8px; text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{background:#0e1422; color:var(--muted); position:sticky; top:0}
+  tr{background:#0e1320; border:1px solid #1f2633}
+  td.win{color:var(--win)} td.loss{color:var(--loss)}
+
+  .champ{border:2px solid gold; color:gold}
+  @media print {
+  header { display:none !important; }
+  body { background:#fff; color:#000; }
+  .board, aside { border:none !important; }
+  .board { background:#fff !important; }
+  table.matches th, table.matches td,
+  table.stats th, table.stats td {
+    border:1px solid #000 !important;
+    color:#000 !important;
+  }
+  .champ { border:2px solid gold !important; }
+}
+
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">🏸 Badminton Round Robin</h1>
+  <div class="controls">
+    <select id="mode">
+      <option value="singles">Singles</option>
+      <option value="doubles">Doubles</option>
+      <option value="auto_doubles">Auto Doubles</option>
+    </select>
+    <select id="format">
+      <option value="single">Single game</option>
+      <option value="bo3">Best of 3</option>
+    </select>
+    <input id="tName" placeholder="Tournament Name" style="width:190px">
+    <input id="tDate" type="date" style="width:155px">
+    <label><input type="checkbox" id="shuffle"> Randomize</label>
+    <button class="btn primary" id="buildBtn">Generate</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <button class="btn" id="importBtn">Import</button>
+    <button class="btn" id="printBtn">Print</button>
+
+    <span class="legend" id="count">0 players</span>
+    <input id="playerName" placeholder="Add player/team">
+    <button class="btn" id="addBtn">＋ Add</button>
+    <textarea id="bulk" placeholder="Paste names list"></textarea>
+    <button class="btn" id="bulkBtn">Add List</button>
+    <button class="btn" id="clearBtn">Clear All</button>
+  </div>
+</header>
+
+<main>
+  <section class="board">
+    <h2>Matches</h2>
+    <div id="matches"></div>
+  </section>
+  <aside>
+    <h3>📊 Standings</h3>
+    <table class="stats">
+      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </aside>
+</main>
+
+<script>
+(function(){
+  const S={players:[],matches:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
+  const q=id=>document.getElementById(id);
+  const matchesDiv=q('matches'), statsBody=q('statsBody');
+  const addBtn=q('addBtn'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
+  const buildBtn=q('buildBtn'), resetBtn=q('resetBtn');
+  const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+  const printBtn = document.getElementById('printBtn');
+  printBtn.onclick = ()=>window.print();
+  const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
+  const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
+
+  function updateCount(){count.textContent=`${S.players.length} players`;}
+  function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+  addBtn.onclick=()=>{const v=playerName.value.trim();if(!v) return;S.players.push(v);playerName.value='';updateCount();};
+  playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
+  bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push(n));bulk.value='';updateCount();};
+  clearBtn.onclick=()=>{S.players=[];updateCount();};
+
+  buildBtn.onclick=()=>build();
+  resetBtn.onclick=()=>{S.players=[];S.matches=[];S.stats.clear();matchesDiv.innerHTML='';statsBody.innerHTML='';updateCount();};
+
+  function build(){
+  if(S.players.length<2){alert("Need at least 2 players");return;}
+  S.meta.name=tName.value||'Tournament';
+  S.meta.date=tDate.value||new Date().toISOString().slice(0,10);
+  S.meta.mode=modeSel.value; 
+  S.meta.format=formatSel.value;
+  title.textContent=`🏸 ${S.meta.name} (${S.meta.date})`;
+
+  let entries=[...S.players];
+  if(shuffle.checked) shuffleArr(entries);
+
+  // Handle doubles logic
+  if(S.meta.mode==="auto_doubles"){
+    let teams=[];
+    for(let i=0;i<entries.length;i+=2){
+      if(i+1<entries.length){
+        teams.push(entries[i]+" & "+entries[i+1]);
+      }else{
+        // odd player out (bye)
+        teams.push(entries[i]+" (bye)");
+      }
+    }
+    entries=teams;
+  }
+  else if(S.meta.mode==="doubles"){
+    // Expect user to already enter teams manually (as names)
+    // so we don’t regroup here
+  }
+  // singles just keeps entries as is
+
+  // Generate round robin pairings
+  S.matches=[];
+  for(let i=0;i<entries.length;i++){
+    for(let j=i+1;j<entries.length;j++){
+      // Skip "bye" matches
+      if(entries[i].includes("(bye)") || entries[j].includes("(bye)")) continue;
+      S.matches.push({A:entries[i],B:entries[j],scoreA:null,scoreB:null});
+    }
+  }
+
+  // init stats
+  S.stats.clear(); 
+  entries.forEach(n=>{
+    if(!n.includes("(bye)")) S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0});
+  });
+
+  renderMatches();
+  renderStats();
+}
+
+
+  function renderMatches(){
+    matchesDiv.innerHTML='';
+    const tbl=document.createElement('table'); tbl.className='matches';
+    tbl.innerHTML='<thead><tr><th>Match</th><th>Scores</th><th>Action</th></tr></thead>';
+    const tb=document.createElement('tbody');
+    S.matches.forEach((m,idx)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${m.A} vs ${m.B}</td>`;
+      const tdScore=document.createElement('td');
+      const A=document.createElement('input'); A.type='number'; A.min=0; A.value=m.scoreA??'';
+      const B=document.createElement('input'); B.type='number'; B.min=0; B.value=m.scoreB??'';
+      tdScore.append(A,document.createTextNode(' - '),B);
+      const tdAct=document.createElement('td');
+      const save=document.createElement('button'); save.className='btn'; save.textContent='Save';
+      save.onclick=()=>{
+        const a=parseInt(A.value,10), b=parseInt(B.value,10);
+        if(isNaN(a)||isNaN(b)||a===b){alert('Enter valid scores');return;}
+        m.scoreA=a;m.scoreB=b;
+        updateStats(m);
+        renderStats();
+        save.disabled=true; A.disabled=true; B.disabled=true;
+      };
+      tdAct.appendChild(save);
+      tr.append(tdScore,tdAct); tb.appendChild(tr);
+    });
+    tbl.appendChild(tb); matchesDiv.appendChild(tbl);
+  }
+
+  function updateStats(m){
+    const {A,B,scoreA,scoreB}=m;
+    const SA=S.stats.get(A), SB=S.stats.get(B);
+    SA.P++; SB.P++;
+    SA.PF+=scoreA; SA.PA+=scoreB;
+    SB.PF+=scoreB; SB.PA+=scoreA;
+    if(scoreA>scoreB){SA.W++; SB.L++;} else {SB.W++; SA.L++;}
+    S.stats.set(A,SA); S.stats.set(B,SB);
+  }
+
+  function renderStats(){
+    statsBody.innerHTML='';
+    const sorted=[...S.stats.entries()].sort((a,b)=>
+      (b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
+    sorted.forEach(([name,s],i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${i+1}</td><td>${name}</td><td>${s.P}</td>
+      <td class="win">${s.W}</td><td class="loss">${s.L}</td>
+      <td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
+      if(i===0) tr.classList.add('champ');
+      statsBody.appendChild(tr);
+    });
+  }
+
+  // Export / Import
+  exportBtn.onclick=()=>{
+  if(!S.meta.name){ 
+    // fallback: take from input box
+    S.meta.name = tName.value.trim(); 
+  }
+  if(!S.meta.name){
+    alert("Please enter a Tournament Name before saving!");
+    return;
+  }
+  const data=JSON.stringify({
+    players:S.players,
+    matches:S.matches,
+    meta:S.meta,
+    stats:[...S.stats]
+  },null,2);
+
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a'); 
+  a.href=URL.createObjectURL(blob);
+  // use clean name (replace spaces with underscores)
+  a.download=`${S.meta.name.replace(/\s+/g,'_')}.json`;  
+  a.click();
+};
+
+
+
+  importBtn.onclick=()=>importFile.click();
+  importFile.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const o=JSON.parse(ev.target.result);
+        S.players=o.players||[];
+        S.matches=o.matches||[];
+        S.meta=o.meta||{};
+        S.stats=new Map(o.stats||[]);
+        updateCount();
+        renderMatches(); renderStats();
+      }catch(err){alert('Bad file');}
+    };
+    r.readAsText(f);
+  };
+
+})();
+</script>
+</body>
+</html>

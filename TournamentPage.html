@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unified Tournament Page</title>
+  <style>
+    :root {
+      --bg: #0f1724;
+      --card: #1a2235;
+      --accent: #3a86ff;
+      --muted: #9aa4b2;
+      --white: #fff;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--white);
+      font-family: Arial, sans-serif;
+    }
+
+    /* Toggle Bar */
+    .tournament-toggle {
+      display: flex;
+      justify-content: center;
+      background: #1a2235;
+      padding: 12px;
+      border-bottom: 2px solid var(--accent);
+    }
+    .tournament-toggle button {
+      margin: 0 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      background: #2b3650;
+      color: var(--muted);
+      transition: 0.3s;
+    }
+    .tournament-toggle button.active {
+      background: linear-gradient(90deg, var(--accent), #7b61ff);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(58,134,255,0.5);
+    }
+
+    /* Sections */
+    section {
+      padding: 20px;
+    }
+
+    /* Shared box/card styling */
+    .box, .card {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 10px;
+      margin: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    }
+    h2 {
+      margin-top: 0;
+      color: var(--accent);
+    }
+
+    /* Round Robin specific */
+    #rr-container table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+    }
+    #rr-container th, #rr-container td {
+      padding: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      text-align: center;
+    }
+
+    /* Bracket specific */
+    #bracket-container {
+      position: relative;
+      overflow-x: auto;
+    }
+    .box {
+      color: #fff;
+      text-align: center;
+    }
+    .win { color: #6ff76f; }
+    .loss { color: #ff5c5c; }
+    .champ { background: linear-gradient(45deg, #3a86ff, #7b61ff); }
+    .confetti {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      from { transform: translateY(0) rotate(0); opacity:1; }
+      to { transform: translateY(150px) rotate(360deg); opacity:0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="tournament-toggle">
+    <button data-target="roundRobinSection" class="active">🌀 Round Robin</button>
+    <button data-target="bracketSection">🎯 Knockout Bracket</button>
+  </div>
+
+  <!-- Round Robin Section -->
+  <section id="roundRobinSection">
+    <h2>Round Robin Tournament</h2>
+    <div id="rr-container">
+      <!-- Full Round Robin UI goes here -->
+       <header>
+  <h1 id="title">🏸 Badminton Round Robin</h1>
+  <div class="controls">
+    <select id="mode">
+      <option value="singles">Singles</option>
+      <option value="doubles">Doubles</option>
+      <option value="auto_doubles">Auto Doubles</option>
+    </select>
+    <select id="format">
+      <option value="single">Single game</option>
+      <option value="bo3">Best of 3</option>
+    </select>
+    <input id="tName" placeholder="Tournament Name" style="width:190px">
+    <input id="tDate" type="date" style="width:155px">
+    <label><input type="checkbox" id="shuffle"> Randomize</label>
+    <button class="btn primary" id="buildBtn">Generate</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <button class="btn" id="importBtn">Import</button>
+    <button class="btn" id="printBtn">Print</button>
+
+    <span class="legend" id="count">0 players</span>
+    <input id="playerName" placeholder="Add player/team">
+    <button class="btn" id="addBtn">＋ Add</button>
+    <textarea id="bulk" placeholder="Paste names list"></textarea>
+    <button class="btn" id="bulkBtn">Add List</button>
+    <button class="btn" id="clearBtn">Clear All</button>
+  </div>
+</header>
+
+<main>
+  <section class="board">
+    <h2>Matches</h2>
+    <div id="matches"></div>
+  </section>
+  <aside>
+    <h3>📊 Standings</h3>
+    <table class="stats">
+      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </aside>
+</main>
+    </div>
+    <script>
+      // Paste full Round_Robin_updated.js code here
+
+      
+(function(){
+  const S={players:[],matches:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
+  const q=id=>document.getElementById(id);
+  const matchesDiv=q('matches'), statsBody=q('statsBody');
+  const addBtn=q('addBtn'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
+  const buildBtn=q('buildBtn'), resetBtn=q('resetBtn');
+  const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+  const printBtn = document.getElementById('printBtn');
+  printBtn.onclick = ()=>window.print();
+  const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
+  const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
+
+  function updateCount(){count.textContent=`${S.players.length} players`;}
+  function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+  addBtn.onclick=()=>{const v=playerName.value.trim();if(!v) return;S.players.push(v);playerName.value='';updateCount();};
+  playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
+  bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push(n));bulk.value='';updateCount();};
+  clearBtn.onclick=()=>{S.players=[];updateCount();};
+
+  buildBtn.onclick=()=>build();
+  resetBtn.onclick=()=>{S.players=[];S.matches=[];S.stats.clear();matchesDiv.innerHTML='';statsBody.innerHTML='';updateCount();};
+
+  function build(){
+    if(S.players.length<2){alert("Need at least 2 players");return;}
+    S.meta.name=tName.value||'Tournament';
+    S.meta.date=tDate.value||new Date().toISOString().slice(0,10);
+    S.meta.mode=modeSel.value; S.meta.format=formatSel.value;
+    title.textContent=`🏸 ${S.meta.name} (${S.meta.date})`;
+    let entries=[...S.players];
+    if(shuffle.checked) shuffleArr(entries);
+
+    // Generate round robin pairings
+    S.matches=[];
+    for(let i=0;i<entries.length;i++){
+      for(let j=i+1;j<entries.length;j++){
+        S.matches.push({A:entries[i],B:entries[j],scoreA:null,scoreB:null});
+      }
+    }
+    // init stats
+    S.stats.clear(); entries.forEach(n=>S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0}));
+
+    renderMatches();
+    renderStats();
+  }
+
+  function renderMatches(){
+    matchesDiv.innerHTML='';
+    const tbl=document.createElement('table'); tbl.className='matches';
+    tbl.innerHTML='<thead><tr><th>Match</th><th>Scores</th><th>Action</th></tr></thead>';
+    const tb=document.createElement('tbody');
+    S.matches.forEach((m,idx)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${m.A} vs ${m.B}</td>`;
+      const tdScore=document.createElement('td');
+      const A=document.createElement('input'); A.type='number'; A.min=0; A.value=m.scoreA??'';
+      const B=document.createElement('input'); B.type='number'; B.min=0; B.value=m.scoreB??'';
+      tdScore.append(A,document.createTextNode(' - '),B);
+      const tdAct=document.createElement('td');
+      const save=document.createElement('button'); save.className='btn'; save.textContent='Save';
+      save.onclick=()=>{
+        const a=parseInt(A.value,10), b=parseInt(B.value,10);
+        if(isNaN(a)||isNaN(b)||a===b){alert('Enter valid scores');return;}
+        m.scoreA=a;m.scoreB=b;
+        updateStats(m);
+        renderStats();
+        save.disabled=true; A.disabled=true; B.disabled=true;
+      };
+      tdAct.appendChild(save);
+      tr.append(tdScore,tdAct); tb.appendChild(tr);
+    });
+    tbl.appendChild(tb); matchesDiv.appendChild(tbl);
+  }
+
+  function updateStats(m){
+    const {A,B,scoreA,scoreB}=m;
+    const SA=S.stats.get(A), SB=S.stats.get(B);
+    SA.P++; SB.P++;
+    SA.PF+=scoreA; SA.PA+=scoreB;
+    SB.PF+=scoreB; SB.PA+=scoreA;
+    if(scoreA>scoreB){SA.W++; SB.L++;} else {SB.W++; SA.L++;}
+    S.stats.set(A,SA); S.stats.set(B,SB);
+  }
+
+  function renderStats(){
+    statsBody.innerHTML='';
+    const sorted=[...S.stats.entries()].sort((a,b)=>
+      (b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
+    sorted.forEach(([name,s],i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${i+1}</td><td>${name}</td><td>${s.P}</td>
+      <td class="win">${s.W}</td><td class="loss">${s.L}</td>
+      <td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
+      if(i===0) tr.classList.add('champ');
+      statsBody.appendChild(tr);
+    });
+  }
+
+  // Export / Import
+  exportBtn.onclick=()=>{
+  if(!S.meta.name){ 
+    // fallback: take from input box
+    S.meta.name = tName.value.trim(); 
+  }
+  if(!S.meta.name){
+    alert("Please enter a Tournament Name before saving!");
+    return;
+  }
+  const data=JSON.stringify({
+    players:S.players,
+    matches:S.matches,
+    meta:S.meta,
+    stats:[...S.stats]
+  },null,2);
+
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a'); 
+  a.href=URL.createObjectURL(blob);
+  // use clean name (replace spaces with underscores)
+  a.download=`${S.meta.name.replace(/\s+/g,'_')}.json`;  
+  a.click();
+};
+
+
+
+  importBtn.onclick=()=>importFile.click();
+  importFile.onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const o=JSON.parse(ev.target.result);
+        S.players=o.players||[];
+        S.matches=o.matches||[];
+        S.meta=o.meta||{};
+        S.stats=new Map(o.stats||[]);
+        updateCount();
+        renderMatches(); renderStats();
+      }catch(err){alert('Bad file');}
+    };
+    r.readAsText(f);
+  };
+
+})();
+      console.log("Round Robin script active");
+    </script>
+  </section>
+
+  <!-- Bracket Section -->
+  <section id="bracketSection" style="display:none">
+    <h2>Knockout Bracket Tournament</h2>
+    <div id="bracket-container">
+
+       <header>
+  <h1 id="title">🏸 Badminton Knockout</h1>
+
+  <div class="controls">
+    <select id="mode" title="Singles / Doubles / Auto Doubles">
+      <option value="singles">Singles</option>
+      <option value="doubles">Doubles</option>
+      <option value="auto_doubles">Auto Doubles</option>
+    </select>
+
+    <select id="format" title="Match format">
+      <option value="single">Single game</option>
+      <option value="bo3">Best of 3</option>
+    </select>
+
+    <input id="tName" placeholder="Tournament Name" style="width:190px">
+    <input id="tDate" type="date" style="width:155px">
+
+    <label><input type="checkbox" id="shuffle"> Randomize seeding</label>
+
+    <button class="btn primary" id="buildBtn">Generate Bracket</button>
+    <button class="btn" id="printBtn">Print Bracket</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <button class="btn" id="exportBtn">Export</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <button class="btn" id="importBtn">Import</button>
+
+    <span class="legend" id="count">0 players</span>
+    <ul id="playerList"></ul>
+
+
+    <!-- adding players placed LAST -->
+    <input id="playerName" placeholder="Add player or Team (A & B)">
+    <button class="btn" id="addBtn">＋ Add</button>
+    <textarea id="bulk" placeholder="Paste names/teams (comma / new lines)"></textarea>
+    <button class="btn" id="bulkBtn">Add List</button>
+    <button class="btn" id="clearBtn">Clear All</button>
+  </div>
+</header>
+
+<main>
+  <section class="board">
+    <div id="board" class="board-inner">
+      <svg id="lines" width="1200" height="800"></svg>
+    </div>
+  </section>
+  <aside>
+    <h3>📊 Player Statistics</h3>
+    <table>
+      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
+      <tbody id="statsBody"></tbody>
+    </table>
+  </aside>
+</main> 
+      <div id="board"><svg id="lines"></svg></div>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>Diff</th></tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </div>
+    <script>
+      // Paste full Bracket_tournament.js code here
+
+      (function(){
+    const S={players:[],entries:[],rounds:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
+const q=id=>document.getElementById(id);
+const board=q('board'); let svg=q('lines'); const statsBody=q('statsBody');
+
+// UI refs
+const modeSel=q('mode'), formatSel=q('format');
+const tName=q('tName'), tDate=q('tDate'), title=q('title');
+const playerName=q('playerName'), addBtn=q('addBtn');
+const bulk=q('bulk'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
+const count=q('count'), shuffle=q('shuffle');
+const buildBtn=q('buildBtn'), resetBtn=q('resetBtn'), printBtn=q('printBtn');
+const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+
+// helpers
+const el=(t,c,s)=>{const x=document.createElement(t); if(c) x.className=c; if(s) Object.assign(x.style,s); return x};
+const esc = s => String(s).replace(/[&<>"']/g, m =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
+);
+function updateCount() {
+  count.textContent = `${S.players.length} player${S.players.length === 1 ? '' : 's'}`;
+
+  // render player list
+  const list = q('playerList');
+  list.innerHTML = '';
+  S.players.forEach((p, i) => {
+    const li = document.createElement('li');
+    li.textContent = p.name;
+
+    // delete button
+    const del = document.createElement('button');
+    del.textContent = '❌';
+    del.className = 'btn';
+    del.style.marginLeft = '8px';
+    del.onclick = () => {
+      S.players.splice(i, 1);   // remove player
+      updateCount();            // re-render
+    };
+
+    li.appendChild(del);
+    list.appendChild(li);
+  });
+}
+
+function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+const BW=180,BH=48,CG=180,RG=28; const cy=t=>t+BH/2;
+
+// Add players
+addBtn.onclick=()=>{const v=playerName.value.trim(); if(!v) return; S.players.push({name:v}); playerName.value=''; updateCount();};
+playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
+bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push({name:n})); bulk.value=''; updateCount();};
+clearBtn.onclick=()=>{S.players=[]; updateCount();};
+
+// Actions
+buildBtn.onclick=()=>buildFromPlayers();
+resetBtn.onclick=()=>{ board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); S.rounds=[]; S.stats.clear(); S.players=[]; S.entries=[]; statsBody.innerHTML=''; updateCount(); };
+printBtn.onclick=()=>window.print();
+
+function buildFromPlayers(){
+  if(S.players.length<2){alert('Add at least 2 entries');return;}
+  S.meta.name = tName.value||'Tournament';
+  S.meta.date = tDate.value||new Date().toISOString().slice(0,10);
+  S.meta.mode = modeSel.value;
+  S.meta.format = formatSel.value;
+  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
+
+  let entries;
+  if(S.meta.mode==='singles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
+  else if(S.meta.mode==='doubles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
+  else{
+    let singles=S.players.map(p=>p.name);
+    if(shuffle.checked) shuffleArr(singles);
+    if(singles.length%2===1) singles.push('BYE');
+    entries=[];
+    for(let i=0;i<singles.length;i+=2) entries.push(`${singles[i]} & ${singles[i+1]}`);
+  }
+
+  entries = padToPowerOfTwo(entries);
+  S.stats.clear();
+  entries.filter(n=>n!=='BYE').forEach(n=>S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0}));
+
+  S.entries = entries;
+  board.innerHTML='<svg id="lines"></svg>'; svg=q('lines');
+  layout(entries);
+  resizeSVG(); renderStats();
+}
+
+function padToPowerOfTwo(players){
+  let n = players.length, p = 1;
+  while (p < n) p <<= 1;
+  if (p === n) return players;
+
+  const need = p - n;
+  const filled = [...players];
+
+  // BYE seeding: assign BYEs so that top seeds get them
+  // Place BYEs evenly spaced in the bracket to avoid BYE vs BYE
+  for (let i = 0; i < need; i++) {
+    // Insert BYE at every other slot near the end
+    filled.splice(filled.length - (i * 2 + 1), 0, 'BYE');
+  }
+  return filled;
+}
+
+
+function layout(entries){
+  S.rounds=[]; const roundsCount=Math.log2(entries.length)|0;
+  let prev=[];
+  for(let i=0;i<entries.length;i++){
+    const left=0, top=i*(BH+RG);
+    prev.push(createBox(entries[i], left, top, false, false));
+  }
+  for(let r=0;r<roundsCount;r++){
+    const curr=[]; S.rounds[r]=[]; const isFinal=(r===roundsCount-1);
+    for(let m=0;m<prev.length/2;m++){
+      const A=prev[2*m], B=prev[2*m+1];
+      const yA=cy(parseFloat(A.style.top)), yB=cy(parseFloat(B.style.top)), midY=(yA+yB)/2;
+      const ax=parseFloat(A.style.left)+BW, bx=parseFloat(B.style.left)+BW, tx=(r+1)*(BW+CG);
+      const jx=(ax+tx)/2;
+      const hA=line(ax,yA,jx,yA); const vU=line(jx,yA,jx,midY);
+      const hB=line(bx,yB,jx,yB); const vL=line(jx,midY,jx,yB);
+      const hF=line(jx,midY,tx,midY);
+      const T=createBox('—',tx,midY-BH/2,false,isFinal);
+      curr.push(T);
+      const mo={A,B,T,lines:{hA,vU,hB,vL,hF},saved:false};
+
+      if(A.dataset.name==='BYE' && B.dataset.name!=='BYE'){ forwardWinner(mo,B.dataset.name,0,0,true); }
+      else if(B.dataset.name==='BYE' && A.dataset.name!=='BYE'){ forwardWinner(mo,A.dataset.name,0,0,true); }
+      else if(A.dataset.name==='BYE' && B.dataset.name==='BYE'){ /* skip completely */ }
+      else{ mo.card=createScoreCard(`${A.dataset.name} vs ${B.dataset.name}`,T,mo); }
+
+      S.rounds[r].push(mo);
+    }
+    prev=curr;
+  }
+}
+
+function createBox(name,left,top,isBye=false,isChamp=false){
+  const b=el('div','box'+(isChamp?' champ':''),{left:left+'px',top:top+'px',width:BW+'px',height:BH+'px'});
+  const seed=el('div','seed'); seed.textContent=isChamp?'🏆':(name==='BYE'?'—':'');
+  const nm=el('div','name'+(name==='BYE'?' bye':'')); nm.textContent=name;
+  b.dataset.name=name; b.append(seed,nm); 
+  board.appendChild(b); return b;
+}
+
+function line(x1,y1,x2,y2){
+  const L=document.createElementNS('http://www.w3.org/2000/svg','line');
+  L.setAttribute('x1',x1);L.setAttribute('y1',y1);L.setAttribute('x2',x2);L.setAttribute('y2',y2);
+  L.setAttribute('class','edge');svg.appendChild(L);return L;
+}
+
+function createScoreCard(label,T,mo){
+  const card=el('div','scorecard',{left:(parseFloat(T.style.left)+BW/2+16)+'px', top:T.style.top});
+  const lab=el('span','lab'); lab.textContent=label; lab.title=label; card.appendChild(lab);
+
+  if(S.meta.format==='bo3'){
+    const A1=inp(),B1=inp(),A2=inp(),B2=inp(),A3=inp(),B3=inp();
+    const save=btn('Save'); card.append(A1,B1,A2,B2,A3,B3,save); board.appendChild(card);
+    save.onclick=()=>{
+      const sets=[[A1,B1],[A2,B2],[A3,B3]];
+      let wSets=0,lSets=0,pf=0,pa=0;
+      for(const [ai,bi] of sets){
+        const a=val(ai), b=val(bi);
+        if(a===null&&b===null) continue;
+        if(a===b){alert('Set cannot be tied'); return;}
+        if(a===null||b===null){alert('Fill both scores'); return;}
+        pf+=a; pa+=b; if(a>b) wSets++; else lSets++;
+      }
+      if(wSets<2&&lSets<2){alert('Enter enough sets');return;}
+      const winner=(wSets>=2)?mo.A.dataset.name:mo.B.dataset.name;
+      forwardWinner(mo,winner,pf,pa,false);
+      disable([A1,B1,A2,B2,A3,B3,save]);
+    };
+  } else {
+    const A=inp(),B=inp(),save=btn('Save');
+    card.append(A,B,save); board.appendChild(card);
+    save.onclick=()=>{
+      const a=val(A), b=val(B);
+      if(a===null||b===null||a===b){alert('Enter valid non-tied scores');return;}
+      const winner=(a>b)?mo.A.dataset.name:mo.B.dataset.name;
+      forwardWinner(mo,winner,a,b,false);
+      disable([A,B,save]);
+    };
+  }
+  return card;
+
+  function inp(){const i=el('input'); i.type='number'; i.min='0'; i.step='1'; i.inputMode='numeric'; return i;}
+  function btn(t){const b=el('button','btn'); b.textContent=t; return b;}
+  function val(i){const v=i.value.trim(); if(v==='') return null; const n=parseInt(v,10); return Number.isNaN(n)?null:n;}
+  function disable(arr){arr.forEach(x=>x.disabled=true); mo.saved=true;}
+}
+
+function forwardWinner(mo,winner,sa,sb,isBye,restoring=false){
+  const loser = winner===mo.A.dataset.name ? mo.B.dataset.name : mo.A.dataset.name;
+
+  // forward name
+  mo.T.dataset.name=winner; mo.T.querySelector('.name').textContent=winner;
+
+  // colour path
+  const {hA,vU,hB,vL,hF}=mo.lines;
+  if(winner===mo.A.dataset.name){
+    hA.classList.add('win'); vU.classList.add('win');
+    hB.classList.add('loss'); vL.classList.add('loss');
+    hF.classList.add('win');
+    mo.A.classList.add('win'); if(mo.B.dataset.name!=='BYE') mo.B.classList.add('loss');
+  }else{
+    hB.classList.add('win'); vL.classList.add('win');
+    hA.classList.add('loss'); vU.classList.add('loss');
+    hF.classList.add('win');
+    mo.B.classList.add('win'); if(mo.A.dataset.name!=='BYE') mo.A.classList.add('loss');
+  }
+
+  // stats
+  if(!restoring){
+    if(!isBye && winner!=='BYE' && loser!=='BYE'){
+      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
+      const L=S.stats.get(loser)||{P:0,W:0,L:0,PF:0,PA:0};
+      W.P++;W.W++;W.PF+=Math.max(sa,sb);W.PA+=Math.min(sa,sb);
+      L.P++;L.L++;L.PF+=Math.min(sa,sb);L.PA+=Math.max(sa,sb);
+      S.stats.set(winner,W); S.stats.set(loser,L);
+    } else if(isBye && winner!=='BYE'){
+      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
+      S.stats.set(winner,W);
+    }
+    renderStats();
+  }
+
+  // update downstream labels
+  for(const rnd of S.rounds){
+    for(const node of rnd){
+      if(node.card&&(node.A===mo.T||node.B===mo.T)){
+        const text=`${node.A.dataset.name} vs ${node.B.dataset.name}`;
+        node.card.querySelector('.lab').textContent=text;
+        node.card.querySelector('.lab').title=text;
+      }
+    }
+  }
+
+  // champion?
+  let usedLater=false;
+  for(const rnd of S.rounds){
+    for(const node of rnd){
+      if(node!==mo&&(node.A===mo.T||node.B===mo.T)){usedLater=true;break;}
+    }
+    if(usedLater) break;
+  }
+  if(!usedLater){sprinkleConfetti(mo.T); mo.T.classList.add('champ');}
+}
+
+function renderStats(){
+  statsBody.innerHTML='';
+  const sorted=[...S.stats.entries()]
+    .sort((a,b)=>(b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
+  sorted.forEach(([name,s],i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${i+1}</td><td>${esc(name)}</td><td>${s.P}</td><td class="win">${s.W}</td><td class="loss">${s.L}</td><td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
+    statsBody.appendChild(tr);
+  });
+}
+
+function resizeSVG(){
+  const boxes=[...board.querySelectorAll('.box')];
+  if(!boxes.length){svg.setAttribute('width',1200);svg.setAttribute('height',800);return;}
+  let maxX=0,maxY=0;
+  boxes.forEach(b=>{
+    const x=parseFloat(b.style.left)+BW, y=parseFloat(b.style.top)+BH;
+    if(x>maxX) maxX=x; if(y>maxY) maxY=y;
+  });
+  svg.setAttribute('width',Math.max(800,maxX+80));
+  svg.setAttribute('height',Math.max(600,maxY+80));
+}
+
+function sprinkleConfetti(box){
+  const rect=box.getBoundingClientRect(), off=board.getBoundingClientRect();
+  const x=rect.left-off.left+rect.width/2, y=rect.top-off.top+rect.height/2;
+  for(let i=0;i<25;i++){
+    const c=el('div','confetti',{
+      left:(x+(Math.random()*40-20))+'px',
+      top:y+'px',
+      background:`hsl(${Math.random()*360},100%,50%)`,
+      animationDuration:(1+Math.random()*2)+'s'
+    });
+    board.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
+}
+
+// Export / Import
+exportBtn.onclick = () => {
+  const rounds = S.rounds.map(rnd =>
+    rnd.map(mo => ({
+      A: mo.A?.dataset.name,
+      B: mo.B?.dataset.name,
+      T: mo.T?.dataset.name,
+      winner: mo.T?.dataset.name,
+      saved: mo.saved || false,
+      scores: mo.card
+        ? [...mo.card.querySelectorAll("input")].map(i => i.value)
+        : null
+    }))
+  );
+
+  const data = JSON.stringify({
+    players: S.players,
+    entries: S.entries,
+    meta: S.meta,
+    stats: [...S.stats],   // save as array of [name, obj]
+    rounds: rounds
+  }, null, 2);
+
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${S.meta.name || "tournament"}.json`;
+  a.click();
+};
+
+importBtn.onclick=()=>importFile.click();
+importFile.onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+
+      S.players = Array.isArray(o.players) ? o.players : [];
+      S.entries = Array.isArray(o.entries) ? o.entries : [];
+      S.meta = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
+      S.stats = new Map(o.stats || []);
+
+      // restore UI
+      tName.value = S.meta.name || "";
+      tDate.value = S.meta.date || "";
+      modeSel.value = S.meta.mode || "singles";
+      formatSel.value = S.meta.format || "single";
+      updateCount();
+      renderStats();
+
+      // rebuild layout
+      if (S.entries.length >= 2) {
+        board.innerHTML = '<svg id="lines"></svg>';
+        svg = q("lines");
+        layout(S.entries);
+
+        if (o.rounds) {
+          S.rounds.forEach((rnd, i) => {
+            rnd.forEach((mo, j) => {
+              const saved = o.rounds[i]?.[j];
+              if (saved) {
+                if (saved.winner && saved.winner !== "BYE") {
+                  forwardWinner(mo, saved.winner, 0, 0, true, true);
+                  mo.saved = saved.saved;
+                }
+                // restore scores if available
+                if (saved.scores && mo.card) {
+                  const inputs = mo.card.querySelectorAll("input");
+                  saved.scores.forEach((val, idx) => {
+                    if (inputs[idx]) inputs[idx].value = val;
+                  });
+                  if (saved.saved) {
+                    inputs.forEach(inp => inp.disabled = true);
+                    const btn = mo.card.querySelector("button");
+                    if (btn) btn.disabled = true;
+                  }
+                }
+              }
+            });
+          });
+        }
+        resizeSVG();
+        renderStats();
+      } else {
+        alert("Imported file has no players/entries");
+      }
+    } catch (err) {
+      alert("Bad file");
+    }
+  };
+  r.readAsText(f);
+};
+
+
+})();
+      
+    </script>
+  </section>
+
+  <script>
+    // Toggle logic
+    document.querySelectorAll('.tournament-toggle button').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.tournament-toggle button').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('roundRobinSection').style.display =
+          btn.dataset.target==="roundRobinSection" ? "block" : "none";
+        document.getElementById('bracketSection').style.display =
+          btn.dataset.target==="bracketSection" ? "block" : "none";
+      });
+    });
+  </script>
+
+</body>
+</html>

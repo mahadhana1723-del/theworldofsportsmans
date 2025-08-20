@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8">
+    
+    <title>Badminton Manager Pro | Advanced Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+
+    <style>
+         :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --accent: #ff006e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #06d6a0;
+            --warning: #ffbe0b;
+            --danger: #ef476f;
+            --text: #2b2d42;
+            --text-light: #8d99ae;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Floating Central Navigation */
+        .central-nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 50px;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+        .Dashboard {
+            color: rgba(255, 255, 255, 0.8) ;
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            align-items: center;
+            display: flex;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        .Dashboard:hover {
+            color:white;
+            background:  rgba(255, 255, 255, 0.15) ;
+        }
+
+        .player {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+        }
+        .player:hover{
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+
+        }
+        .player.activ{
+             color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.4);
+            
+        }
+        .Tournaments {
+             color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            align-items: center;
+            display: flex;
+            font-weight: 500;
+            font-size: 0.9rem;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3 ease;
+        }
+        .Tournaments:hover{
+             color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .Attendance {
+             color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            align-items: center;
+            display: flex;
+            font-weight: 500;
+            font-size: 0.9rem;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3 ease;
+        }
+        .Attendance:hover {
+           color: white;
+            background: rgba(255, 255, 255, 0.15); 
+        }
+        .Statistics {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            align-items: center;
+            display: flex;
+            font-weight: 500;
+            font-size: 0.9rem;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3 ease;
+        }
+        .Statistics:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .Settings {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.8rem 1.5rem;
+            align-items: center;
+            display: flex;
+            font-weight: 500;
+            font-size: 0.9rem;
+            gap: 8px;
+            border-radius: 50px;
+            transition: all 0.3 ease;
+        }
+        .Settings:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        
+        .nav-link.active {
+            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.4);
+        }
+
+        .nav-icon {
+            font-size: 1rem;
+        }
+
+        /* Main Dashboard */
+        .dashboard {
+            padding: 100px 2rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 5px 15px rgba(58, 134, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(58, 134, 255, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(58, 134, 255, 0.1) 0%, transparent 70%);
+        }
+
+        .stat-title {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, white, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Recent Tournaments */
+        .tournaments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .tournament-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .tournament-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .tournament-header {
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            padding: 1rem;
+            color: white;
+        }
+
+        .tournament-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            z-index: 1;
+        }
+
+        .tournament-date {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .tournament-body {
+            padding: 1.5rem;
+        }
+
+        .tournament-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .tournament-stat {
+            text-align: center;
+        }
+
+        .tournament-stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .tournament-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .tournament-progress {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            width: 65%;
+        }
+
+        .tournament-actions {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .tournament-btn {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tournament-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tournament-btn.primary:hover {
+            background: #2a75e6;
+        }
+
+        .tournament-btn.outline {
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .tournament-btn.outline:hover {
+            background: rgba(58, 134, 255, 0.1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .central-nav {
+                top: 10px;
+                padding: 0.3rem;
+            }
+            
+            .nav-link {
+                padding: 0.7rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .nav-icon {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .dashboard-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .central-nav {
+                width: 95%;
+                overflow-x: auto;
+                padding: 0.5rem;
+                justify-content: flex-start;
+                scrollbar-width: none;
+            }
+            
+            .central-nav::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard {
+                padding: 80px 1rem 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tournaments-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Central Floating Navigation -->
+  
+
+    <!-- Main Dashboard Content -->
+    <div class="dashboard">
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">Dashboard Overview</h1>
+            <div class="dashboard-actions">
+                <button class="btn btn-outline"><i class="fas fa-download"></i> Export</button>
+                <button class="btn btn-primary"><i class="fas fa-plus"></i> New Tournament</button>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title"><i class="fas fa-users"></i> Total Players</div>
+                <div class="stat-value">156</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 8% from last month</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title"><i class="fas fa-trophy"></i> Active Tournaments</div>
+                <div class="stat-value">5</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 1 new this week</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title"><i class="fas fa-clipboard-check"></i> Average Attendance</div>
+                <div class="stat-value">87%</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 5% from last month</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-title"><i class="fas fa-chart-line"></i> Matches Played</div>
+                <div class="stat-value">189</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up"></i> 22% from last month</div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="activity-feed">
+            <h2 class="section-title"><i class="fas fa-history"></i> Recent Activity</h2>
+            <ul class="activity-list">
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">3 new players registered for Summer Championship</div>
+                        <div class="activity-time"><i class="far fa-clock"></i> Today, 9:30 AM</div>
+                    </div>
+                </li>
+                
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Spring Tournament Start </div>
+                        <div class="activity-time"><i class="far fa-clock"></i> Yesterday, 4:15 PM</div>
+                    </div>
+                </li>
+                
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">Attendance record broken - 0% participation</div>
+                        <div class="activity-time"><i class="far fa-clock"></i> Few days ago</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Upcoming Tournaments -->
+        <h2 class="section-title"><i class="fas fa-calendar-check"></i> Upcoming Tournaments</h2>
+        <div class="tournaments-grid">
+            <div class="tournament-card">
+                <div class="tournament-header">
+                    <h3 class="tournament-title">Camp Start</h3>
+                    <div class="tournament-date">Soon</div>
+                </div>
+                <div class="tournament-body">
+                    <div class="tournament-info">
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">0</div>
+                            <div class="tournament-stat-label">Players</div>
+                        </div>
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">4</div>
+                            <div class="tournament-stat-label">Courts</div>
+                        </div>
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">0</div>
+                            <div class="tournament-stat-label">Matches</div>
+                        </div>
+                    </div>
+                    <div class="tournament-progress">
+                        <div class="progress-label">
+                            <span>Registration Progress</span>
+                            <span>0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <div class="tournament-btn primary">Manage</div>
+                        <div class="tournament-btn outline">Details</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tournament-card">
+                <div class="tournament-header">
+                    <h3 class="tournament-title">Open Starts</h3>
+                    <div class="tournament-date">Soon</div>
+                </div>
+                <div class="tournament-body">
+                    <div class="tournament-info">
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">0</div>
+                            <div class="tournament-stat-label">Players</div>
+                        </div>
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">3</div>
+                            <div class="tournament-stat-label">Courts</div>
+                        </div>
+                        <div class="tournament-stat">
+                            <div class="tournament-stat-value">42</div>
+                            <div class="tournament-stat-label">Matches</div>
+                        </div>
+                    </div>
+                    <div class="tournament-progress">
+                        <div class="progress-label">
+                            <span>Registration Progress</span>
+                            <span>90%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    <div class="tournament-actions">
+                        <div class="tournament-btn primary">Manage</div>
+                        <div class="tournament-btn outline">Details</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation active state
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Animate stats on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const stats = document.querySelectorAll('.stat-value');
+            stats.forEach(stat => {
+                const target = parseInt(stat.textContent);
+                let current = 0;
+                stat.textContent = '0';
+                
+                const interval = setInterval(() => {
+                    current += Math.ceil(target / 30);
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(interval);
+                    }
+                    stat.textContent = current;
+                }, 50);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>🏸 Player Manager</title>
+<style>
+  body { margin:0; font-family:system-ui,Arial; background:#0c0f13; color:#f2f5f9; }
+  header { padding:14px; background:#131826; position:sticky; top:0; z-index:5; }
+  h1 { margin:0; font-size:20px; }
+  .form { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:10px; }
+  input,textarea { padding:6px; border-radius:8px; border:1px solid #1f2738; background:#0e1320; color:#fff; }
+  textarea { min-width:200px; min-height:60px; }
+  .btn { padding:6px 12px; border-radius:8px; border:none; cursor:pointer; background:#2a82ff; color:#fff; }
+  main { padding:16px; }
+  table { width:100%; border-collapse:collapse; }
+  th,td { padding:8px; border-bottom:1px solid #2a2f40; text-align:left; }
+  tr:hover { background:#1c2335; cursor:pointer; }
+  /* Popup */
+  #profilePopup { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.65); z-index:1000; }
+  .profile-card { background:#131826; border-radius:16px; padding:20px; width:360px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.5); text-align:center; animation: pop 0.3s ease-out; }
+  .profile-card img { width:140px; height:140px; border-radius:50%; object-fit:cover;
+    border:4px solid #2a82ff; margin-bottom:10px; }
+  .profile-card h2 { margin:10px 0 4px; }
+  .profile-card small { color:#aaa; }
+  .stats { margin-top:10px; text-align:left; }
+  .stats table { width:100%; }
+  .stats th, .stats td { padding:4px; font-size:13px; }
+  #closePopup { margin-top:14px; background:#ef4444; width:100%; }
+  @keyframes pop { from{ transform:scale(0.8); opacity:0; } to{ transform:scale(1); opacity:1; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏸 Player Manager</h1>
+  <div class="form">
+    <input id="pId" placeholder="Player ID">
+    <input id="pAadhar" placeholder="Aadhaar No.">
+    <input id="pName" placeholder="Name">
+    <input id="pAge" placeholder="Age" type="number">
+    <input id="pCountry" placeholder="Country">
+    <input id="pPhoto" type="file" accept="image/*">
+    <textarea id="pBio" placeholder="Short Bio"></textarea>
+    <input id="pVideo" placeholder="Video URL">
+    <button class="btn" id="addBtn">＋ Add Player</button>
+    <button class="btn" id="saveEditBtn" style="display:none">💾 Save Edit</button>
+    <input id="fileName" placeholder="File name (without .json)">
+    <button class="btn" id="exportBtn">Export Players</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <button class="btn" id="importBtn">Import</button>
+    <button class="btn" id="exportAttendanceBtn">Export Attendance</button>
+  </div>
+  <input id="searchBar" placeholder="🔍 Search players..." style="margin-top:10px; width:100%; padding:8px; border-radius:8px; border:1px solid #1f2738; background:#0e1320; color:#fff;">
+</header>
+
+<main>
+  <table id="playerTable">
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Country</th><th>Age</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>✏️</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<!-- Profile Popup -->
+<div id="profilePopup">
+  <div class="profile-card">
+    <img id="profilePhoto" src="">
+    <h2 id="profileName"></h2>
+    <small id="profileMeta"></small>
+    <p id="profileBio"></p>
+    <div class="stats">
+      <h3>Stats</h3>
+      <table>
+        <tr><th>Matches</th><td id="profileMatches"></td></tr>
+        <tr><th>Wins</th><td id="profileWins"></td></tr>
+        <tr><th>Losses</th><td id="profileLosses"></td></tr>
+        <tr><th>Points For</th><td id="profilePF"></td></tr>
+        <tr><th>Points Against</th><td id="profilePA"></td></tr>
+      </table>
+    </div>
+    <div id="profileVideo"></div>
+    <button class="btn" id="markPresent">✔ Mark Present</button>
+    <button class="btn" id="markAbsent" style="background:#f59e0b">✖ Mark Absent</button>
+    <button class="btn" id="closePopup">Close</button>
+  </div>
+</div>
+
+<script>
+const S={players:[]};
+let editIndex=null;
+const tableBody=document.querySelector("#playerTable tbody");
+const popup=document.getElementById("profilePopup");
+
+function renderPlayers(filter=""){
+  tableBody.innerHTML="";
+  S.players
+     .filter(p => p && p.name && p.name.toLowerCase().includes(filter.toLowerCase()))
+    .forEach((p,idx)=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${p.id||"-"}</td>
+        <td style="color:#49a8ff; text-decoration:underline">${p.name}</td>
+        <td>${p.country||""}</td>
+        <td>${p.age||""}</td>
+        <td>${p.stats?.matchesPlayed||0}</td>
+        <td>${p.stats?.wins||0}</td>
+        <td>${p.stats?.losses||0}</td>
+        <td>${p.stats?.pointsFor||0}</td>
+        <td>${p.stats?.pointsAgainst||0}</td>
+        <td><button class="btn" style="padding:2px 6px;font-size:12px">✏️</button></td>
+      `;
+      tr.querySelector("td:nth-child(2)").onclick=()=>showProfile(p,idx);
+      tr.querySelector("button").onclick=(e)=>{ e.stopPropagation(); loadEdit(idx); };
+      tableBody.appendChild(tr);
+    });
+}
+
+
+function showProfile(p,index){
+  document.getElementById("profilePhoto").src = p.photo || "";
+  document.getElementById("profileName").textContent = p.name;
+  document.getElementById("profileMeta").textContent =
+    `ID: ${p.id||"-"} | Aadhaar: ${p.aadhar||"-"} | Age: ${p.age||"-"} | ${p.country||"-"}`;
+  document.getElementById("profileBio").textContent = p.bio || "";
+  document.getElementById("profileMatches").textContent = p.stats?.matchesPlayed||0;
+  document.getElementById("profileWins").textContent = p.stats?.wins||0;
+  document.getElementById("profileLosses").textContent = p.stats?.losses||0;
+  document.getElementById("profilePF").textContent = p.stats?.pointsFor||0;
+  document.getElementById("profilePA").textContent = p.stats?.pointsAgainst||0;
+  document.getElementById("profileVideo").innerHTML =
+    p.videos && p.videos.length ? `<p><a href="${p.videos[0]}" target="_blank">🎥 Watch Video</a></p>` : "";
+  popup.style.display="flex";
+
+  document.getElementById("markPresent").onclick=()=>markAttendance(index,"Present");
+  document.getElementById("markAbsent").onclick=()=>markAttendance(index,"Absent");
+}
+document.getElementById("closePopup").onclick=()=>popup.style.display="none";
+
+function markAttendance(index,status){
+  const today=new Date().toISOString().slice(0,10);
+  if(!S.players[index].attendance) S.players[index].attendance=[];
+  S.players[index].attendance.push({date:today,status});
+  alert(`${S.players[index].name} marked ${status} (${today})`);
+}
+
+// Add Player
+document.getElementById("addBtn").onclick=()=>{
+  const p=getFormValues();
+  if(!p.name) return;
+  S.players.push(p);
+  clearForm();
+  renderPlayers();
+};
+
+// Save Edit
+document.getElementById("saveEditBtn").onclick=()=>{
+  if(editIndex===null) return;
+  const updated=getFormValues(S.players[editIndex].photo);
+  S.players[editIndex]=updated;
+  clearForm();
+  editIndex=null;
+  document.getElementById("addBtn").style.display="inline-block";
+  document.getElementById("saveEditBtn").style.display="none";
+  renderPlayers();
+};
+
+function loadEdit(idx){
+  editIndex=idx;
+  const p=S.players[idx];
+  document.getElementById("pId").value=p.id||"";
+  document.getElementById("pAadhar").value=p.aadhar||"";
+  document.getElementById("pName").value=p.name||"";
+  document.getElementById("pAge").value=p.age||"";
+  document.getElementById("pCountry").value=p.country||"";
+  document.getElementById("pBio").value=p.bio||"";
+  document.getElementById("pVideo").value=p.videos?.[0]||"";
+  document.getElementById("addBtn").style.display="none";
+  document.getElementById("saveEditBtn").style.display="inline-block";
+}
+
+function getFormValues(oldPhoto=""){
+  const id=document.getElementById("pId").value.trim();
+  const aadhar=document.getElementById("pAadhar").value.trim();
+  const name=document.getElementById("pName").value.trim();
+  const age=document.getElementById("pAge").value.trim();
+  const country=document.getElementById("pCountry").value.trim();
+  const bio=document.getElementById("pBio").value.trim();
+  const video=document.getElementById("pVideo").value.trim();
+  const file=document.getElementById("pPhoto").files[0];
+
+  const base={
+    id,aadhar,name,age,country,bio,
+    photo:oldPhoto,videos:video?[video]:[],
+    stats:{matchesPlayed:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0},
+    attendance:[]
+  };
+
+  if(file){
+    const reader=new FileReader();
+    reader.onload=e=>{ base.photo=e.target.result; };
+    reader.readAsDataURL(file);
+  }
+  return base;
+}
+function clearForm(){ ["pId","pAadhar","pName","pAge","pCountry","pBio","pVideo","pPhoto"].forEach(id=>document.getElementById(id).value=""); }
+
+// Export Players
+document.getElementById("exportBtn").onclick=()=>{
+  const fname=document.getElementById("fileName").value.trim() || "players";
+  const data=JSON.stringify({players:S.players},null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${fname}.json`;
+  a.click();
+};
+// Export Attendance
+document.getElementById("exportAttendanceBtn").onclick=()=>{
+  const fname="attendance";
+  const attendance=S.players.map(p=>({name:p.name,attendance:p.attendance||[]}));
+  const data=JSON.stringify({attendance},null,2);
+  const blob=new Blob([data],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${fname}.json`;
+  a.click();
+};
+
+// Import
+const importFile=document.getElementById("importFile");
+document.getElementById("importBtn").onclick=()=>importFile.click();
+importFile.onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+
+      // ask user what type of file
+      const fileType = prompt("What type of file is this? (players / attendance / knockout / roundrobin)", "players");
+
+      if (fileType === "players") {
+        if (Array.isArray(o.players)) {
+          S.players = o.players;
+        } else if (Array.isArray(o)) {
+          S.players = o;
+        } else {
+          alert("❌ Not a valid players file");
+          return;
+        }
+
+        // normalize
+        S.players = S.players.map(p => ({
+          id: p.id || Date.now(),
+          name: p.name || "Unnamed",
+          country: p.country || "",
+          age: p.age || "",
+          bio: p.bio || "",
+          photo: p.photo || "",
+          videos: p.videos || [],
+          stats: p.stats || { matchesPlayed: 0, wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 },
+          attendance: p.attendance || []
+        }));
+
+        renderPlayers();
+
+      } else if (fileType === "attendance") {
+        if (o.attendance) {
+          o.attendance.forEach(att => {
+            const p = S.players.find(x => x.name === att.name);
+            if (p) p.attendance = att.attendance;
+          });
+          renderPlayers();
+        } else {
+          alert("❌ Not a valid attendance file");
+        }
+
+      } else if (fileType === "knockout") {
+        alert("⚠ Knockout file detected. Please open it in the Knockout page (brackets).");
+
+      } else if (fileType === "roundrobin") {
+        alert("⚠ Round Robin file detected. Please open it in the Round Robin page.");
+
+      } else {
+        alert("❌ Unknown file type.");
+      }
+
+    } catch (err) {
+      alert("Bad file: " + err.message);
+    }
+  };
+  r.readAsText(f);
+};
+
+
+// Search
+document.getElementById("searchBar").oninput=(e)=>{ renderPlayers(e.target.value); };
+</script>
+</body>
+</html>
