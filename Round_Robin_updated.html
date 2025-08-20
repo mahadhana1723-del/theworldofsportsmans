@@ -59,12 +59,45 @@
   .champ { border:2px solid gold !important; }
 }
 
+#playerSidebar {
+  position: fixed;
+  top: 15%;
+  left: 0;
+  height: 70%;
+  width: 240px;
+  background: var(--panel);
+  border-radius: 0 12px 12px 0;
+  overflow-y: auto;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 150;
+}
+#playerSidebar.active { transform: translateX(0); }
+#playerSidebar .header {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+#playerSidebar h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text);
+}
+
 </style>
 </head>
 <body>
 <header>
   <h1 id="title">🏸 Badminton Round Robin</h1>
   <div class="controls">
+    <button class="btn" id="togglePlayersBtn">👥 Players</button>
+
     <select id="mode">
       <option value="singles">Singles</option>
       <option value="doubles">Doubles</option>
@@ -106,6 +139,18 @@
     </table>
   </aside>
 </main>
+<!-- Slide-in Player Sidebar -->
+<aside id="playerSidebar">
+  <div class="header">
+    <h3 style="margin:0;font-size:16px;">Players</h3>
+    <button id="closeSidebarBtn"
+      style="background:none;border:0;font-size:20px;cursor:pointer;color:var(--text);">
+      ×
+    </button>
+  </div>
+  <div id="playerList"></div>
+</aside>
+
 
 <script>
 (function(){
@@ -120,13 +165,129 @@
   const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
   const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
 
-  function updateCount(){count.textContent=`${S.players.length} players`;}
+  const togglePlayersBtn = document.getElementById('togglePlayersBtn');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+const playerSidebar = document.getElementById('playerSidebar');
+const playerList = document.getElementById('playerList');
+
+// Toggle sidebar
+togglePlayersBtn.onclick = () => {
+  playerSidebar.classList.add('active');
+};
+closeSidebarBtn.onclick = () => {
+  playerSidebar.classList.remove('active');
+};
+
+// Populate player list dynamically
+function renderPlayersSidebar() {
+  playerList.innerHTML = '';
+  (S.players || []).forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'player-card';
+    div.innerHTML = `
+      <img src="${p.photo || 'https://via.placeholder.com/40'}" 
+           style="width:30px;height:30px;border-radius:50%;margin-right:8px;">
+      <span>${p.name}</span>
+    `;
+    div.onclick = () => showPlayerDetails(i);
+    playerList.appendChild(div);
+  });
+}
+
+
+function showPlayerDetails(idx) {
+  const p = S.players[idx];
+  const modal     = document.getElementById('playerModal');
+  const photoEl   = document.getElementById('modalPhoto');
+  const nameEl    = document.getElementById('modalName');
+  const fileInput = document.getElementById('photoInput');
+  const saveBtn   = document.getElementById('savePlayerBtn');
+
+  if (!modal) {
+    alert(`${p.name}\n(Edit coming soon)`);
+    return;
+  }
+
+  // populate
+  photoEl.src = p.photo || 'https://via.placeholder.com/100';
+  nameEl.value = p.name;
+  fileInput.value = '';
+  modal.classList.add('open');
+
+  // save handler
+  saveBtn.onclick = () => {
+    const newName = nameEl.value.trim() || p.name;
+
+    // rename across matches + stats if name changed
+    if (newName !== p.name) renameParticipant(p.name, newName);
+    p.name = newName;
+
+    if (fileInput.files && fileInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        p.photo = e.target.result; // Base64
+        finish();
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else {
+      finish();
+    }
+
+    function finish() {
+      S.players[idx] = p;
+      renderPlayersSidebar();
+      renderMatches();
+      renderStats();
+      updateCount();
+      modal.classList.remove('open');
+    }
+  };
+}
+
+
+function renameParticipant(oldName, newName){
+  // update matches
+  S.matches.forEach(m => {
+    if (m.A === oldName) m.A = newName;
+    if (m.B === oldName) m.B = newName;
+  });
+  // update stats map key
+  if (S.stats.has(oldName)) {
+    const v = S.stats.get(oldName);
+    S.stats.delete(oldName);
+    S.stats.set(newName, v);
+  }
+}
+
+
+
+// Removed stray closing brace here
+
+function updateCount(){count.textContent=`${S.players.length} players`;}
   function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
-  addBtn.onclick=()=>{const v=playerName.value.trim();if(!v) return;S.players.push(v);playerName.value='';updateCount();};
+addBtn.onclick=()=>{
+  const v = playerName.value.trim();
+  if(!v) return;
+  S.players.push({ name: v, photo: null });
+  playerName.value = '';
+  updateCount();
+  renderPlayersSidebar();
+};
   playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-  bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push(n));bulk.value='';updateCount();};
-  clearBtn.onclick=()=>{S.players=[];updateCount();};
+bulkBtn.onclick=()=>{
+  bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>{
+    S.players.push({ name: n, photo: null });
+  });
+  bulk.value='';
+  updateCount();
+  renderPlayersSidebar();
+};
+clearBtn.onclick=()=>{
+  S.players=[];
+  updateCount();
+  renderPlayersSidebar();
+};
 
   buildBtn.onclick=()=>build();
   resetBtn.onclick=()=>{S.players=[];S.matches=[];S.stats.clear();matchesDiv.innerHTML='';statsBody.innerHTML='';updateCount();};
@@ -139,23 +300,21 @@
   S.meta.format=formatSel.value;
   title.textContent=`🏸 ${S.meta.name} (${S.meta.date})`;
 
-  let entries=[...S.players];
+  let entries = (S.players || []).map(p => typeof p === 'string' ? p : p.name);
   if(shuffle.checked) shuffleArr(entries);
 
   // Handle doubles logic
   if(S.meta.mode==="auto_doubles"){
-    let teams=[];
+    const teams=[];
     for(let i=0;i<entries.length;i+=2){
-      if(i+1<entries.length){
-        teams.push(entries[i]+" & "+entries[i+1]);
-      }else{
-        // odd player out (bye)
-        teams.push(entries[i]+" (bye)");
+       if (i + 1 < entries.length) {
+        teams.push(`${entries[i]} & ${entries[i+1]}`);
+      } else {
+        teams.push(`${entries[i]} (bye)`);
       }
     }
-    entries=teams;
-  }
-  else if(S.meta.mode==="doubles"){
+    entries = teams;
+  } else if (S.meta.mode === "doubles") {
     // Expect user to already enter teams manually (as names)
     // so we don’t regroup here
   }
@@ -179,6 +338,7 @@
 
   renderMatches();
   renderStats();
+   renderPlayersSidebar();
 }
 
 
@@ -261,25 +421,76 @@
 
 
 
-  importBtn.onclick=()=>importFile.click();
-  importFile.onchange=e=>{
-    const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=ev=>{
-      try{
-        const o=JSON.parse(ev.target.result);
-        S.players=o.players||[];
-        S.matches=o.matches||[];
-        S.meta=o.meta||{};
-        S.stats=new Map(o.stats||[]);
-        updateCount();
-        renderMatches(); renderStats();
-      }catch(err){alert('Bad file');}
-    };
-    r.readAsText(f);
+ importBtn.onclick = () => importFile.click();
+importFile.onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const o = JSON.parse(ev.target.result);
+
+      // players: normalize to objects with {name, photo}
+      S.players = Array.isArray(o.players)
+        ? o.players.map(p => typeof p === "string" ? { name: p, photo: null } : p)
+        : [];
+
+      // ✅ restore matches
+      S.matches = Array.isArray(o.matches) ? o.matches : [];
+
+      // meta + stats
+      S.meta  = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
+      S.stats = new Map(o.stats || []);
+
+      // restore UI fields
+      tName.value       = S.meta.name || "";
+      tDate.value       = S.meta.date || "";
+      modeSel.value     = S.meta.mode || "singles";
+      formatSel.value   = S.meta.format || "single";
+      title.textContent = `🏸 ${S.meta.name || 'Badminton Round Robin'} (${S.meta.date || ''})`;
+
+      updateCount();
+      renderMatches();
+      renderStats();
+      renderPlayersSidebar();
+
+    } catch (err) {
+      alert('Bad file');
+    }
   };
+  r.readAsText(f);
+};
+
 
 })();
 </script>
+
+<style>
+  /* minimal modal */
+  #playerModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 200; }
+  #playerModal.open { display: flex; }
+  #playerModal .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
+  #playerModal .card { position: relative; background: var(--panel); border-radius: 14px; padding: 16px; width: 320px; }
+  #playerModal .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  #playerModal img { width: 96px; height: 96px; border-radius: 12px; object-fit: cover; }
+  #playerModal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+</style>
+
+<div id="playerModal">
+  <div class="overlay" onclick="document.getElementById('playerModal').classList.remove('open')"></div>
+  <div class="card">
+    <div class="row">
+      <img id="modalPhoto" src="https://via.placeholder.com/100" alt="">
+      <div>
+        <input id="modalName" placeholder="Player name" style="width: 190px">
+        <input id="photoInput" type="file" accept="image/*">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="document.getElementById('playerModal').classList.remove('open')">Close</button>
+      <button class="btn primary" id="savePlayerBtn">Save</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
