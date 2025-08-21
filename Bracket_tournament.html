@@ -304,17 +304,55 @@
   z-index: 10;
 }
 
+/* Menu button hidden on desktop */
+#menuToggle {
+  display: none;
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Mobile mode */
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .controls {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+  }
+  .controls.open {
+    display: flex;
+  }
+  #menuToggle {
+    display: block;
+  }
+}
+
+
+
 
 </style>
 </head>
 <body>
 <header>
   <h1 id="title">🏸 Badminton Knockout</h1>
+  
+  <!-- Menu button for mobile -->
+  <button class="btn" id="menuToggle">☰ Menu</button>
 
-  <div class="controls">
+  <!-- All your existing buttons, inputs, selects go here -->
+  <div class="controls" id="controlsPanel">
     <button class="btn" id="togglePlayersBtn">👥 Players</button>
-
-    <select id="mode" title="Singles / Doubles / Auto Doubles">
+       <select id="mode" title="Singles / Doubles / Auto Doubles">
       <option value="singles">Singles</option>
       <option value="doubles">Doubles</option>
       <option value="auto_doubles">Auto Doubles</option>
@@ -324,31 +362,24 @@
       <option value="single">Single game</option>
       <option value="bo3">Best of 3</option>
     </select>
-
-    <input id="tName" placeholder="Tournament Name" style="width:190px">
-    <input id="tDate" type="date" style="width:155px">
-
-    <label><input type="checkbox" id="shuffle"> Randomize seeding</label>
-
-    <button class="btn primary" id="buildBtn">Generate Bracket</button>
-    <button class="btn" id="printBtn">Print Bracket</button>
+    <input id="tName" placeholder="Tournament Name">
+    <input id="tDate" type="date">
+    <label><input type="checkbox" id="shuffle"> Randomize</label>
+    <button class="btn primary" id="buildBtn">Generate</button>
     <button class="btn" id="resetBtn">Reset</button>
     <button class="btn" id="exportBtn">Export</button>
-    <input id="importFile" type="file" accept="application/json" style="display:none">
+    <input id="importFile" type="file" style="display:none">
     <button class="btn" id="importBtn">Import</button>
-
+    <button class="btn" id="printBtn">Print</button>
     <span class="legend" id="count">0 players</span>
-   
-
-
-    <!-- adding players placed LAST -->
-    <input id="playerName" placeholder="Add player or Team (A & B)">
+    <input id="playerName" placeholder="Add player/team">
     <button class="btn" id="addBtn">＋ Add</button>
-    <textarea id="bulk" placeholder="Paste names/teams (comma / new lines)"></textarea>
+    <textarea id="bulk" placeholder="Paste names list"></textarea>
     <button class="btn" id="bulkBtn">Add List</button>
     <button class="btn" id="clearBtn">Clear All</button>
   </div>
 </header>
+
 
 <main>
 
@@ -401,6 +432,11 @@ const bulk=q('bulk'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
 const count=q('count'), shuffle=q('shuffle');
 const buildBtn=q('buildBtn'), resetBtn=q('resetBtn'), printBtn=q('printBtn');
 const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+
+const menuToggle = document.getElementById('menuToggle');
+const controlsPanel = document.getElementById('controlsPanel');
+menuToggle.onclick = () => controlsPanel.classList.toggle('open');
+
 
 let currentPlayerIndex = -1;
 

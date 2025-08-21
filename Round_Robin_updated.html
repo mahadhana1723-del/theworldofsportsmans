@@ -127,12 +127,47 @@
   }
 }
 
+/* Menu button hidden on desktop */
+#menuToggle {
+  display: none;
+  margin-left: auto;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Mobile mode */
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .controls {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+  }
+  .controls.open {
+    display: flex;
+  }
+  #menuToggle {
+    display: block;
+  }
+}
+
+
 
 </style>
 </head>
 <body>
 <header>
   <h1 id="title">🏸 Badminton Round Robin</h1>
+  <button class="btn" id="menuToggle">☰ Menu</button>
   <div class="controls">
     <button class="btn" id="togglePlayersBtn">👥 Players</button>
 
@@ -206,10 +241,13 @@
   const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
   const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
 
- const togglePlayersBtn = q('togglePlayersBtn');
-const closeSidebarBtn = q('closeSidebarBtn');
-const playerSidebar = q('playerSidebar');
+
+
 const playerList = document.getElementById('playerList');
+const menuToggle = document.getElementById('menuToggle');
+const controlsPanel = document.getElementById('controlsPanel');
+menuToggle.onclick = () => controlsPanel.classList.toggle('open');
+
 
 // Toggle sidebar
 togglePlayersBtn.onclick = () => {
