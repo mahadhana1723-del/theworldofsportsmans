@@ -1,783 +1,864 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Unified Tournament Page</title>
-  <style>
-    :root {
-      --bg: #0f1724;
-      --card: #1a2235;
-      --accent: #3a86ff;
-      --muted: #9aa4b2;
-      --white: #fff;
-    }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--white);
-      font-family: Arial, sans-serif;
-    }
+<meta charset="UTF-8" />
+<title>Practice Round Robin — Multi‑Category</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    /* Toggle Bar */
-    .tournament-toggle {
-      display: flex;
-      justify-content: center;
-      background: #1a2235;
-      padding: 12px;
-      border-bottom: 2px solid var(--accent);
-    }
-    .tournament-toggle button {
-      margin: 0 8px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      background: #2b3650;
-      color: var(--muted);
-      transition: 0.3s;
-    }
-    .tournament-toggle button.active {
-      background: linear-gradient(90deg, var(--accent), #7b61ff);
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(58,134,255,0.5);
-    }
+<style>
+  :root{
+    --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
+    --accent:#49a8ff; --win:#22c55e; --loss:#ef4444; --neutral:#7b88a8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);}
+  header{
+    position:sticky; top:0; z-index:5; padding:12px 14px; border-bottom:1px solid #1a2233;
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:
+      radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
+      radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
+      linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
+    box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  }
+  h1{margin:0 6px 0 0; font-size:18px; letter-spacing:.2px}
+  .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  input,textarea,select{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#0e1320; color:var(--text)}
+  textarea{width:220px; height:60px}
+  .btn{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#132037; color:var(--text); cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8}
+  .legend{font-size:12px; color:var(--muted); margin-left:4px}
 
-    /* Sections */
-    section {
-      padding: 20px;
-    }
+  main{display:grid; grid-template-columns:1fr 320px; gap:14px; padding:14px}
+  .board{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:14px; overflow:auto}
 
-    /* Shared box/card styling */
-    .box, .card {
-      background: var(--card);
-      border-radius: 10px;
-      padding: 10px;
-      margin: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
-    h2 {
-      margin-top: 0;
-      color: var(--accent);
-    }
+  table.matches{width:100%; border-collapse:collapse; margin-top:8px}
+  table.matches th,table.matches td{border:1px solid #1f2738; padding:6px 8px; font-size:13px}
+  table.matches th{background:#0e1422; color:var(--muted)}
+  table.matches td input{width:56px;text-align:center}
 
-    /* Round Robin specific */
-    #rr-container table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--card);
-    }
-    #rr-container th, #rr-container td {
-      padding: 8px;
-      border: 1px solid rgba(255,255,255,0.1);
-      text-align: center;
-    }
+  aside{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto}
+  aside h3{margin:6px 6px 10px; font-size:16px}
+  table.stats{width:100%; border-collapse:separate; border-spacing:0 6px}
+  th,td{font-size:12px; padding:6px 8px; text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  th{background:#0e1422; color:var(--muted); position:sticky; top:0}
+  tr{background:#0e1320; border:1px solid #1f2633}
+  td.win{color:var(--win)} td.loss{color:var(--loss)}
 
-    /* Bracket specific */
-    #bracket-container {
-      position: relative;
-      overflow-x: auto;
+  .champ{border:2px solid gold; color:gold}
+
+  /* Player Sidebar (left slide-in) */
+  #playerSidebar {
+    position: fixed;
+    top: 15%;
+    left: 0;
+    height: 70%;
+    width: 260px;
+    background: var(--panel);
+    border-radius: 0 12px 12px 0;
+    overflow-y: auto;
+    box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 150;
+    padding:12px;
+  }
+  #playerSidebar.active { transform: translateX(0); }
+  #playerSidebar .header {
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+    padding: 8px 4px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    z-index: 10;
+  }
+  #playerSidebar h3 { margin: 0; font-size: 16px; color: var(--text); }
+
+  /* Player mini-cards in sidebar */
+  .player-card {
+    background: #141c2b;
+    border: 1px solid #1f2738;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .player-card:hover { background: #1b2538; transform: translateY(-2px); }
+  .player-card img {
+    width: 38px; height: 38px; border-radius: 50%;
+    object-fit: cover; border: 2px solid var(--accent);
+  }
+  .player-info { flex:1 }
+  .player-name { font-size: 14px; font-weight: 600 }
+  .player-meta { font-size: 12px; color: var(--muted) }
+  .player-del { background:#2b334a; color:#fff; border:0; border-radius:8px; padding:4px 8px; cursor:pointer }
+  .player-del:hover { background:#d32f2f }
+
+  /* Modal (edit player) */
+  #playerModal {
+    position: fixed; inset: 0; display: none;
+    align-items: center; justify-content: center; z-index: 200;
+  }
+  #playerModal.open { display: flex; }
+  #playerModal .overlay { position:absolute; inset:0; background:rgba(0,0,0,.6) }
+  #playerModal .modal-content {
+    position: relative;
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 18px;
+    width: 720px;
+    max-width: 92vw;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+    z-index: 210;
+  }
+  .modal-header {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+  }
+  .modal-header h2{margin:0; font-size:18px}
+  .modal-header .close{
+    background:none; border:0; color:var(--muted); cursor:pointer; font-size:22px; line-height:1
+  }
+  .modal-header .close:hover{ color:var(--accent) }
+
+  .player-editor{ display:grid; grid-template-columns: 180px 1fr; gap:16px }
+  .player-avatar{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    background:linear-gradient(145deg,#1a2233,#0f1625); border-radius:16px; padding:12px;
+    box-shadow: inset 0 0 10px rgba(73,168,255,0.15);
+  }
+  .player-avatar img{
+    width:140px; height:140px; border-radius:50%; object-fit:cover; border:3px solid var(--accent);
+    box-shadow:0 0 10px rgba(73,168,255,0.3);
+  }
+  .player-form{
+    display:grid; grid-template-columns: repeat(12, 1fr); gap:10px;
+    background:#121a2b; border:1px solid #1f2738; border-radius:12px; padding:12px;
+  }
+  .f{display:flex; flex-direction:column; gap:6px}
+  .f label{font-size:12px; color:var(--muted)}
+  .f input, .f textarea{width:100%}
+  .span-3{grid-column: span 3}
+  .span-4{grid-column: span 4}
+  .span-5{grid-column: span 5}
+  .span-6{grid-column: span 6}
+  .span-12{grid-column: 1 / -1}
+  .modal-actions{
+    display:flex; gap:8px; justify-content:flex-end; margin-top:10px
+  }
+
+  /* Mobile tweaks */
+  @media (max-width: 768px) {
+    header { flex-direction: column; align-items: flex-start; padding: 10px; gap: 8px; position: static; }
+    .controls { flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+    .controls input, .controls select, .controls textarea, .controls button { width: 100%; max-width: 100%; }
+    main { display: block; padding: 10px; }
+    aside { position: static; height: auto; margin-top: 12px; }
+    .player-editor{ grid-template-columns: 1fr; }
+  }
+
+  /* Print */
+  @media print {
+    header { display:none !important; }
+    body { background:#fff; color:#000; }
+    .board, aside { border:none !important; }
+    .board { background:#fff !important; }
+    table.matches th, table.matches td,
+    table.stats th, table.stats td {
+      border:1px solid #000 !important; color:#000 !important;
     }
-    .box {
-      color: #fff;
-      text-align: center;
-    }
-    .win { color: #6ff76f; }
-    .loss { color: #ff5c5c; }
-    .champ { background: linear-gradient(45deg, #3a86ff, #7b61ff); }
-    .confetti {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      animation: fall linear forwards;
-    }
-    @keyframes fall {
-      from { transform: translateY(0) rotate(0); opacity:1; }
-      to { transform: translateY(150px) rotate(360deg); opacity:0; }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
 
-  <div class="tournament-toggle">
-    <button data-target="roundRobinSection" class="active">🌀 Round Robin</button>
-    <button data-target="bracketSection">🎯 Knockout Bracket</button>
-  </div>
+  <header>
+    <h1>Tournament-Round Robin</h1>
 
-  <!-- Round Robin Section -->
-  <section id="roundRobinSection">
-    <h2>Round Robin Tournament</h2>
-    <div id="rr-container">
-      <!-- Full Round Robin UI goes here -->
-       <header>
-  <h1 id="title">🏸 Badminton Round Robin</h1>
-  <div class="controls">
-    <select id="mode">
-      <option value="singles">Singles</option>
-      <option value="doubles">Doubles</option>
-      <option value="auto_doubles">Auto Doubles</option>
-    </select>
-    <select id="format">
-      <option value="single">Single game</option>
-      <option value="bo3">Best of 3</option>
-    </select>
-    <input id="tName" placeholder="Tournament Name" style="width:190px">
-    <input id="tDate" type="date" style="width:155px">
-    <label><input type="checkbox" id="shuffle"> Randomize</label>
-    <button class="btn primary" id="buildBtn">Generate</button>
-    <button class="btn" id="resetBtn">Reset</button>
-    <button class="btn" id="exportBtn">Export</button>
-    <input id="importFile" type="file" accept="application/json" style="display:none">
-    <button class="btn" id="importBtn">Import</button>
-    <button class="btn" id="printBtn">Print</button>
+    <div class="controls">
+      <!-- Category + Gender -->
+      <label>Category</label>
+      <select id="categorySelect">
+        <option>U11</option><option>U13</option><option>U15</option><option>U17</option><option>U19</option>
+        <option>Men</option><option>Women</option>
+        <option>Batch1</option><option>Batch2</option><option>Batch3</option><option>Batch4</option><option>Batch5</option>
+      </select>
 
-    <span class="legend" id="count">0 players</span>
-    <input id="playerName" placeholder="Add player/team">
-    <button class="btn" id="addBtn">＋ Add</button>
-    <textarea id="bulk" placeholder="Paste names list"></textarea>
-    <button class="btn" id="bulkBtn">Add List</button>
-    <button class="btn" id="clearBtn">Clear All</button>
-  </div>
-</header>
+      <label id="genderLabel">Gender</label>
+      <select id="genderSelect">
+        <option>Boys</option>
+        <option>Girls</option>
+      </select>
 
-<main>
-  <section class="board">
-    <h2>Matches</h2>
-    <div id="matches"></div>
-  </section>
-  <aside>
-    <h3>📊 Standings</h3>
-    <table class="stats">
-      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
-      <tbody id="statsBody"></tbody>
-    </table>
-  </aside>
-</main>
+      <span id="currentKeyTag" class="legend"></span>
     </div>
-    <script>
-      // Paste full Round_Robin_updated.js code here
 
-      
-(function(){
-  const S={players:[],matches:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
-  const q=id=>document.getElementById(id);
-  const matchesDiv=q('matches'), statsBody=q('statsBody');
-  const addBtn=q('addBtn'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
-  const buildBtn=q('buildBtn'), resetBtn=q('resetBtn');
-  const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
-  const printBtn = document.getElementById('printBtn');
-  printBtn.onclick = ()=>window.print();
-  const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
-  const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
+    <div class="controls">
+      <!-- Players quick add -->
+      <input id="playerName" placeholder="Player name" />
+      <button class="btn" id="addBtn">Add</button>
 
-  function updateCount(){count.textContent=`${S.players.length} players`;}
-  function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+      <textarea id="bulk" placeholder="Bulk add (one per line)"></textarea>
+      <button class="btn" id="bulkBtn">Bulk Add</button>
+      <button class="btn" id="clearBtn">Clear Players</button>
 
-  addBtn.onclick=()=>{const v=playerName.value.trim();if(!v) return;S.players.push(v);playerName.value='';updateCount();};
-  playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-  bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push(n));bulk.value='';updateCount();};
-  clearBtn.onclick=()=>{S.players=[];updateCount();};
+      <span class="legend" id="count">0 players</span>
+    </div>
 
-  buildBtn.onclick=()=>build();
-  resetBtn.onclick=()=>{S.players=[];S.matches=[];S.stats.clear();matchesDiv.innerHTML='';statsBody.innerHTML='';updateCount();};
+    <div class="controls">
+      <!-- Matches + IO -->
+      <button class="btn primary" id="buildBtn">Generate Matches</button>
+      <button class="btn" id="resetBtn">Reset Matches</button>
+      <button class="btn" id="printBtn">Print</button>
 
-  function build(){
-    if(S.players.length<2){alert("Need at least 2 players");return;}
-    S.meta.name=tName.value||'Tournament';
-    S.meta.date=tDate.value||new Date().toISOString().slice(0,10);
-    S.meta.mode=modeSel.value; S.meta.format=formatSel.value;
-    title.textContent=`🏸 ${S.meta.name} (${S.meta.date})`;
-    let entries=[...S.players];
-    if(shuffle.checked) shuffleArr(entries);
+      <button class="btn" id="exportBtn">Export (All)</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="btn" id="importBtn">Import (All)</button>
 
-    // Generate round robin pairings
-    S.matches=[];
-    for(let i=0;i<entries.length;i++){
-      for(let j=i+1;j<entries.length;j++){
-        S.matches.push({A:entries[i],B:entries[j],scoreA:null,scoreB:null});
-      }
+      <!-- Toggle sidebar -->
+      <button class="btn" id="togglePlayersBtn">Players Sidebar</button>
+    </div>
+  </header>
+
+  <!-- Slide-in Players Sidebar -->
+  <div id="playerSidebar">
+    <div class="header">
+      <h3>Players</h3>
+      <button class="btn" id="closeSidebarBtn">Close</button>
+    </div>
+    <div id="playerList"></div>
+  </div>
+
+  <main>
+    <div class="board">
+      <h2 id="matchesTitle">Matches</h2>
+      <table class="matches" id="matchesTable"></table>
+    </div>
+
+    <aside>
+      <h3>Stats</h3>
+      <table class="stats">
+        <thead>
+          <tr>
+            <th>#</th><th>Player</th><th>P</th><th class="win">W</th><th class="loss">L</th><th>PF</th><th>PA</th><th>±</th>
+          </tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </aside>
+  </main>
+
+  <!-- Player Modal -->
+  <div id="playerModal">
+    <div class="overlay" onclick="closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Player</h2>
+        <button class="close" id="modalX">&times;</button>
+      </div>
+
+      <div class="player-editor">
+        <!-- LEFT: photo -->
+        <div class="player-avatar">
+          <img id="modalPhoto" src="https://via.placeholder.com/160" alt="Player Photo">
+          <input type="file" id="modalPhotoInput" accept="image/*">
+        </div>
+
+        <!-- RIGHT: form -->
+        <div class="player-form">
+          <div class="f span-3"><label>ID</label><input id="modalId" type="text"></div>
+          <div class="f span-4"><label>Aadhaar</label><input id="modalAadhar" type="text"></div>
+          <div class="f span-5"><label>Name</label><input id="modalNameInput" type="text"></div>
+
+          <div class="f span-3"><label>Age</label><input id="modalAge" type="number" min="1"></div>
+          <div class="f span-4"><label>Country</label><input id="modalCountry" type="text"></div>
+          <div class="f span-5"><label>Video URL</label><input id="modalVideo" type="text" placeholder="https://..."></div>
+
+          <div class="f span-12"><label>Bio</label><textarea id="modalBio" rows="3"></textarea></div>
+
+          <div class="span-12">
+            <div id="modalStats" style="font-size:13px; line-height:1.6"></div>
+          </div>
+
+          <div class="span-12 modal-actions">
+            <button class="btn primary" id="modalSaveBtn">💾 Save</button>
+            <button class="btn" id="modalCancelBtn">❌ Cancel</button>
+            <button class="btn" id="modalDeleteBtn">🗑️ Delete</button>
+            <button class="btn" id="modalPrevBtn">⬅️ Prev</button>
+            <button class="btn" id="modalNextBtn">➡️ Next</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- State per category/gender ----------
+  const TOURNAMENTS = {}; // { key: { players:[], matches:[], stats: Map(), meta:{} } }
+
+  // ---------- Quick DOM helpers ----------
+  const q = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, m =>
+    ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
+  );
+
+  // ---------- UI refs ----------
+  const categorySelect = q('categorySelect');
+  const genderSelect   = q('genderSelect');
+  const genderLabel    = q('genderLabel');
+  const currentKeyTag  = q('currentKeyTag');
+
+  const playerName = q('playerName');
+  const addBtn     = q('addBtn');
+  const bulk       = q('bulk');
+  const bulkBtn    = q('bulkBtn');
+  const clearBtn   = q('clearBtn');
+  const count      = q('count');
+
+  const buildBtn   = q('buildBtn');
+  const resetBtn   = q('resetBtn');
+  const printBtn   = q('printBtn');
+  const exportBtn  = q('exportBtn');
+  const importBtn  = q('importBtn');
+  const importFile = q('importFile');
+
+  const togglePlayersBtn = q('togglePlayersBtn');
+  const closeSidebarBtn  = q('closeSidebarBtn');
+  const playerSidebar    = q('playerSidebar');
+  const playerList       = q('playerList');
+
+  const matchesTable = q('matchesTable');
+  const statsBody    = q('statsBody');
+  const matchesTitle = q('matchesTitle');
+
+  // Modal refs
+  const modal            = q('playerModal');
+  const modalPhoto       = q('modalPhoto');
+  const modalPhotoInput  = q('modalPhotoInput');
+  const modalId          = q('modalId');
+  const modalAadhar      = q('modalAadhar');
+  const modalNameInput   = q('modalNameInput');
+  const modalAge         = q('modalAge');
+  const modalCountry     = q('modalCountry');
+  const modalVideo       = q('modalVideo');
+  const modalBio         = q('modalBio');
+  const modalStats       = q('modalStats');
+  const modalSaveBtn     = q('modalSaveBtn');
+  const modalCancelBtn   = q('modalCancelBtn');
+  const modalDeleteBtn   = q('modalDeleteBtn');
+  const modalPrevBtn     = q('modalPrevBtn');
+  const modalNextBtn     = q('modalNextBtn');
+  const modalX           = q('modalX');
+
+  // ---------- Category/Gender helpers ----------
+  function keyFrom(cat, gen) {
+    const isU = /^U\d+$/i.test(cat);
+    return isU ? `${cat}-${gen}` : cat;
+  }
+  function getKey() {
+    return keyFrom(categorySelect.value, genderSelect.value);
+  }
+  function getState() {
+    const k = getKey();
+    if (!TOURNAMENTS[k]) {
+      TOURNAMENTS[k] = { players: [], matches: [], stats: new Map(), meta: {} };
     }
-    // init stats
-    S.stats.clear(); entries.forEach(n=>S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0}));
+    return TOURNAMENTS[k];
+  }
+  function updateGenderVisibility() {
+    const show = /^U\d+$/i.test(categorySelect.value);
+    genderLabel.style.display = show ? 'inline-block' : 'none';
+    genderSelect.style.display = show ? 'inline-block' : 'none';
+  }
+  function updateKeyTag() {
+    currentKeyTag.textContent = `Now editing: ${getKey()}`;
+  }
 
+  // Restore last selection
+  const lastKey = localStorage.getItem('lastCategoryKey');
+  if (lastKey) {
+    const [cat, sub] = lastKey.split('-');
+    categorySelect.value = cat;
+    if (sub) genderSelect.value = sub;
+  } else {
+    categorySelect.value = 'U11';
+    genderSelect.value = 'Boys';
+  }
+  updateGenderVisibility();
+  updateKeyTag();
+
+  categorySelect.addEventListener('change', () => {
+    updateGenderVisibility();
+    localStorage.setItem('lastCategoryKey', getKey());
+    updateKeyTag();
+    renderAll();
+  });
+  genderSelect.addEventListener('change', () => {
+    localStorage.setItem('lastCategoryKey', getKey());
+    updateKeyTag();
+    renderAll();
+  });
+
+  // ---------- Sidebar toggle ----------
+  togglePlayersBtn.onclick = () => playerSidebar.classList.add('active');
+  closeSidebarBtn.onclick  = () => playerSidebar.classList.remove('active');
+
+  // ---------- Players ----------
+  addBtn.onclick = () => {
+    const v = playerName.value.trim();
+    if (!v) return;
+    const st = getState();
+    st.players.push({ name: v, id:'', aadhar:'', age:'', country:'', bio:'', video:'', photo:'' });
+    playerName.value = '';
+    renderPlayersSidebar();
+    updateCount();
+  };
+  playerName.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+  bulkBtn.onclick = () => {
+    const names = bulk.value.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+    if (!names.length) return;
+    const st = getState();
+    names.forEach(n => st.players.push({ name: n, id:'', aadhar:'', age:'', country:'', bio:'', video:'', photo:'' }));
+    bulk.value = '';
+    renderPlayersSidebar();
+    updateCount();
+  };
+
+  clearBtn.onclick = () => {
+    if (!confirm('Clear all players in this tournament?')) return;
+    const st = getState();
+    st.players = [];
+    st.matches = [];
+    st.stats = new Map();
+    renderAll();
+    updateCount();
+  };
+
+  function updateCount() {
+    const st = getState();
+    count.textContent = `${st.players.length} player${st.players.length === 1 ? '' : 's'}`;
+  }
+
+  function renderPlayersSidebar() {
+    const st = getState();
+    playerList.innerHTML = '';
+    st.players.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'player-card';
+
+      const img = document.createElement('img');
+      img.src = p.photo || 'https://via.placeholder.com/80';
+
+      const info = document.createElement('div');
+      info.className = 'player-info';
+      const nm = document.createElement('div');
+      nm.className = 'player-name';
+      nm.textContent = p.name || '(no name)';
+      const meta = document.createElement('div');
+      meta.className = 'player-meta';
+      const s = getStatsFor(p.name);
+      meta.textContent = `P:${s.P} • W:${s.W} • L:${s.L}`;
+
+      info.appendChild(nm);
+      info.appendChild(meta);
+
+      const del = document.createElement('button');
+      del.className = 'player-del';
+      del.textContent = '❌';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        if (!confirm(`Delete ${p.name || 'this player'}?`)) return;
+        st.players.splice(i, 1);
+        // remove matches involving this player
+        st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
+        recomputeStats();
+        renderAll();
+      };
+
+      card.appendChild(img);
+      card.appendChild(info);
+      card.appendChild(del);
+
+      card.onclick = () => showPlayerDetails(i);
+      playerList.appendChild(card);
+    });
+  }
+
+  // ---------- Matches (Round Robin) ----------
+  function generateRoundRobin(names) {
+    // Standard round robin pairing (single round)
+    const arr = names.slice();
+    if (arr.length < 2) return [];
+    if (arr.length % 2 === 1) arr.push('BYE');
+
+    const rounds = [];
+    const n = arr.length;
+    const half = n / 2;
+
+    let left = arr.slice(0, half);
+    let right = arr.slice(half).reverse();
+
+    for (let r = 0; r < n - 1; r++) {
+      const pairs = [];
+      for (let i = 0; i < half; i++) {
+        const a = left[i], b = right[i];
+        if (a !== 'BYE' && b !== 'BYE') {
+          pairs.push({ a, b, sa: '', sb: '', saved: false, round: r + 1 });
+        }
+      }
+      rounds.push(...pairs);
+
+      // rotate (keep left[0] fixed)
+      const lFixed = left[0];
+      const movedFromLeft  = left.splice(1, 1)[0];
+      const movedFromRight = right.splice(0, 1)[0];
+      left = [lFixed, ...right];
+      right = [...right.slice(1), movedFromLeft];
+      right.unshift(movedFromRight); // re-balance
+    }
+    return rounds;
+  }
+
+  buildBtn.onclick = () => {
+    const st = getState();
+    const names = st.players.map(p => p.name).filter(Boolean);
+    if (names.length < 2) {
+      alert('Add at least 2 players');
+      return;
+    }
+    st.matches = generateRoundRobin(names);
+    recomputeStats();
     renderMatches();
     renderStats();
+  };
+
+  resetBtn.onclick = () => {
+    const st = getState();
+    if (!confirm('Reset all match scores for this tournament?')) return;
+    st.matches.forEach(m => { m.sa=''; m.sb=''; m.saved=false; });
+    recomputeStats();
+    renderMatches();
+    renderStats();
+  };
+
+  printBtn.onclick = () => window.print();
+
+  function renderMatches() {
+    const st = getState();
+    matchesTitle.textContent = `Matches — ${getKey()}`;
+    const tbl = matchesTable;
+    tbl.innerHTML = '';
+
+    if (!st.matches.length) {
+      tbl.innerHTML = '<tr><td>No matches. Click "Generate Matches".</td></tr>';
+      return;
+    }
+
+    // group by round number
+    const byRound = new Map();
+    for (const m of st.matches) {
+      if (!byRound.has(m.round)) byRound.set(m.round, []);
+      byRound.get(m.round).push(m);
+    }
+
+    let html = `
+      <tr>
+        <th style="text-align:left">Round</th>
+        <th style="text-align:left">Match</th>
+        <th style="text-align:center">A</th>
+        <th style="text-align:center">B</th>
+        <th style="text-align:center">Save</th>
+      </tr>
+    `;
+    let idx = 1;
+
+    for (const [rnd, arr] of [...byRound.entries()].sort((a,b)=>a[0]-b[0])) {
+      for (const m of arr) {
+        const rowId = `m_${rnd}_${idx}`;
+        html += `
+          <tr data-row="${rowId}">
+            <td>R${rnd}</td>
+            <td>${esc(m.a)} vs ${esc(m.b)}</td>
+            <td style="text-align:center">
+              <input type="number" min="0" step="1" data-a value="${m.sa ?? ''}" ${m.saved?'disabled':''}>
+            </td>
+            <td style="text-align:center">
+              <input type="number" min="0" step="1" data-b value="${m.sb ?? ''}" ${m.saved?'disabled':''}>
+            </td>
+            <td style="text-align:center">
+              <button class="btn" data-save ${m.saved?'disabled':''}>Save</button>
+            </td>
+          </tr>
+        `;
+        idx++;
+      }
+    }
+
+    tbl.innerHTML = html;
+
+    // wire save buttons
+    let rowIdx = 0;
+    for (const [rnd, arr] of [...byRound.entries()].sort((a,b)=>a[0]-b[0])) {
+      for (const m of arr) {
+        const tr = tbl.querySelectorAll('tr[data-row]')[rowIdx];
+        const inA = tr.querySelector('input[data-a]');
+        const inB = tr.querySelector('input[data-b]');
+        const btn = tr.querySelector('button[data-save]');
+
+        btn.onclick = () => {
+          const a = inA.value.trim();
+          const b = inB.value.trim();
+          if (a === '' || b === '') { alert('Enter both scores'); return; }
+          const na = parseInt(a, 10), nb = parseInt(b, 10);
+          if (Number.isNaN(na) || Number.isNaN(nb)) { alert('Scores must be numbers'); return; }
+          if (na === nb) { alert('No ties allowed'); return; }
+
+          m.sa = na; m.sb = nb; m.saved = true;
+          inA.disabled = true; inB.disabled = true; btn.disabled = true;
+
+          recomputeStats();
+          renderStats();
+        };
+
+        rowIdx++;
+      }
+    }
   }
 
-  function renderMatches(){
-    matchesDiv.innerHTML='';
-    const tbl=document.createElement('table'); tbl.className='matches';
-    tbl.innerHTML='<thead><tr><th>Match</th><th>Scores</th><th>Action</th></tr></thead>';
-    const tb=document.createElement('tbody');
-    S.matches.forEach((m,idx)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${m.A} vs ${m.B}</td>`;
-      const tdScore=document.createElement('td');
-      const A=document.createElement('input'); A.type='number'; A.min=0; A.value=m.scoreA??'';
-      const B=document.createElement('input'); B.type='number'; B.min=0; B.value=m.scoreB??'';
-      tdScore.append(A,document.createTextNode(' - '),B);
-      const tdAct=document.createElement('td');
-      const save=document.createElement('button'); save.className='btn'; save.textContent='Save';
-      save.onclick=()=>{
-        const a=parseInt(A.value,10), b=parseInt(B.value,10);
-        if(isNaN(a)||isNaN(b)||a===b){alert('Enter valid scores');return;}
-        m.scoreA=a;m.scoreB=b;
-        updateStats(m);
-        renderStats();
-        save.disabled=true; A.disabled=true; B.disabled=true;
-      };
-      tdAct.appendChild(save);
-      tr.append(tdScore,tdAct); tb.appendChild(tr);
-    });
-    tbl.appendChild(tb); matchesDiv.appendChild(tbl);
+  // ---------- Stats ----------
+  function getStatsFor(name) {
+    const st = getState();
+    return st.stats.get(name) || { P:0, W:0, L:0, PF:0, PA:0 };
   }
 
-  function updateStats(m){
-    const {A,B,scoreA,scoreB}=m;
-    const SA=S.stats.get(A), SB=S.stats.get(B);
-    SA.P++; SB.P++;
-    SA.PF+=scoreA; SA.PA+=scoreB;
-    SB.PF+=scoreB; SB.PA+=scoreA;
-    if(scoreA>scoreB){SA.W++; SB.L++;} else {SB.W++; SA.L++;}
-    S.stats.set(A,SA); S.stats.set(B,SB);
+  function recomputeStats() {
+    const st = getState();
+    // reset
+    st.stats = new Map();
+    for (const p of st.players) st.stats.set(p.name, { P:0, W:0, L:0, PF:0, PA:0 });
+
+    for (const m of st.matches) {
+      if (!m.saved) continue;
+      const a = st.stats.get(m.a) || { P:0, W:0, L:0, PF:0, PA:0 };
+      const b = st.stats.get(m.b) || { P:0, W:0, L:0, PF:0, PA:0 };
+
+      a.P++; b.P++;
+      a.PF += m.sa; a.PA += m.sb;
+      b.PF += m.sb; b.PA += m.sa;
+      if (m.sa > m.sb) { a.W++; b.L++; } else { b.W++; a.L++; }
+
+      st.stats.set(m.a, a); st.stats.set(m.b, b);
+    }
   }
 
-  function renderStats(){
-    statsBody.innerHTML='';
-    const sorted=[...S.stats.entries()].sort((a,b)=>
-      (b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
-    sorted.forEach(([name,s],i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${i+1}</td><td>${name}</td><td>${s.P}</td>
-      <td class="win">${s.W}</td><td class="loss">${s.L}</td>
-      <td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
-      if(i===0) tr.classList.add('champ');
+  function renderStats() {
+    const st = getState();
+    const rows = [...st.stats.entries()]
+      .map(([name, s]) => ({ name, ...s }))
+      .sort((x,y) =>
+        (y.W - x.W) ||
+        ((y.PF - y.PA) - (x.PF - x.PA)) ||
+        (y.PF - x.PF)
+      );
+
+    statsBody.innerHTML = '';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${esc(r.name)}</td>
+        <td>${r.P}</td>
+        <td class="win">${r.W}</td>
+        <td class="loss">${r.L}</td>
+        <td>${r.PF}</td>
+        <td>${r.PA}</td>
+        <td>${r.PF - r.PA}</td>
+      `;
       statsBody.appendChild(tr);
     });
   }
 
-  // Export / Import
-  exportBtn.onclick=()=>{
-  if(!S.meta.name){ 
-    // fallback: take from input box
-    S.meta.name = tName.value.trim(); 
+  // ---------- Modal (Edit Player) ----------
+  let currentPlayerIndex = -1;
+
+  function showPlayerDetails(idx) {
+    const st = getState();
+    if (idx < 0 || idx >= st.players.length) return;
+    currentPlayerIndex = idx;
+
+    const p = st.players[idx];
+
+    // Fill fields
+    modalPhoto.src = p.photo || 'https://via.placeholder.com/160';
+    modalId.value = p.id || '';
+    modalAadhar.value = p.aadhar || '';
+    modalNameInput.value = p.name || '';
+    modalAge.value = p.age || '';
+    modalCountry.value = p.country || '';
+    modalVideo.value = p.video || '';
+    modalBio.value = p.bio || '';
+
+    const s = getStatsFor(p.name);
+    modalStats.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr><td style="text-align:left;">Played</td><td>${s.P}</td></tr>
+        <tr><td style="text-align:left; color:var(--win);">Wins</td><td>${s.W}</td></tr>
+        <tr><td style="text-align:left; color:var(--loss);">Losses</td><td>${s.L}</td></tr>
+        <tr><td style="text-align:left;">Points For</td><td>${s.PF}</td></tr>
+        <tr><td style="text-align:left;">Points Against</td><td>${s.PA}</td></tr>
+        <tr><td style="text-align:left;">± Diff</td><td>${s.PF - s.PA}</td></tr>
+      </table>
+    `;
+
+    // Handlers
+    modalPhotoInput.value = '';
+    modalPhotoInput.onchange = () => {
+      if (modalPhotoInput.files && modalPhotoInput.files[0]) {
+        const rd = new FileReader();
+        rd.onload = e => {
+          st.players[idx].photo = e.target.result;
+          modalPhoto.src = e.target.result;
+          renderPlayersSidebar();
+        };
+        rd.readAsDataURL(modalPhotoInput.files[0]);
+      }
+    };
+
+    modalSaveBtn.onclick = () => {
+      const oldName = p.name;
+      const newName = modalNameInput.value.trim() || oldName;
+
+      // update fields
+      p.id = modalId.value.trim();
+      p.aadhar = modalAadhar.value.trim();
+      p.name = newName;
+      p.age = modalAge.value.trim();
+      p.country = modalCountry.value.trim();
+      p.video = modalVideo.value.trim();
+      p.bio = modalBio.value.trim();
+
+      // rename in matches if name changed
+      if (newName !== oldName) {
+        for (const m of st.matches) {
+          if (m.a === oldName) m.a = newName;
+          if (m.b === oldName) m.b = newName;
+        }
+        // move stats entry
+        const oldStats = st.stats.get(oldName);
+        if (oldStats) {
+          st.stats.delete(oldName);
+          st.stats.set(newName, oldStats);
+        }
+      }
+
+      st.players[idx] = p;
+      recomputeStats();
+      renderPlayersSidebar();
+      renderMatches();
+      renderStats();
+      closeModal();
+    };
+
+    modalPrevBtn.onclick = () => {
+      if (currentPlayerIndex > 0) showPlayerDetails(currentPlayerIndex - 1);
+    };
+    modalNextBtn.onclick = () => {
+      const st2 = getState();
+      if (currentPlayerIndex < st2.players.length - 1) showPlayerDetails(currentPlayerIndex + 1);
+    };
+
+    modalDeleteBtn.onclick = () => {
+      if (!confirm(`Delete ${p.name || 'this player'}?`)) return;
+      st.players.splice(idx, 1);
+      // remove matches involving this player
+      st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
+      recomputeStats();
+      renderPlayersSidebar();
+      renderMatches();
+      renderStats();
+      closeModal();
+    };
+
+    modalCancelBtn.onclick = closeModal;
+    modalX.onclick = closeModal;
+
+    modal.classList.add('open');
+    modal.style.display = 'flex';
   }
-  if(!S.meta.name){
-    alert("Please enter a Tournament Name before saving!");
-    return;
-  }
-  const data=JSON.stringify({
-    players:S.players,
-    matches:S.matches,
-    meta:S.meta,
-    stats:[...S.stats]
-  },null,2);
 
-  const blob=new Blob([data],{type:'application/json'});
-  const a=document.createElement('a'); 
-  a.href=URL.createObjectURL(blob);
-  // use clean name (replace spaces with underscores)
-  a.download=`${S.meta.name.replace(/\s+/g,'_')}.json`;  
-  a.click();
-};
+  window.closeModal = function(){
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+    }
+  };
 
+  // ---------- Import / Export (ENTIRE DB) ----------
+  exportBtn.onclick = () => {
+    // Convert Map -> plain object for each tournament
+    const out = {};
+    for (const [k, v] of Object.entries(TOURNAMENTS)) {
+      out[k] = {
+        players: v.players,
+        matches: v.matches,
+        stats: Object.fromEntries(v.stats), // map to object
+        meta: v.meta || {}
+      };
+    }
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'round_robin_database.json';
+    a.click();
+  };
 
-
-  importBtn.onclick=()=>importFile.click();
-  importFile.onchange=e=>{
-    const f=e.target.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=ev=>{
-      try{
-        const o=JSON.parse(ev.target.result);
-        S.players=o.players||[];
-        S.matches=o.matches||[];
-        S.meta=o.meta||{};
-        S.stats=new Map(o.stats||[]);
-        updateCount();
-        renderMatches(); renderStats();
-      }catch(err){alert('Bad file');}
+  importBtn.onclick = () => importFile.click();
+  importFile.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        // rebuild TOURNAMENTS
+        for (const k of Object.keys(TOURNAMENTS)) delete TOURNAMENTS[k];
+        for (const [k, v] of Object.entries(data)) {
+          TOURNAMENTS[k] = {
+            players: Array.isArray(v.players) ? v.players : [],
+            matches: Array.isArray(v.matches) ? v.matches : [],
+            stats: new Map(Object.entries(v.stats || {})),
+            meta: v.meta || {}
+          };
+        }
+        renderAll();
+        alert('Imported entire database successfully.');
+      } catch (err) {
+        alert('Invalid file.');
+      }
     };
     r.readAsText(f);
   };
 
-})();
-      console.log("Round Robin script active");
-    </script>
-  </section>
-
-  <!-- Bracket Section -->
-  <section id="bracketSection" style="display:none">
-    <h2>Knockout Bracket Tournament</h2>
-    <div id="bracket-container">
-
-       <header>
-  <h1 id="title">🏸 Badminton Knockout</h1>
-
-  <div class="controls">
-    <select id="mode" title="Singles / Doubles / Auto Doubles">
-      <option value="singles">Singles</option>
-      <option value="doubles">Doubles</option>
-      <option value="auto_doubles">Auto Doubles</option>
-    </select>
-
-    <select id="format" title="Match format">
-      <option value="single">Single game</option>
-      <option value="bo3">Best of 3</option>
-    </select>
-
-    <input id="tName" placeholder="Tournament Name" style="width:190px">
-    <input id="tDate" type="date" style="width:155px">
-
-    <label><input type="checkbox" id="shuffle"> Randomize seeding</label>
-
-    <button class="btn primary" id="buildBtn">Generate Bracket</button>
-    <button class="btn" id="printBtn">Print Bracket</button>
-    <button class="btn" id="resetBtn">Reset</button>
-    <button class="btn" id="exportBtn">Export</button>
-    <input id="importFile" type="file" accept="application/json" style="display:none">
-    <button class="btn" id="importBtn">Import</button>
-
-    <span class="legend" id="count">0 players</span>
-    <ul id="playerList"></ul>
-
-
-    <!-- adding players placed LAST -->
-    <input id="playerName" placeholder="Add player or Team (A & B)">
-    <button class="btn" id="addBtn">＋ Add</button>
-    <textarea id="bulk" placeholder="Paste names/teams (comma / new lines)"></textarea>
-    <button class="btn" id="bulkBtn">Add List</button>
-    <button class="btn" id="clearBtn">Clear All</button>
-  </div>
-</header>
-
-<main>
-  <section class="board">
-    <div id="board" class="board-inner">
-      <svg id="lines" width="1200" height="800"></svg>
-    </div>
-  </section>
-  <aside>
-    <h3>📊 Player Statistics</h3>
-    <table>
-      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
-      <tbody id="statsBody"></tbody>
-    </table>
-  </aside>
-</main> 
-      <div id="board"><svg id="lines"></svg></div>
-      <table>
-        <thead>
-          <tr><th>#</th><th>Player</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>Diff</th></tr>
-        </thead>
-        <tbody id="statsBody"></tbody>
-      </table>
-    </div>
-    <script>
-      // Paste full Bracket_tournament.js code here
-
-      (function(){
-    const S={players:[],entries:[],rounds:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
-const q=id=>document.getElementById(id);
-const board=q('board'); let svg=q('lines'); const statsBody=q('statsBody');
-
-// UI refs
-const modeSel=q('mode'), formatSel=q('format');
-const tName=q('tName'), tDate=q('tDate'), title=q('title');
-const playerName=q('playerName'), addBtn=q('addBtn');
-const bulk=q('bulk'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
-const count=q('count'), shuffle=q('shuffle');
-const buildBtn=q('buildBtn'), resetBtn=q('resetBtn'), printBtn=q('printBtn');
-const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
-
-// helpers
-const el=(t,c,s)=>{const x=document.createElement(t); if(c) x.className=c; if(s) Object.assign(x.style,s); return x};
-const esc = s => String(s).replace(/[&<>"']/g, m =>
-  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
-);
-function updateCount() {
-  count.textContent = `${S.players.length} player${S.players.length === 1 ? '' : 's'}`;
-
-  // render player list
-  const list = q('playerList');
-  list.innerHTML = '';
-  S.players.forEach((p, i) => {
-    const li = document.createElement('li');
-    li.textContent = p.name;
-
-    // delete button
-    const del = document.createElement('button');
-    del.textContent = '❌';
-    del.className = 'btn';
-    del.style.marginLeft = '8px';
-    del.onclick = () => {
-      S.players.splice(i, 1);   // remove player
-      updateCount();            // re-render
-    };
-
-    li.appendChild(del);
-    list.appendChild(li);
-  });
-}
-
-function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-const BW=180,BH=48,CG=180,RG=28; const cy=t=>t+BH/2;
-
-// Add players
-addBtn.onclick=()=>{const v=playerName.value.trim(); if(!v) return; S.players.push({name:v}); playerName.value=''; updateCount();};
-playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push({name:n})); bulk.value=''; updateCount();};
-clearBtn.onclick=()=>{S.players=[]; updateCount();};
-
-// Actions
-buildBtn.onclick=()=>buildFromPlayers();
-resetBtn.onclick=()=>{ board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); S.rounds=[]; S.stats.clear(); S.players=[]; S.entries=[]; statsBody.innerHTML=''; updateCount(); };
-printBtn.onclick=()=>window.print();
-
-function buildFromPlayers(){
-  if(S.players.length<2){alert('Add at least 2 entries');return;}
-  S.meta.name = tName.value||'Tournament';
-  S.meta.date = tDate.value||new Date().toISOString().slice(0,10);
-  S.meta.mode = modeSel.value;
-  S.meta.format = formatSel.value;
-  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
-
-  let entries;
-  if(S.meta.mode==='singles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
-  else if(S.meta.mode==='doubles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
-  else{
-    let singles=S.players.map(p=>p.name);
-    if(shuffle.checked) shuffleArr(singles);
-    if(singles.length%2===1) singles.push('BYE');
-    entries=[];
-    for(let i=0;i<singles.length;i+=2) entries.push(`${singles[i]} & ${singles[i+1]}`);
-  }
-
-  entries = padToPowerOfTwo(entries);
-  S.stats.clear();
-  entries.filter(n=>n!=='BYE').forEach(n=>S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0}));
-
-  S.entries = entries;
-  board.innerHTML='<svg id="lines"></svg>'; svg=q('lines');
-  layout(entries);
-  resizeSVG(); renderStats();
-}
-
-function padToPowerOfTwo(players){
-  let n = players.length, p = 1;
-  while (p < n) p <<= 1;
-  if (p === n) return players;
-
-  const need = p - n;
-  const filled = [...players];
-
-  // BYE seeding: assign BYEs so that top seeds get them
-  // Place BYEs evenly spaced in the bracket to avoid BYE vs BYE
-  for (let i = 0; i < need; i++) {
-    // Insert BYE at every other slot near the end
-    filled.splice(filled.length - (i * 2 + 1), 0, 'BYE');
-  }
-  return filled;
-}
-
-
-function layout(entries){
-  S.rounds=[]; const roundsCount=Math.log2(entries.length)|0;
-  let prev=[];
-  for(let i=0;i<entries.length;i++){
-    const left=0, top=i*(BH+RG);
-    prev.push(createBox(entries[i], left, top, false, false));
-  }
-  for(let r=0;r<roundsCount;r++){
-    const curr=[]; S.rounds[r]=[]; const isFinal=(r===roundsCount-1);
-    for(let m=0;m<prev.length/2;m++){
-      const A=prev[2*m], B=prev[2*m+1];
-      const yA=cy(parseFloat(A.style.top)), yB=cy(parseFloat(B.style.top)), midY=(yA+yB)/2;
-      const ax=parseFloat(A.style.left)+BW, bx=parseFloat(B.style.left)+BW, tx=(r+1)*(BW+CG);
-      const jx=(ax+tx)/2;
-      const hA=line(ax,yA,jx,yA); const vU=line(jx,yA,jx,midY);
-      const hB=line(bx,yB,jx,yB); const vL=line(jx,midY,jx,yB);
-      const hF=line(jx,midY,tx,midY);
-      const T=createBox('—',tx,midY-BH/2,false,isFinal);
-      curr.push(T);
-      const mo={A,B,T,lines:{hA,vU,hB,vL,hF},saved:false};
-
-      if(A.dataset.name==='BYE' && B.dataset.name!=='BYE'){ forwardWinner(mo,B.dataset.name,0,0,true); }
-      else if(B.dataset.name==='BYE' && A.dataset.name!=='BYE'){ forwardWinner(mo,A.dataset.name,0,0,true); }
-      else if(A.dataset.name==='BYE' && B.dataset.name==='BYE'){ /* skip completely */ }
-      else{ mo.card=createScoreCard(`${A.dataset.name} vs ${B.dataset.name}`,T,mo); }
-
-      S.rounds[r].push(mo);
-    }
-    prev=curr;
-  }
-}
-
-function createBox(name,left,top,isBye=false,isChamp=false){
-  const b=el('div','box'+(isChamp?' champ':''),{left:left+'px',top:top+'px',width:BW+'px',height:BH+'px'});
-  const seed=el('div','seed'); seed.textContent=isChamp?'🏆':(name==='BYE'?'—':'');
-  const nm=el('div','name'+(name==='BYE'?' bye':'')); nm.textContent=name;
-  b.dataset.name=name; b.append(seed,nm); 
-  board.appendChild(b); return b;
-}
-
-function line(x1,y1,x2,y2){
-  const L=document.createElementNS('http://www.w3.org/2000/svg','line');
-  L.setAttribute('x1',x1);L.setAttribute('y1',y1);L.setAttribute('x2',x2);L.setAttribute('y2',y2);
-  L.setAttribute('class','edge');svg.appendChild(L);return L;
-}
-
-function createScoreCard(label,T,mo){
-  const card=el('div','scorecard',{left:(parseFloat(T.style.left)+BW/2+16)+'px', top:T.style.top});
-  const lab=el('span','lab'); lab.textContent=label; lab.title=label; card.appendChild(lab);
-
-  if(S.meta.format==='bo3'){
-    const A1=inp(),B1=inp(),A2=inp(),B2=inp(),A3=inp(),B3=inp();
-    const save=btn('Save'); card.append(A1,B1,A2,B2,A3,B3,save); board.appendChild(card);
-    save.onclick=()=>{
-      const sets=[[A1,B1],[A2,B2],[A3,B3]];
-      let wSets=0,lSets=0,pf=0,pa=0;
-      for(const [ai,bi] of sets){
-        const a=val(ai), b=val(bi);
-        if(a===null&&b===null) continue;
-        if(a===b){alert('Set cannot be tied'); return;}
-        if(a===null||b===null){alert('Fill both scores'); return;}
-        pf+=a; pa+=b; if(a>b) wSets++; else lSets++;
-      }
-      if(wSets<2&&lSets<2){alert('Enter enough sets');return;}
-      const winner=(wSets>=2)?mo.A.dataset.name:mo.B.dataset.name;
-      forwardWinner(mo,winner,pf,pa,false);
-      disable([A1,B1,A2,B2,A3,B3,save]);
-    };
-  } else {
-    const A=inp(),B=inp(),save=btn('Save');
-    card.append(A,B,save); board.appendChild(card);
-    save.onclick=()=>{
-      const a=val(A), b=val(B);
-      if(a===null||b===null||a===b){alert('Enter valid non-tied scores');return;}
-      const winner=(a>b)?mo.A.dataset.name:mo.B.dataset.name;
-      forwardWinner(mo,winner,a,b,false);
-      disable([A,B,save]);
-    };
-  }
-  return card;
-
-  function inp(){const i=el('input'); i.type='number'; i.min='0'; i.step='1'; i.inputMode='numeric'; return i;}
-  function btn(t){const b=el('button','btn'); b.textContent=t; return b;}
-  function val(i){const v=i.value.trim(); if(v==='') return null; const n=parseInt(v,10); return Number.isNaN(n)?null:n;}
-  function disable(arr){arr.forEach(x=>x.disabled=true); mo.saved=true;}
-}
-
-function forwardWinner(mo,winner,sa,sb,isBye,restoring=false){
-  const loser = winner===mo.A.dataset.name ? mo.B.dataset.name : mo.A.dataset.name;
-
-  // forward name
-  mo.T.dataset.name=winner; mo.T.querySelector('.name').textContent=winner;
-
-  // colour path
-  const {hA,vU,hB,vL,hF}=mo.lines;
-  if(winner===mo.A.dataset.name){
-    hA.classList.add('win'); vU.classList.add('win');
-    hB.classList.add('loss'); vL.classList.add('loss');
-    hF.classList.add('win');
-    mo.A.classList.add('win'); if(mo.B.dataset.name!=='BYE') mo.B.classList.add('loss');
-  }else{
-    hB.classList.add('win'); vL.classList.add('win');
-    hA.classList.add('loss'); vU.classList.add('loss');
-    hF.classList.add('win');
-    mo.B.classList.add('win'); if(mo.A.dataset.name!=='BYE') mo.A.classList.add('loss');
-  }
-
-  // stats
-  if(!restoring){
-    if(!isBye && winner!=='BYE' && loser!=='BYE'){
-      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
-      const L=S.stats.get(loser)||{P:0,W:0,L:0,PF:0,PA:0};
-      W.P++;W.W++;W.PF+=Math.max(sa,sb);W.PA+=Math.min(sa,sb);
-      L.P++;L.L++;L.PF+=Math.min(sa,sb);L.PA+=Math.max(sa,sb);
-      S.stats.set(winner,W); S.stats.set(loser,L);
-    } else if(isBye && winner!=='BYE'){
-      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
-      S.stats.set(winner,W);
-    }
+  // ---------- Initial render ----------
+  function renderAll() {
+    renderPlayersSidebar();
+    updateCount();
+    renderMatches();
     renderStats();
   }
-
-  // update downstream labels
-  for(const rnd of S.rounds){
-    for(const node of rnd){
-      if(node.card&&(node.A===mo.T||node.B===mo.T)){
-        const text=`${node.A.dataset.name} vs ${node.B.dataset.name}`;
-        node.card.querySelector('.lab').textContent=text;
-        node.card.querySelector('.lab').title=text;
-      }
-    }
-  }
-
-  // champion?
-  let usedLater=false;
-  for(const rnd of S.rounds){
-    for(const node of rnd){
-      if(node!==mo&&(node.A===mo.T||node.B===mo.T)){usedLater=true;break;}
-    }
-    if(usedLater) break;
-  }
-  if(!usedLater){sprinkleConfetti(mo.T); mo.T.classList.add('champ');}
-}
-
-function renderStats(){
-  statsBody.innerHTML='';
-  const sorted=[...S.stats.entries()]
-    .sort((a,b)=>(b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
-  sorted.forEach(([name,s],i)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${i+1}</td><td>${esc(name)}</td><td>${s.P}</td><td class="win">${s.W}</td><td class="loss">${s.L}</td><td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
-    statsBody.appendChild(tr);
-  });
-}
-
-function resizeSVG(){
-  const boxes=[...board.querySelectorAll('.box')];
-  if(!boxes.length){svg.setAttribute('width',1200);svg.setAttribute('height',800);return;}
-  let maxX=0,maxY=0;
-  boxes.forEach(b=>{
-    const x=parseFloat(b.style.left)+BW, y=parseFloat(b.style.top)+BH;
-    if(x>maxX) maxX=x; if(y>maxY) maxY=y;
-  });
-  svg.setAttribute('width',Math.max(800,maxX+80));
-  svg.setAttribute('height',Math.max(600,maxY+80));
-}
-
-function sprinkleConfetti(box){
-  const rect=box.getBoundingClientRect(), off=board.getBoundingClientRect();
-  const x=rect.left-off.left+rect.width/2, y=rect.top-off.top+rect.height/2;
-  for(let i=0;i<25;i++){
-    const c=el('div','confetti',{
-      left:(x+(Math.random()*40-20))+'px',
-      top:y+'px',
-      background:`hsl(${Math.random()*360},100%,50%)`,
-      animationDuration:(1+Math.random()*2)+'s'
-    });
-    board.appendChild(c);
-    setTimeout(()=>c.remove(),3000);
-  }
-}
-
-// Export / Import
-exportBtn.onclick = () => {
-  const rounds = S.rounds.map(rnd =>
-    rnd.map(mo => ({
-      A: mo.A?.dataset.name,
-      B: mo.B?.dataset.name,
-      T: mo.T?.dataset.name,
-      winner: mo.T?.dataset.name,
-      saved: mo.saved || false,
-      scores: mo.card
-        ? [...mo.card.querySelectorAll("input")].map(i => i.value)
-        : null
-    }))
-  );
-
-  const data = JSON.stringify({
-    players: S.players,
-    entries: S.entries,
-    meta: S.meta,
-    stats: [...S.stats],   // save as array of [name, obj]
-    rounds: rounds
-  }, null, 2);
-
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `${S.meta.name || "tournament"}.json`;
-  a.click();
-};
-
-importBtn.onclick=()=>importFile.click();
-importFile.onchange = e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const o = JSON.parse(ev.target.result);
-
-      S.players = Array.isArray(o.players) ? o.players : [];
-      S.entries = Array.isArray(o.entries) ? o.entries : [];
-      S.meta = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
-      S.stats = new Map(o.stats || []);
-
-      // restore UI
-      tName.value = S.meta.name || "";
-      tDate.value = S.meta.date || "";
-      modeSel.value = S.meta.mode || "singles";
-      formatSel.value = S.meta.format || "single";
-      updateCount();
-      renderStats();
-
-      // rebuild layout
-      if (S.entries.length >= 2) {
-        board.innerHTML = '<svg id="lines"></svg>';
-        svg = q("lines");
-        layout(S.entries);
-
-        if (o.rounds) {
-          S.rounds.forEach((rnd, i) => {
-            rnd.forEach((mo, j) => {
-              const saved = o.rounds[i]?.[j];
-              if (saved) {
-                if (saved.winner && saved.winner !== "BYE") {
-                  forwardWinner(mo, saved.winner, 0, 0, true, true);
-                  mo.saved = saved.saved;
-                }
-                // restore scores if available
-                if (saved.scores && mo.card) {
-                  const inputs = mo.card.querySelectorAll("input");
-                  saved.scores.forEach((val, idx) => {
-                    if (inputs[idx]) inputs[idx].value = val;
-                  });
-                  if (saved.saved) {
-                    inputs.forEach(inp => inp.disabled = true);
-                    const btn = mo.card.querySelector("button");
-                    if (btn) btn.disabled = true;
-                  }
-                }
-              }
-            });
-          });
-        }
-        resizeSVG();
-        renderStats();
-      } else {
-        alert("Imported file has no players/entries");
-      }
-    } catch (err) {
-      alert("Bad file");
-    }
-  };
-  r.readAsText(f);
-};
-
-
+  renderAll();
 })();
-      
-    </script>
-  </section>
-
-  <script>
-    // Toggle logic
-    document.querySelectorAll('.tournament-toggle button').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        document.querySelectorAll('.tournament-toggle button').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('roundRobinSection').style.display =
-          btn.dataset.target==="roundRobinSection" ? "block" : "none";
-        document.getElementById('bracketSection').style.display =
-          btn.dataset.target==="bracketSection" ? "block" : "none";
-      });
-    });
-  </script>
+</script>
 
 </body>
 </html>
