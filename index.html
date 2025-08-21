@@ -297,6 +297,21 @@ menuToggle.addEventListener('click', () => {
   tabsContainer.classList.toggle('open');
 });
 
+// 🔥 Close menu after clicking a tab (mobile)
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.getAttribute('data-target');
+    if (!loggedUser) {
+      alert("You must be logged in to access!");
+      return;
+    }
+    loadTab(target);
+
+    // close the mobile menu
+    tabsContainer.classList.remove('open');
+  });
+});
+
 
     // ---- Set your login credentials ----
     const VALID_USER = "admin";
