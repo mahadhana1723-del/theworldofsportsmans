@@ -190,7 +190,10 @@
         <option>Men</option><option>Women</option>
         <option>Batch1</option><option>Batch2</option><option>Batch3</option><option>Batch4</option><option>Batch5</option>
       </select>
-
+      <div class="category-nav" style="margin:10px 0;">
+  <button id="prevCategoryBtn">⬅️ Prev Category</button>
+  <button id="nextCategoryBtn">➡️ Next Category</button>
+</div>
       <label id="genderLabel">Gender</label>
       <select id="genderSelect">
         <option>Boys</option>
@@ -308,8 +311,10 @@
   // ---------- Quick DOM helpers ----------
   const q = id => document.getElementById(id);
   const esc = s => String(s).replace(/[&<>"']/g, m =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
-  );
+  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])
+);
+
+  const on = (el, evt, fn) => el && el.addEventListener(evt, fn);
 
   // ---------- UI refs ----------
   const categorySelect = q('categorySelect');
@@ -340,7 +345,7 @@
   const statsBody    = q('statsBody');
   const matchesTitle = q('matchesTitle');
 
-  // Modal refs
+  // Modal refs (select .close OR #modalX safely)
   const modal            = q('playerModal');
   const modalPhoto       = q('modalPhoto');
   const modalPhotoInput  = q('modalPhotoInput');
@@ -357,7 +362,127 @@
   const modalDeleteBtn   = q('modalDeleteBtn');
   const modalPrevBtn     = q('modalPrevBtn');
   const modalNextBtn     = q('modalNextBtn');
-  const modalX           = q('modalX');
+
+  // This will match either a span/button with class "close" OR an element with id "modalX"
+  const modalX = modal ? modal.querySelector('.close, #modalX') : null;
+
+  // ---------- IndexedDB ----------
+  const DB_NAME = "TournamentDB";
+  const DB_STORE = "tournaments";
+  let db;
+
+
+  // ---------- Category Navigation (Prev/Next Buttons) ----------
+/* ---------- Category Navigation (Prev/Next Buttons) ---------- */
+const categories = [
+  "U11-Boys", "U11-Girls",
+  "U13-Boys", "U13-Girls",
+  "U15-Boys", "U15-Girls",
+  "U17-Boys", "U17-Girls",
+  "U19-Boys", "U19-Girls",
+  "Men", "Women",
+  "Batch1", "Batch2", "Batch3", "Batch4", "Batch5" // <-- capital B to match <select>
+];
+
+function getCategoryIndex() {
+  return categories.indexOf(getKey());
+}
+
+function maybeAutoBuild() {
+  const st = getState();
+  if (st.players.length >= 2 && st.matches.length === 0) {
+    st.matches = generateRoundRobin(st.players.map(p => p.name));
+    recomputeStats();
+    saveDB();
+  }
+}
+
+function setCategoryByIndex(i) {
+  if (i < 0 || i >= categories.length) return;
+  const parts = categories[i].split("-");
+  const cat = parts[0];
+  const gen = parts[1] || "";
+
+  categorySelect.value = cat;
+  if (gen) genderSelect.value = gen;
+
+  updateGenderVisibility();
+  updateKeyTag();
+  localStorage.setItem("lastCategoryKey", getKey());
+
+  // Auto-generate matches for this category if needed
+  maybeAutoBuild();
+  renderAll();
+}
+
+// Wire the buttons
+on(q("prevCategoryBtn"), "click", () => {
+  const i = getCategoryIndex();
+  if (i > 0) setCategoryByIndex(i - 1);
+});
+on(q("nextCategoryBtn"), "click", () => {
+  const i = getCategoryIndex();
+  if (i < categories.length - 1) setCategoryByIndex(i + 1);
+});
+
+
+
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+      };
+      req.onsuccess = e => { db = e.target.result; resolve(db); };
+      req.onerror = e => reject(e);
+    });
+  }
+
+ // --- Ensure DB is ready before saving ---
+function saveDB() {
+  if (!db) return;
+  const out = {};
+  for (const [k, v] of Object.entries(TOURNAMENTS)) {
+    out[k] = {
+      players: v.players,
+      matches: v.matches,
+      stats: Object.fromEntries(v.stats || new Map()),
+      meta: v.meta || {}
+    };
+  }
+  const tx = db.transaction(DB_STORE, "readwrite");
+  tx.objectStore(DB_STORE).put(JSON.stringify(out), "data");
+  tx.oncomplete = () => console.log("Saved to DB (Edge safe)");
+}
+
+  function loadDB() {
+    return new Promise(resolve => {
+      if (!db) return resolve();
+      const tx = db.transaction(DB_STORE, "readonly");
+      const req = tx.objectStore(DB_STORE).get("data");
+      req.onsuccess = e => {
+        if (e.target.result) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            for (const [k, v] of Object.entries(parsed)) {
+              TOURNAMENTS[k] = {
+                players: v.players || [],
+                matches: v.matches || [],
+                stats: new Map(Object.entries(v.stats || {})),
+                meta: v.meta || {}
+              };
+            }
+          } catch {}
+        }
+        resolve();
+      };
+      req.onerror = () => resolve();
+    });
+  }
 
   // ---------- Category/Gender helpers ----------
   function keyFrom(cat, gen) {
@@ -387,7 +512,7 @@
   const lastKey = localStorage.getItem('lastCategoryKey');
   if (lastKey) {
     const [cat, sub] = lastKey.split('-');
-    categorySelect.value = cat;
+    categorySelect.value = cat || 'U11';
     if (sub) genderSelect.value = sub;
   } else {
     categorySelect.value = 'U11';
@@ -396,24 +521,30 @@
   updateGenderVisibility();
   updateKeyTag();
 
-  categorySelect.addEventListener('change', () => {
-    updateGenderVisibility();
-    localStorage.setItem('lastCategoryKey', getKey());
-    updateKeyTag();
-    renderAll();
-  });
-  genderSelect.addEventListener('change', () => {
-    localStorage.setItem('lastCategoryKey', getKey());
-    updateKeyTag();
-    renderAll();
-  });
+ on(categorySelect, 'change', () => {
+  saveDB();
+  updateGenderVisibility();
+  localStorage.setItem('lastCategoryKey', getKey());
+  updateKeyTag();
+  maybeAutoBuild();
+  renderAll();
+});
+
+on(genderSelect, 'change', () => {
+  saveDB();
+  localStorage.setItem('lastCategoryKey', getKey());
+  updateKeyTag();
+  maybeAutoBuild();
+  renderAll();
+});
+
 
   // ---------- Sidebar toggle ----------
-  togglePlayersBtn.onclick = () => playerSidebar.classList.add('active');
-  closeSidebarBtn.onclick  = () => playerSidebar.classList.remove('active');
+  on(togglePlayersBtn, 'click', () => playerSidebar.classList.add('active'));
+  on(closeSidebarBtn,  'click', () => playerSidebar.classList.remove('active'));
 
   // ---------- Players ----------
-  addBtn.onclick = () => {
+  on(addBtn, 'click', () => {
     const v = playerName.value.trim();
     if (!v) return;
     const st = getState();
@@ -421,10 +552,12 @@
     playerName.value = '';
     renderPlayersSidebar();
     updateCount();
-  };
-  playerName.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+    saveDB();
+  });
 
-  bulkBtn.onclick = () => {
+  on(playerName, 'keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+  on(bulkBtn, 'click', () => {
     const names = bulk.value.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
     if (!names.length) return;
     const st = getState();
@@ -432,9 +565,10 @@
     bulk.value = '';
     renderPlayersSidebar();
     updateCount();
-  };
+    saveDB();
+  });
 
-  clearBtn.onclick = () => {
+  on(clearBtn, 'click', () => {
     if (!confirm('Clear all players in this tournament?')) return;
     const st = getState();
     st.players = [];
@@ -442,11 +576,13 @@
     st.stats = new Map();
     renderAll();
     updateCount();
-  };
+    saveDB();
+  });
 
   function updateCount() {
     const st = getState();
     count.textContent = `${st.players.length} player${st.players.length === 1 ? '' : 's'}`;
+    saveDB();
   }
 
   function renderPlayersSidebar() {
@@ -483,6 +619,7 @@
         st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
         recomputeStats();
         renderAll();
+        saveDB();
       };
 
       card.appendChild(img);
@@ -496,7 +633,6 @@
 
   // ---------- Matches (Round Robin) ----------
   function generateRoundRobin(names) {
-    // Standard round robin pairing (single round)
     const arr = names.slice();
     if (arr.length < 2) return [];
     if (arr.length % 2 === 1) arr.push('BYE');
@@ -524,12 +660,12 @@
       const movedFromRight = right.splice(0, 1)[0];
       left = [lFixed, ...right];
       right = [...right.slice(1), movedFromLeft];
-      right.unshift(movedFromRight); // re-balance
+      right.unshift(movedFromRight);
     }
     return rounds;
   }
 
-  buildBtn.onclick = () => {
+  on(buildBtn, 'click', () => {
     const st = getState();
     const names = st.players.map(p => p.name).filter(Boolean);
     if (names.length < 2) {
@@ -540,18 +676,20 @@
     recomputeStats();
     renderMatches();
     renderStats();
-  };
+    saveDB();
+  });
 
-  resetBtn.onclick = () => {
+  on(resetBtn, 'click', () => {
     const st = getState();
     if (!confirm('Reset all match scores for this tournament?')) return;
     st.matches.forEach(m => { m.sa=''; m.sb=''; m.saved=false; });
     recomputeStats();
     renderMatches();
     renderStats();
-  };
+    saveDB();
+  });
 
-  printBtn.onclick = () => window.print();
+  on(printBtn, 'click', () => window.print());
 
   function renderMatches() {
     const st = getState();
@@ -628,6 +766,7 @@
 
           recomputeStats();
           renderStats();
+          saveDB(); // persist scores immediately
         };
 
         rowIdx++;
@@ -643,7 +782,6 @@
 
   function recomputeStats() {
     const st = getState();
-    // reset
     st.stats = new Map();
     for (const p of st.players) st.stats.set(p.name, { P:0, W:0, L:0, PF:0, PA:0 });
 
@@ -699,14 +837,15 @@
     const p = st.players[idx];
 
     // Fill fields
-    modalPhoto.src = p.photo || 'https://via.placeholder.com/160';
-    modalId.value = p.id || '';
-    modalAadhar.value = p.aadhar || '';
+    if (!modal) return;
+    modalPhoto.src     = p.photo || 'https://via.placeholder.com/160';
+    modalId.value      = p.id || '';
+    modalAadhar.value  = p.aadhar || '';
     modalNameInput.value = p.name || '';
-    modalAge.value = p.age || '';
+    modalAge.value     = p.age || '';
     modalCountry.value = p.country || '';
-    modalVideo.value = p.video || '';
-    modalBio.value = p.bio || '';
+    modalVideo.value   = p.video || '';
+    modalBio.value     = p.bio || '';
 
     const s = getStatsFor(p.name);
     modalStats.innerHTML = `
@@ -720,7 +859,7 @@
       </table>
     `;
 
-    // Handlers
+    // Photo change
     modalPhotoInput.value = '';
     modalPhotoInput.onchange = () => {
       if (modalPhotoInput.files && modalPhotoInput.files[0]) {
@@ -729,31 +868,30 @@
           st.players[idx].photo = e.target.result;
           modalPhoto.src = e.target.result;
           renderPlayersSidebar();
+          saveDB();
         };
         rd.readAsDataURL(modalPhotoInput.files[0]);
       }
     };
 
+    // Save
     modalSaveBtn.onclick = () => {
       const oldName = p.name;
       const newName = modalNameInput.value.trim() || oldName;
 
-      // update fields
-      p.id = modalId.value.trim();
-      p.aadhar = modalAadhar.value.trim();
-      p.name = newName;
-      p.age = modalAge.value.trim();
+      p.id      = modalId.value.trim();
+      p.aadhar  = modalAadhar.value.trim();
+      p.name    = newName;
+      p.age     = modalAge.value.trim();
       p.country = modalCountry.value.trim();
-      p.video = modalVideo.value.trim();
-      p.bio = modalBio.value.trim();
+      p.video   = modalVideo.value.trim();
+      p.bio     = modalBio.value.trim();
 
-      // rename in matches if name changed
       if (newName !== oldName) {
         for (const m of st.matches) {
           if (m.a === oldName) m.a = newName;
           if (m.b === oldName) m.b = newName;
         }
-        // move stats entry
         const oldStats = st.stats.get(oldName);
         if (oldStats) {
           st.stats.delete(oldName);
@@ -767,30 +905,28 @@
       renderMatches();
       renderStats();
       closeModal();
+      saveDB();
     };
 
-    modalPrevBtn.onclick = () => {
-      if (currentPlayerIndex > 0) showPlayerDetails(currentPlayerIndex - 1);
-    };
-    modalNextBtn.onclick = () => {
-      const st2 = getState();
-      if (currentPlayerIndex < st2.players.length - 1) showPlayerDetails(currentPlayerIndex + 1);
-    };
+    // Prev/Next
+    modalPrevBtn.onclick = () => { if (currentPlayerIndex > 0) showPlayerDetails(currentPlayerIndex - 1); };
+    modalNextBtn.onclick = () => { if (currentPlayerIndex < getState().players.length - 1) showPlayerDetails(currentPlayerIndex + 1); };
 
+    // Delete
     modalDeleteBtn.onclick = () => {
       if (!confirm(`Delete ${p.name || 'this player'}?`)) return;
       st.players.splice(idx, 1);
-      // remove matches involving this player
       st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
       recomputeStats();
       renderPlayersSidebar();
       renderMatches();
       renderStats();
       closeModal();
+      saveDB();
     };
 
     modalCancelBtn.onclick = closeModal;
-    modalX.onclick = closeModal;
+    if (modalX) modalX.onclick = closeModal; // works for either .close or #modalX
 
     modal.classList.add('open');
     modal.style.display = 'flex';
@@ -804,14 +940,13 @@
   };
 
   // ---------- Import / Export (ENTIRE DB) ----------
-  exportBtn.onclick = () => {
-    // Convert Map -> plain object for each tournament
+  on(exportBtn, 'click', () => {
     const out = {};
     for (const [k, v] of Object.entries(TOURNAMENTS)) {
       out[k] = {
         players: v.players,
         matches: v.matches,
-        stats: Object.fromEntries(v.stats), // map to object
+        stats: Object.fromEntries(v.stats),
         meta: v.meta || {}
       };
     }
@@ -820,17 +955,16 @@
     a.href = URL.createObjectURL(blob);
     a.download = 'round_robin_database.json';
     a.click();
-  };
+  });
 
-  importBtn.onclick = () => importFile.click();
-  importFile.onchange = e => {
+  on(importBtn, 'click', () => importFile.click());
+  on(importFile, 'change', e => {
     const f = e.target.files[0];
     if (!f) return;
     const r = new FileReader();
     r.onload = ev => {
       try {
         const data = JSON.parse(ev.target.result);
-        // rebuild TOURNAMENTS
         for (const k of Object.keys(TOURNAMENTS)) delete TOURNAMENTS[k];
         for (const [k, v] of Object.entries(data)) {
           TOURNAMENTS[k] = {
@@ -841,13 +975,14 @@
           };
         }
         renderAll();
+        saveDB();
         alert('Imported entire database successfully.');
       } catch (err) {
         alert('Invalid file.');
       }
     };
     r.readAsText(f);
-  };
+  });
 
   // ---------- Initial render ----------
   function renderAll() {
@@ -855,10 +990,15 @@
     updateCount();
     renderMatches();
     renderStats();
+    saveDB();
   }
-  renderAll();
+
+  openDB().then(() => loadDB()).then(() => { renderAll(); });
+
 })();
 </script>
 
+
 </body>
+<script src="tournament.js"></script> 
 </html>
