@@ -168,7 +168,7 @@
 <header>
   <h1 id="title">🏸 Badminton Round Robin</h1>
   <button class="btn" id="menuToggle">☰ Menu</button>
-  <div class="controls">
+  <div class="controls" id="controlsPanel">
     <button class="btn" id="togglePlayersBtn">👥 Players</button>
 
     <select id="mode">
@@ -244,9 +244,11 @@
 
 
 const playerList = document.getElementById('playerList');
+
 const menuToggle = document.getElementById('menuToggle');
-const controlsPanel = document.getElementById('controlsPanel');
+const controlsPanel = document.querySelector('header .controls');
 menuToggle.onclick = () => controlsPanel.classList.toggle('open');
+
 
 
 // Toggle sidebar
