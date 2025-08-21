@@ -90,6 +90,44 @@
   color: var(--text);
 }
 
+/* === Mobile Responsive Fix === */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    gap: 8px;
+    position: static; /* remove sticky on mobile */
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .controls input,
+  .controls select,
+  .controls textarea,
+  .controls button {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  main {
+    display: block;
+    padding: 10px;
+  }
+
+  aside {
+    position: static;
+    height: auto;
+    margin-top: 12px;
+  }
+}
+
+
 </style>
 </head>
 <body>
@@ -109,7 +147,9 @@
     </select>
     <input id="tName" placeholder="Tournament Name" style="width:190px">
     <input id="tDate" type="date" style="width:155px">
+
     <label><input type="checkbox" id="shuffle"> Randomize</label>
+
     <button class="btn primary" id="buildBtn">Generate</button>
     <button class="btn" id="resetBtn">Reset</button>
     <button class="btn" id="exportBtn">Export</button>
@@ -118,6 +158,7 @@
     <button class="btn" id="printBtn">Print</button>
 
     <span class="legend" id="count">0 players</span>
+
     <input id="playerName" placeholder="Add player/team">
     <button class="btn" id="addBtn">＋ Add</button>
     <textarea id="bulk" placeholder="Paste names list"></textarea>
@@ -165,9 +206,9 @@
   const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
   const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
 
-  const togglePlayersBtn = document.getElementById('togglePlayersBtn');
-const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-const playerSidebar = document.getElementById('playerSidebar');
+ const togglePlayersBtn = q('togglePlayersBtn');
+const closeSidebarBtn = q('closeSidebarBtn');
+const playerSidebar = q('playerSidebar');
 const playerList = document.getElementById('playerList');
 
 // Toggle sidebar
@@ -185,7 +226,7 @@ function renderPlayersSidebar() {
     const div = document.createElement('div');
     div.className = 'player-card';
     div.innerHTML = `
-      <img src="${p.photo || 'https://via.placeholder.com/40'}" 
+      <img src="${p.photo || 'https://via.placeholder.com/30'}" 
            style="width:30px;height:30px;border-radius:50%;margin-right:8px;">
       <span>${p.name}</span>
     `;
@@ -194,72 +235,117 @@ function renderPlayersSidebar() {
   });
 }
 
+function updatePlayerStatsInModal(p){
+  const statsBox = document.getElementById('modalStats');
+  if (!statsBox || !p) return;
+  const stats = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
+  statsBox.innerHTML = `
+    <p><strong>Played:</strong> ${stats.P}</p>
+    <p><strong>Wins:</strong> ${stats.W}</p>
+    <p><strong>Losses:</strong> ${stats.L}</p>
+    <p><strong>Points For:</strong> ${stats.PF}</p>
+    <p><strong>Points Against:</strong> ${stats.PA}</p>
+  `;
+}
+
 
 function showPlayerDetails(idx) {
-  const p = S.players[idx];
-  const modal     = document.getElementById('playerModal');
-  const photoEl   = document.getElementById('modalPhoto');
-  const nameEl    = document.getElementById('modalName');
-  const fileInput = document.getElementById('photoInput');
-  const saveBtn   = document.getElementById('savePlayerBtn');
+    const p = S.players[idx];
+    const modal   = q('playerModal');
+    const photoEl = q('modalPhoto');
+    const cardName= q('modalCardName');
+    const cardMeta= q('modalCardMeta');
+    const nameInp = q('modalNameInput');
+    const fileInp = q('modalPhotoInput');
+    const statsBox= q('modalStats');
+    
+    const saveBtn   = q('modalSaveBtn');
+    const cancelBtn = q('modalCancelBtn');
+    const deleteBtn = q('modalDeleteBtn');
+    const prevBtn   = q('modalPrevBtn');
+    const nextBtn   = q('modalNextBtn');
 
-  if (!modal) {
-    alert(`${p.name}\n(Edit coming soon)`);
-    return;
+    if (!modal) return;
+
+    // Fill card
+    photoEl.src = p.photo || 'https://via.placeholder.com/96';
+    cardName.textContent = p.name;
+    nameInp.value = p.name;
+
+    const stats = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
+    cardMeta.textContent = `P:${stats.P} • W:${stats.W} • L:${stats.L}`;
+    statsBox.innerHTML = `
+      <p><strong>Played:</strong> ${stats.P}</p>
+      <p><strong>Wins:</strong> ${stats.W}</p>
+      <p><strong>Losses:</strong> ${stats.L}</p>
+      <p><strong>Points For:</strong> ${stats.PF}</p>
+      <p><strong>Points Against:</strong> ${stats.PA}</p>
+    `;
+
+    modal.style.display = 'flex';
+    modal.classList.add('open');
+
+    // Save
+    saveBtn.onclick = () => {
+      const newName = nameInp.value.trim() || p.name;
+      if (newName !== p.name) renameParticipant(p.name, newName);
+      p.name = newName;
+
+      if (fileInp.files && fileInp.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          p.photo = e.target.result;
+          finish();
+        };
+        reader.readAsDataURL(fileInp.files[0]);
+      } else {
+        finish();
+      }
+
+      function finish() {
+        S.players[idx] = p;
+        renderPlayersSidebar();
+        renderMatches();
+        renderStats();
+        updateCount();
+        closeModal();
+      }
+    };
+
+    prevBtn.onclick = () => idx>0 && showPlayerDetails(idx-1);
+    nextBtn.onclick = () => idx<S.players.length-1 && showPlayerDetails(idx+1);
+
+    // ✅ fix delete
+    deleteBtn.onclick = () => {
+      if (confirm(`Delete ${p.name}?`)) {
+        S.players.splice(idx,1);
+        renderPlayersSidebar();
+        renderMatches();
+        renderStats();
+        updateCount();
+        closeModal();
+      }
+    };
+
+    cancelBtn.onclick = closeModal;
   }
 
-  // populate
-  photoEl.src = p.photo || 'https://via.placeholder.com/100';
-  nameEl.value = p.name;
-  fileInput.value = '';
-  modal.classList.add('open');
-
-  // save handler
-  saveBtn.onclick = () => {
-    const newName = nameEl.value.trim() || p.name;
-
-    // rename across matches + stats if name changed
-    if (newName !== p.name) renameParticipant(p.name, newName);
-    p.name = newName;
-
-    if (fileInput.files && fileInput.files[0]) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        p.photo = e.target.result; // Base64
-        finish();
-      };
-      reader.readAsDataURL(fileInput.files[0]);
-    } else {
-      finish();
-    }
-
-    function finish() {
-      S.players[idx] = p;
-      renderPlayersSidebar();
-      renderMatches();
-      renderStats();
-      updateCount();
+  // ✅ make closeModal global
+  window.closeModal = function() {
+    const modal = q('playerModal');
+    if (modal) {
       modal.classList.remove('open');
+      modal.style.display = 'none';
     }
   };
-}
 
-
-function renameParticipant(oldName, newName){
-  // update matches
-  S.matches.forEach(m => {
-    if (m.A === oldName) m.A = newName;
-    if (m.B === oldName) m.B = newName;
-  });
-  // update stats map key
-  if (S.stats.has(oldName)) {
-    const v = S.stats.get(oldName);
+function renameParticipant(oldName,newName){
+  if(S.stats.has(oldName)){
+    const v=S.stats.get(oldName);
     S.stats.delete(oldName);
-    S.stats.set(newName, v);
+    S.stats.set(newName,v);
   }
 }
-
-
 
 // Removed stray closing brace here
 
@@ -275,14 +361,16 @@ addBtn.onclick=()=>{
   renderPlayersSidebar();
 };
   playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-bulkBtn.onclick=()=>{
-  bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>{
-    S.players.push({ name: n, photo: null });
-  });
-  bulk.value='';
+bulkBtn.onclick = () => {
+  bulk.value.split(/[,\r\n]+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .forEach(n => S.players.push({ name: n, photo: null }));
+  bulk.value = '';
   updateCount();
   renderPlayersSidebar();
 };
+
 clearBtn.onclick=()=>{
   S.players=[];
   updateCount();
@@ -294,52 +382,49 @@ clearBtn.onclick=()=>{
 
   function build(){
   if(S.players.length<2){alert("Need at least 2 players");return;}
-  S.meta.name=tName.value||'Tournament';
-  S.meta.date=tDate.value||new Date().toISOString().slice(0,10);
-  S.meta.mode=modeSel.value; 
-  S.meta.format=formatSel.value;
-  title.textContent=`🏸 ${S.meta.name} (${S.meta.date})`;
 
-  let entries = (S.players || []).map(p => typeof p === 'string' ? p : p.name);
+  S.meta.name = tName.value || 'Tournament';
+  S.meta.date = tDate.value || new Date().toISOString().slice(0,10);
+  S.meta.mode = modeSel.value;
+  S.meta.format = formatSel.value;
+  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
+
+  // ✅ keep full player objects, not just strings
+  let entries = [...S.players];
+
   if(shuffle.checked) shuffleArr(entries);
 
-  // Handle doubles logic
   if(S.meta.mode==="auto_doubles"){
     const teams=[];
     for(let i=0;i<entries.length;i+=2){
-       if (i + 1 < entries.length) {
-        teams.push(`${entries[i]} & ${entries[i+1]}`);
-      } else {
-        teams.push(`${entries[i]} (bye)`);
+      if(i+1<entries.length){
+        teams.push({name:`${entries[i].name} & ${entries[i+1].name}`,photo:null});
+      }else{
+        teams.push({name:`${entries[i].name} (bye)`,photo:null});
       }
     }
-    entries = teams;
-  } else if (S.meta.mode === "doubles") {
-    // Expect user to already enter teams manually (as names)
-    // so we don’t regroup here
+    entries=teams;
   }
-  // singles just keeps entries as is
 
-  // Generate round robin pairings
   S.matches=[];
   for(let i=0;i<entries.length;i++){
     for(let j=i+1;j<entries.length;j++){
-      // Skip "bye" matches
-      if(entries[i].includes("(bye)") || entries[j].includes("(bye)")) continue;
+      if(entries[i].name.includes("(bye)")||entries[j].name.includes("(bye)")) continue;
       S.matches.push({A:entries[i],B:entries[j],scoreA:null,scoreB:null});
     }
   }
 
-  // init stats
-  S.stats.clear(); 
-  entries.forEach(n=>{
-    if(!n.includes("(bye)")) S.stats.set(n,{P:0,W:0,L:0,PF:0,PA:0});
+  // stats
+  S.stats.clear();
+  entries.forEach(p=>{
+    if(!p.name.includes("(bye)")) S.stats.set(p.name,{P:0,W:0,L:0,PF:0,PA:0});
   });
 
   renderMatches();
   renderStats();
-   renderPlayersSidebar();
+  renderPlayersSidebar();
 }
+
 
 
   function renderMatches(){
@@ -349,7 +434,7 @@ clearBtn.onclick=()=>{
     const tb=document.createElement('tbody');
     S.matches.forEach((m,idx)=>{
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${m.A} vs ${m.B}</td>`;
+    tr.innerHTML = `<td>${m.A.name} vs ${m.B.name}</td>`;
       const tdScore=document.createElement('td');
       const A=document.createElement('input'); A.type='number'; A.min=0; A.value=m.scoreA??'';
       const B=document.createElement('input'); B.type='number'; B.min=0; B.value=m.scoreB??'';
@@ -392,6 +477,12 @@ clearBtn.onclick=()=>{
       if(i===0) tr.classList.add('champ');
       statsBody.appendChild(tr);
     });
+    const modal = document.getElementById('playerModal');
+  if (modal && modal.classList.contains('open')) {
+    const currentName = document.getElementById('modalName')?.value;
+    const current = S.players.find(pl => pl.name === currentName);
+    if (current) updatePlayerStatsInModal(current);
+  }
   }
 
   // Export / Import
@@ -405,11 +496,14 @@ clearBtn.onclick=()=>{
     return;
   }
   const data=JSON.stringify({
-    players:S.players,
-    matches:S.matches,
-    meta:S.meta,
-    stats:[...S.stats]
-  },null,2);
+  players: S.players,
+  matches: S.matches.map(m=>({
+    A:m.A.name, B:m.B.name, scoreA:m.scoreA, scoreB:m.scoreB
+  })),
+  meta: S.meta,
+  stats: [...S.stats]
+},null,2);
+
 
   const blob=new Blob([data],{type:'application/json'});
   const a=document.createElement('a'); 
@@ -430,9 +524,18 @@ importFile.onchange = e => {
       const o = JSON.parse(ev.target.result);
 
       // players: normalize to objects with {name, photo}
-      S.players = Array.isArray(o.players)
-        ? o.players.map(p => typeof p === "string" ? { name: p, photo: null } : p)
-        : [];
+     S.players = Array.isArray(o.players)
+  ? o.players.map(p=>typeof p==="string"?{name:p,photo:null}:p)
+  : [];
+
+S.matches = Array.isArray(o.matches)
+  ? o.matches.map(m=>{
+      const A = S.players.find(p=>p.name===m.A) || {name:m.A,photo:null};
+      const B = S.players.find(p=>p.name===m.B) || {name:m.B,photo:null};
+      return {A,B,scoreA:m.scoreA,scoreB:m.scoreB};
+    })
+  : [];
+
 
       // ✅ restore matches
       S.matches = Array.isArray(o.matches) ? o.matches : [];
@@ -465,32 +568,164 @@ importFile.onchange = e => {
 </script>
 
 <style>
-  /* minimal modal */
-  #playerModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 200; }
-  #playerModal.open { display: flex; }
-  #playerModal .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.5); }
-  #playerModal .card { position: relative; background: var(--panel); border-radius: 14px; padding: 16px; width: 320px; }
-  #playerModal .row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
-  #playerModal img { width: 96px; height: 96px; border-radius: 12px; object-fit: cover; }
-  #playerModal .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+/* Player modal */
+#playerModal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+#playerModal.open { display: flex; }
+#playerModal .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+}
+#playerModal .modal-content {
+  position: relative;
+  background: var(--panel);
+  border-radius: 20px;
+  padding: 20px;
+  width: 380px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+  z-index: 210;
+  animation: fadeIn .25s ease;
+}
+
+/* Header with X inside */
+#playerModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+#playerModal .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text);
+}
+#playerModal .modal-header button.close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+#playerModal .modal-header button.close:hover {
+  color: var(--accent);
+}
+
+/* Beautiful card look */
+.player-card.modal-view {
+  background: linear-gradient(145deg, #1a2233, #0f1625);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: inset 0 0 10px rgba(73,168,255,0.15);
+}
+
+.player-card.modal-view img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(73,168,255,0.3);
+}
+
+.player-card.modal-view .player-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+.player-card.modal-view .player-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+#playerList .player-card {
+  background: #141c2b;
+  border: 1px solid #1f2738;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+#playerList .player-card:hover {
+  background: #1b2538;
+  transform: translateY(-2px);
+}
+
+#playerList .player-card img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+}
+#playerList .player-card span {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+
+
+
 </style>
 
-<div id="playerModal">
-  <div class="overlay" onclick="document.getElementById('playerModal').classList.remove('open')"></div>
-  <div class="card">
-    <div class="row">
-      <img id="modalPhoto" src="https://via.placeholder.com/100" alt="">
-      <div>
-        <input id="modalName" placeholder="Player name" style="width: 190px">
-        <input id="photoInput" type="file" accept="image/*">
+<!-- Player details / edit modal -->
+<div id="playerModal" class="modal hidden">
+  <div class="overlay" onclick="closeModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Player Details</h3>
+      <button class="close" onclick="closeModal()">×</button>
+    </div>
+    
+    <!-- Player card -->
+    <div class="player-card modal-view">
+      <img id="modalPhoto" src="" alt="Player" />
+      <div class="player-info">
+        <div class="player-name" id="modalCardName"></div>
+        <div class="player-meta" id="modalCardMeta"></div>
       </div>
     </div>
-    <div class="actions">
-      <button class="btn" onclick="document.getElementById('playerModal').classList.remove('open')">Close</button>
-      <button class="btn primary" id="savePlayerBtn">Save</button>
+
+
+    <!-- Editable inputs -->
+    <div style="margin-top:12px; display:grid; gap:8px;">
+      <input id="modalNameInput" placeholder="Player name" />
+      <input type="file" id="modalPhotoInput" accept="image/*" />
+    </div>
+
+    <!-- Stats below card -->
+    <div id="modalStats" style="margin-top:12px;text-align:left;font-size:14px;"></div>
+
+    <!-- Navigation -->
+    <div style="margin-top:12px; display:flex; justify-content:space-between;">
+      <button class="btn" id="modalPrevBtn">⟵ Prev</button>
+      <button class="btn" id="modalNextBtn">Next ⟶</button>
+    </div>
+
+    <!-- Actions -->
+    <div class="modal-actions" style="margin-top:14px; display:flex; gap:8px; justify-content:center;">
+      <button class="btn primary" id="modalSaveBtn">Save</button>
+      <button class="btn" id="modalCancelBtn" onclick="closeModal()">Cancel</button>
+      <button class="btn" id="modalDeleteBtn" style="border-color:#7a1f1f;background:#2a1313;">Delete</button>
     </div>
   </div>
 </div>
+
+
 
 </body>
 </html>
