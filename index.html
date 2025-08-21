@@ -161,6 +161,48 @@
     @media (max-width:900px){
       .login-container {flex-direction:column;max-width:95%}
     }
+
+
+    /* Hide menu button on desktop */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--white);
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tabs {
+    display: none; /* hide full tabs row */
+    flex-direction: column;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 100%;
+    background: #0f1724;
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    z-index: 100;
+  }
+  .tabs.open {
+    display: flex;
+  }
+
+  .tab {
+    padding: 12px;
+    text-align: center;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .menu-btn {
+    display: block;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -196,6 +238,10 @@
     <!-- APP AREA -->
     <div id="appView" class="app hidden" aria-hidden="true">
       <div class="topbar">
+       <button id="menuToggle" class="menu-btn">
+  <i class="fa fa-bars"></i>
+</button>
+ 
         <div class="brand">
           <div class="logo">DP</div>
           <div>
@@ -243,6 +289,14 @@
     const signOutBtn = document.getElementById('signOutBtn');
     const tabs = document.querySelectorAll('.tab');
     const currentUser = document.getElementById('currentUser');
+
+    const menuToggle = document.getElementById('menuToggle');
+const tabsContainer = document.querySelector('.tabs');
+
+menuToggle.addEventListener('click', () => {
+  tabsContainer.classList.toggle('open');
+});
+
 
     // ---- Set your login credentials ----
     const VALID_USER = "admin";
