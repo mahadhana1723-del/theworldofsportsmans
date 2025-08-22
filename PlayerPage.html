@@ -95,6 +95,37 @@ let editIndex=null;
 const tableBody=document.querySelector("#playerTable tbody");
 const popup=document.getElementById("profilePopup");
 
+// ---------------- IndexedDB ----------------
+let db;
+function initDB(){
+  const req=indexedDB.open("playerDB",1);
+  req.onupgradeneeded=e=>{
+    db=e.target.result;
+    if(!db.objectStoreNames.contains("players")){
+      db.createObjectStore("players",{keyPath:"id"});
+    }
+  };
+  req.onsuccess=e=>{ db=e.target.result; loadPlayers(); };
+  req.onerror=e=>console.error("DB error",e.target.error);
+}
+
+function savePlayers(){
+  if(!db) return;
+  const tx=db.transaction("players","readwrite");
+  const store=tx.objectStore("players");
+  store.clear();
+  S.players.forEach(p=>store.put(p));
+}
+
+function loadPlayers(){
+  if(!db) return;
+  const tx=db.transaction("players","readonly");
+  const store=tx.objectStore("players");
+  const req=store.getAll();
+  req.onsuccess=()=>{ S.players=req.result||[]; renderPlayers(); };
+}
+// -------------------------------------------
+
 function renderPlayers(filter=""){
   tableBody.innerHTML="";
   S.players
@@ -118,7 +149,6 @@ function renderPlayers(filter=""){
       tableBody.appendChild(tr);
     });
 }
-
 
 function showProfile(p,index){
   document.getElementById("profilePhoto").src = p.photo || "";
@@ -144,6 +174,7 @@ function markAttendance(index,status){
   const today=new Date().toISOString().slice(0,10);
   if(!S.players[index].attendance) S.players[index].attendance=[];
   S.players[index].attendance.push({date:today,status});
+  savePlayers();
   alert(`${S.players[index].name} marked ${status} (${today})`);
 }
 
@@ -151,21 +182,25 @@ function markAttendance(index,status){
 document.getElementById("addBtn").onclick=()=>{
   const p=getFormValues();
   if(!p.name) return;
+  if(!p.id) p.id=Date.now();
   S.players.push(p);
   clearForm();
   renderPlayers();
+  savePlayers();
 };
 
 // Save Edit
 document.getElementById("saveEditBtn").onclick=()=>{
   if(editIndex===null) return;
   const updated=getFormValues(S.players[editIndex].photo);
+  updated.id=S.players[editIndex].id; // keep same ID
   S.players[editIndex]=updated;
   clearForm();
   editIndex=null;
   document.getElementById("addBtn").style.display="inline-block";
   document.getElementById("saveEditBtn").style.display="none";
   renderPlayers();
+  savePlayers();
 };
 
 function loadEdit(idx){
@@ -201,7 +236,7 @@ function getFormValues(oldPhoto=""){
 
   if(file){
     const reader=new FileReader();
-    reader.onload=e=>{ base.photo=e.target.result; };
+    reader.onload=e=>{ base.photo=e.target.result; savePlayers(); };
     reader.readAsDataURL(file);
   }
   return base;
@@ -240,9 +275,7 @@ importFile.onchange = e => {
   r.onload = ev => {
     try {
       const o = JSON.parse(ev.target.result);
-
-      // ask user what type of file
-      const fileType = prompt("What type of file is this? (players / attendance / knockout / roundrobin)", "players");
+      const fileType = prompt("What type of file is this? (players / attendance)", "players");
 
       if (fileType === "players") {
         if (Array.isArray(o.players)) {
@@ -253,21 +286,8 @@ importFile.onchange = e => {
           alert("❌ Not a valid players file");
           return;
         }
-
-        // normalize
-        S.players = S.players.map(p => ({
-          id: p.id || Date.now(),
-          name: p.name || "Unnamed",
-          country: p.country || "",
-          age: p.age || "",
-          bio: p.bio || "",
-          photo: p.photo || "",
-          videos: p.videos || [],
-          stats: p.stats || { matchesPlayed: 0, wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 },
-          attendance: p.attendance || []
-        }));
-
         renderPlayers();
+        savePlayers();
 
       } else if (fileType === "attendance") {
         if (o.attendance) {
@@ -276,20 +296,11 @@ importFile.onchange = e => {
             if (p) p.attendance = att.attendance;
           });
           renderPlayers();
+          savePlayers();
         } else {
           alert("❌ Not a valid attendance file");
         }
-
-      } else if (fileType === "knockout") {
-        alert("⚠ Knockout file detected. Please open it in the Knockout page (brackets).");
-
-      } else if (fileType === "roundrobin") {
-        alert("⚠ Round Robin file detected. Please open it in the Round Robin page.");
-
-      } else {
-        alert("❌ Unknown file type.");
       }
-
     } catch (err) {
       alert("Bad file: " + err.message);
     }
@@ -297,9 +308,11 @@ importFile.onchange = e => {
   r.readAsText(f);
 };
 
-
 // Search
 document.getElementById("searchBar").oninput=(e)=>{ renderPlayers(e.target.value); };
+
+// Init
+initDB();
 </script>
 </body>
 </html>
