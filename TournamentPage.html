@@ -40,7 +40,7 @@
   aside{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto}
   aside h3{margin:6px 6px 10px; font-size:16px}
   table.stats{width:100%; border-collapse:separate; border-spacing:0 6px}
-  th,td{font-size:12px; padding:6px 8px; text-align:right}
+  th,td{font-size:12px; padding:6px 8px; text-align:left}
   th:first-child,td:first-child{text-align:left}
   th{background:#0e1422; color:var(--muted); position:sticky; top:0}
   tr{background:#0e1320; border:1px solid #1f2633}
@@ -633,37 +633,39 @@ on(genderSelect, 'change', () => {
 
   // ---------- Matches (Round Robin) ----------
   function generateRoundRobin(names) {
-    const arr = names.slice();
-    if (arr.length < 2) return [];
-    if (arr.length % 2 === 1) arr.push('BYE');
+  const arr = names.slice();
+  if (arr.length < 2) return [];
+  if (arr.length % 2 === 1) arr.push("BYE");
 
-    const rounds = [];
-    const n = arr.length;
-    const half = n / 2;
+  const rounds = [];
+  const n = arr.length;
+  const half = n / 2;
 
-    let left = arr.slice(0, half);
-    let right = arr.slice(half).reverse();
+  const fixed = arr[0];
+  let rest = arr.slice(1);
 
-    for (let r = 0; r < n - 1; r++) {
-      const pairs = [];
-      for (let i = 0; i < half; i++) {
-        const a = left[i], b = right[i];
-        if (a !== 'BYE' && b !== 'BYE') {
-          pairs.push({ a, b, sa: '', sb: '', saved: false, round: r + 1 });
-        }
+  for (let r = 0; r < n - 1; r++) {
+    const pairs = [];
+
+    const left = [fixed, ...rest.slice(0, half - 1)];
+    const right = rest.slice(half - 1).reverse();
+
+    for (let i = 0; i < half; i++) {
+      const a = left[i], b = right[i];
+      if (a !== "BYE" && b !== "BYE") {
+        pairs.push({ a, b, sa: "", sb: "", saved: false, round: r + 1 });
       }
-      rounds.push(...pairs);
-
-      // rotate (keep left[0] fixed)
-      const lFixed = left[0];
-      const movedFromLeft  = left.splice(1, 1)[0];
-      const movedFromRight = right.splice(0, 1)[0];
-      left = [lFixed, ...right];
-      right = [...right.slice(1), movedFromLeft];
-      right.unshift(movedFromRight);
     }
-    return rounds;
+
+    rounds.push(...pairs);
+
+    // ✅ rotate rest right by 1
+    rest.unshift(rest.pop());
   }
+
+  return rounds;
+}
+
 
   on(buildBtn, 'click', () => {
     const st = getState();
@@ -711,6 +713,7 @@ on(genderSelect, 'change', () => {
 
     let html = `
       <tr>
+        <th style="text-align:left">S.No</th>
         <th style="text-align:left">Round</th>
         <th style="text-align:left">Match</th>
         <th style="text-align:center">A</th>
@@ -725,6 +728,7 @@ on(genderSelect, 'change', () => {
         const rowId = `m_${rnd}_${idx}`;
         html += `
           <tr data-row="${rowId}">
+            <td>${idx}</td>
             <td>R${rnd}</td>
             <td>${esc(m.a)} vs ${esc(m.b)}</td>
             <td style="text-align:center">
@@ -950,12 +954,16 @@ on(genderSelect, 'change', () => {
         meta: v.meta || {}
       };
     }
-    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'round_robin_database.json';
-    a.click();
-  });
+  const fileName = prompt("Enter filename to save:", "round_robin_database.json");
+if (!fileName) return; // user cancelled
+
+const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = fileName.endsWith(".json") ? fileName : fileName + ".json";
+a.click();
+});
+
 
   on(importBtn, 'click', () => importFile.click());
   on(importFile, 'change', e => {
@@ -1000,4 +1008,5 @@ on(genderSelect, 'change', () => {
 
 
 </body>
+<script src="tournament.js"></script> 
 </html>
