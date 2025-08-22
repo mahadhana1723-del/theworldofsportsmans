@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>🏸 Badminton Knockout</title>
+<title>🏸 Badminton Knockout + IndexedDB</title>
 <style>
   :root{
   --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
@@ -11,7 +11,7 @@
   --box-w:180px; --box-h:48px; --col-gap:180px; --row-gap:28px;
 }
 *{box-sizing:border-box}
-body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);}
+body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);} 
 
 /* Dart-style gradient header */
 header{
@@ -120,7 +120,7 @@ main {
 .board{position:relative; overflow:auto; border:1px solid #1a2233; border-radius:14px; background:
     radial-gradient(900px 260px at 25% 0%, rgba(73,168,255,.10), transparent),
     radial-gradient(900px 260px at 70% 100%, rgba(123,220,255,.08), transparent),
-    linear-gradient(180deg,#0c111a,#0b0f17);}
+    linear-gradient(180deg,#0c111a,#0b0f17);} 
 .board-inner{position:relative; margin:28px; min-width:960px; min-height:620px}
 svg#lines{position:absolute; inset:0; pointer-events:none}
 
@@ -162,132 +162,42 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
 .confetti{position:absolute; width:8px; height:8px; background:gold; animation:fall 2.2s linear forwards}
 
 /* ===== Player Modal (improved order) ===== */
-.modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 200;
-}
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 200; }
 .modal.hidden { display: none; }
-.modal-content {
-  background: var(--panel);
-  padding: 20px;
-  border-radius: 14px;
-  width: min(900px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
-  color: var(--text);
-  text-align: left;
-  position: relative;
-  box-shadow: 0 18px 40px rgba(0,0,0,.45);
-}
-.modal-content .close {
-  position: absolute; top: 12px; right: 14px;
-  font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--text);
-}
+.modal-content { background: var(--panel); padding: 20px; border-radius: 14px; width: min(900px, 94vw); max-height: 90vh; overflow-y: auto; color: var(--text); text-align: left; position: relative; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.modal-content .close { position: absolute; top: 12px; right: 14px; font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--text); }
 .player-editor { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
 @media (max-width: 720px){ .player-editor{ grid-template-columns: 1fr; } }
-.player-avatar {
-  background: var(--panel-2);
-  border: 1px solid #1f2738;
-  border-radius: 12px;
-  padding: 14px;
-  text-align: center;
-}
-.player-avatar img {
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  border: 3px solid var(--accent);
-  object-fit: cover;
-  margin-bottom: 12px;
-}
-.player-form {
-  display: grid;
-  grid-template-columns: repeat(12,1fr);
-  gap: 14px;
-}
+.player-avatar { background: var(--panel-2); border: 1px solid #1f2738; border-radius: 12px; padding: 14px; text-align: center; }
+.player-avatar img { width: 160px; height: 160px; border-radius: 50%; border: 3px solid var(--accent); object-fit: cover; margin-bottom: 12px; }
+.player-form { display: grid; grid-template-columns: repeat(12,1fr); gap: 14px; }
 .f { display:flex; flex-direction:column; gap:6px; }
 .f label { font-size: 12px; color: var(--muted); }
-.f input, .f textarea {
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #1f2738;
-  background: #0e1320;
-  color: var(--text);
-}
+.f input, .f textarea { padding: 8px 10px; border-radius: 10px; border: 1px solid #1f2738; background: #0e1320; color: var(--text); }
 .f textarea { min-height: 80px; resize: vertical; }
 .span-3{grid-column:span 3;} .span-4{grid-column:span 4;}
 .span-5{grid-column:span 5;} .span-6{grid-column:span 6;}
 .span-12{grid-column:1/-1;}
-#modalStats {
-  background:#0e1320; border:1px solid #1f2738;
-  border-radius:12px; padding:10px; font-size:13px;
-}
-.modal-actions {
-  grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
-}
-.modal-actions button {
-  padding:8px 14px; border-radius:10px; border:0; cursor:pointer;
-  font-weight:600; background:#1f2738; color:var(--text);
-}
+#modalStats { background:#0e1320; border:1px solid #1f2738; border-radius:12px; padding:10px; font-size:13px; }
+.modal-actions { grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.modal-actions button { padding:8px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600; background:#1f2738; color:var(--text); }
 #modalSaveBtn{background:var(--accent); color:#fff;}
 #modalDeleteBtn{background:var(--loss); color:#fff;}
 
 @keyframes fall{to{transform:translateY(220px) rotate(540deg); opacity:0}}
 
-@media print {
-  header, aside { display:none !important; }
-  body{ background:#fff; color:#000 }
-  .board{ overflow:visible !important; border:none !important }
-  .board-inner{ margin:0 !important; transform:scale(0.70); transform-origin:top left }
-  .edge{ stroke-width:2; vector-effect:non-scaling-stroke; shape-rendering:crispEdges }
-  .edge.win{ stroke:#22c55e !important }
-  .edge.loss{ stroke:#ef4444 !important }
-}
+@media print { header, aside { display:none !important; } body{ background:#fff; color:#000 } .board{ overflow:visible !important; border:none !important } .board-inner{ margin:0 !important; transform:scale(0.70); transform-origin:top left } .edge{ stroke-width:2; vector-effect:non-scaling-stroke; shape-rendering:crispEdges } .edge.win{ stroke:#22c55e !important } .edge.loss{ stroke:#ef4444 !important } }
 
 /* Player sidebar slide-in */
-#playerSidebar {
-  position: fixed;
-  top: 15%; left: 0;
-  height: 70%; width: 240px;
-  background: var(--panel);
-  border-radius: 0 12px 12px 0;
-  overflow-y: auto;
-  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
-  transform: translateX(-100%);
-  transition: transform 0.7s ease;
-  z-index: 150;
-}
+#playerSidebar { position: fixed; top: 15%; left: 0; height: 70%; width: 240px; background: var(--panel); border-radius: 0 12px 12px 0; overflow-y: auto; box-shadow: 2px 4px 12px rgba(0,0,0,0.4); transform: translateX(-100%); transition: transform 0.7s ease; z-index: 150; }
 #playerSidebar.active { transform: translateX(0); }
-#playerSidebar .header {
-  position: sticky; top: 0;
-  background: var(--panel);
-  padding: 8px 12px;
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  z-index: 10;
-}
+#playerSidebar .header { position: sticky; top: 0; background: var(--panel); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 10; }
 
 /* Menu button hidden on desktop */
-#menuToggle {
-  display: none;
-  margin-left: auto;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
+#menuToggle { display: none; margin-left: auto; background: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 
 /* Mobile mode */
-@media (max-width: 768px) {
-  header { flex-wrap: wrap; align-items: flex-start; }
-  .controls { display:none; flex-direction:column; gap:8px; width:100%; margin-top:10px; }
-  .controls.open { display:flex; }
-  #menuToggle { display:block; }
-}
-
+@media (max-width: 768px) { header { flex-wrap: wrap; align-items: flex-start; } .controls { display:none; flex-direction:column; gap:8px; width:100%; margin-top:10px; } .controls.open { display:flex; } #menuToggle { display:block; } }
 </style>
 </head>
 <body>
@@ -297,10 +207,14 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
   <!-- Menu button for mobile -->
   <button class="btn" id="menuToggle">☰ Menu</button>
 
-  <!-- All your existing buttons, inputs, selects go here -->
+  <!-- Controls -->
   <div class="controls" id="controlsPanel">
     <button class="btn" id="togglePlayersBtn">👥 Players</button>
-       <select id="mode" title="Singles / Doubles / Auto Doubles">
+
+    <!-- NEW: Category selector (IndexedDB buckets) -->
+    <select id="category" title="Category (stored separately in IndexedDB)"></select>
+
+    <select id="mode" title="Singles / Doubles / Auto Doubles">
       <option value="singles">Singles</option>
       <option value="doubles">Doubles</option>
       <option value="auto_doubles">Auto Doubles</option>
@@ -315,10 +229,17 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
     <label><input type="checkbox" id="shuffle"> Randomize</label>
     <button class="btn primary" id="buildBtn">Generate</button>
     <button class="btn" id="resetBtn">Reset</button>
+    
+    <!-- Persistence shortcuts -->
+    <button class="btn" id="saveDbBtn" title="Save tournament to IndexedDB">💾 Save</button>
+    <button class="btn" id="loadDbBtn" title="Load from IndexedDB">📂 Load</button>
+
+    <!-- File I/O stays -->
     <button class="btn" id="exportBtn">Export</button>
     <input id="importFile" type="file" style="display:none">
     <button class="btn" id="importBtn">Import</button>
     <button class="btn" id="printBtn">Print</button>
+
     <span class="legend" id="count">0 players</span>
     <input id="playerName" placeholder="Add player/team">
     <button class="btn" id="addBtn">＋ Add</button>
@@ -328,9 +249,7 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
   </div>
 </header>
 
-
 <main>
-
   <!-- Middle: Brackets -->
   <section class="board">
     <div class="board-inner" id="board">
@@ -355,20 +274,67 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
 <aside id="playerSidebar">
   <div class="header">
     <h3 style="margin:0;font-size:16px;">Players</h3>
-    <button id="closeSidebarBtn"
-      style="background:none;border:0;font-size:20px;cursor:pointer;color:var(--text);">
-      ×
-    </button>
+    <button id="closeSidebarBtn" style="background:none;border:0;font-size:20px;cursor:pointer;color:var(--text);">×</button>
   </div>
   <div id="playerList"></div>
 </aside>
 
-
-
-
 <script>
 (function(){
-    const S={players:[],entries:[],rounds:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
+// ======= IndexedDB helpers & categories =======
+const DB_NAME = 'bracketDB';
+const DB_VERSION = 1;
+const STORES = { players:'players', tournaments:'tournaments' };
+const CATEGORIES = [
+  'Boys U9','Girls U9','Boys U11','Girls U11','Boys U13','Girls U13',
+  'Boys U15','Girls U15','Boys U17','Girls U17','Boys U19','Girls U19',
+  'Men','Women','Batch 1','Batch 2','Batch 3','Batch 4','Batch 5','Batch 6'
+];
+let db; // IDBDatabase
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e)=>{
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(STORES.players)){
+        const s = db.createObjectStore(STORES.players,{keyPath:'id', autoIncrement:true});
+        s.createIndex('by_category','category',{unique:false});
+        s.createIndex('by_name_cat',['name','category'],{unique:false});
+      }
+      if(!db.objectStoreNames.contains(STORES.tournaments)){
+        // key is category string
+        db.createObjectStore(STORES.tournaments,{keyPath:'category'});
+      }
+    };
+    req.onsuccess = ()=>{ db = req.result; resolve(db); };
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+function tx(store,mode='readonly'){ return db.transaction(store,mode).objectStore(store); }
+
+function idbListPlayers(category){
+  return new Promise((res,rej)=>{
+    const out=[]; const idx = tx(STORES.players).index('by_category');
+    const req = idx.openCursor(IDBKeyRange.only(category));
+    req.onsuccess = (e)=>{ const cur=e.target.result; if(cur){ out.push(cur.value); cur.continue(); } else res(out) };
+    req.onerror = ()=>rej(req.error);
+  });
+}
+function idbAddPlayer(p){ return new Promise((res,rej)=>{ const r = tx(STORES.players,'readwrite').add(p); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function idbPutPlayer(p){ return new Promise((res,rej)=>{ const r = tx(STORES.players,'readwrite').put(p); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+function idbDelPlayer(id){ return new Promise((res,rej)=>{ const r = tx(STORES.players,'readwrite').delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); }); }
+
+function idbSaveTournament(category, data){
+  return new Promise((res,rej)=>{ const r = tx(STORES.tournaments,'readwrite').put({category, data}); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });
+}
+function idbLoadTournament(category){
+  return new Promise((res,rej)=>{ const r = tx(STORES.tournaments).get(category); r.onsuccess=()=>res(r.result?.data||null); r.onerror=()=>rej(r.error); });
+}
+
+// ======= App State =======
+const S={players:[],entries:[],rounds:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single',category:''}};
 const q=id=>document.getElementById(id);
 const board=q('board'); let svg=q('lines'); const statsBody=q('statsBody');
 
@@ -380,36 +346,47 @@ const bulk=q('bulk'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
 const count=q('count'), shuffle=q('shuffle');
 const buildBtn=q('buildBtn'), resetBtn=q('resetBtn'), printBtn=q('printBtn');
 const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
+const categorySel=q('category');
+const saveDbBtn=q('saveDbBtn'), loadDbBtn=q('loadDbBtn');
 
 const menuToggle = document.getElementById('menuToggle');
 const controlsPanel = document.getElementById('controlsPanel');
 menuToggle.onclick = () => controlsPanel.classList.toggle('open');
 
-
 let currentPlayerIndex = -1;
-
 
 const togglePlayersBtn = q('togglePlayersBtn');
 const closeSidebarBtn = q('closeSidebarBtn');
 const playerSidebar = q('playerSidebar');
 
-togglePlayersBtn.onclick = () => {
-  playerSidebar.classList.add('active');
-};
-
-closeSidebarBtn.onclick = () => {
-  playerSidebar.classList.remove('active');
-};
-
+togglePlayersBtn.onclick = () => { playerSidebar.classList.add('active'); };
+closeSidebarBtn.onclick = () => { playerSidebar.classList.remove('active'); };
 
 // helpers
 const el=(t,c,s)=>{const x=document.createElement(t); if(c) x.className=c; if(s) Object.assign(x.style,s); return x};
-const esc = s => String(s).replace(/[&<>"']/g, m =>
-  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m)
-);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m] || m));
+
+// ===== Category select build =====
+function buildCategorySelect(){
+  categorySel.innerHTML='';
+  CATEGORIES.forEach((c)=>{
+    const o = document.createElement('option');
+    o.value=c; o.textContent=c; categorySel.appendChild(o);
+  });
+}
+
+function setCategory(c){
+  S.meta.category = c; categorySel.value=c; updateTitle();
+}
+
+function updateTitle(){
+  const date = S.meta.date || new Date().toISOString().slice(0,10);
+  const cat = S.meta.category ? ` • ${S.meta.category}` : '';
+  title.textContent = `🏸 ${S.meta.name||'Tournament'} (${date})${cat}`;
+}
+
 function updateCount() {
   count.textContent = `${S.players.length} player${S.players.length === 1 ? '' : 's'}`;
-
   const list = q('playerList');
   list.innerHTML = '';
   S.players.forEach((p, i) => {
@@ -427,7 +404,7 @@ function updateCount() {
     const meta = document.createElement('div');
     meta.className = 'player-meta';
     const st = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
-meta.textContent = `${p.country || ''}${p.country && p.age ? ' • ' : ''}${p.age ? 'Age ' + p.age : ''} • P:${st.P} W:${st.W}`;
+    meta.textContent = `${p.category||''}${p.category? ' • ' : ''}${p.country || ''}${p.country && p.age ? ' • ' : ''}${p.age ? 'Age ' + p.age : ''} • P:${st.P} W:${st.W}`;
 
     info.appendChild(name);
     info.appendChild(meta);
@@ -435,11 +412,13 @@ meta.textContent = `${p.country || ''}${p.country && p.age ? ' • ' : ''}${p.ag
     const del = document.createElement('button');
     del.textContent = '❌';
     del.className = 'btn';
-    del.onclick = e => {
+    del.onclick = async e => {
       e.stopPropagation();
+      try{ if(p.id) await idbDelPlayer(p.id); }catch(_){}
       S.players.splice(i, 1);
       updateCount();
       renderStats();
+      autosave();
     };
 
     card.appendChild(img);
@@ -453,10 +432,8 @@ meta.textContent = `${p.country || ''}${p.country && p.age ? ' • ' : ''}${p.ag
   });
 }
 
-
 function showPlayerDetails(p, idx) {
   currentPlayerIndex = idx;
-
   const modal = q('playerModal');
   q("modalId").value = p.id || "";
   q("modalAadhar").value = p.aadhar || "";
@@ -489,24 +466,32 @@ function showPlayerDetails(p, idx) {
         q("modalPhoto").src = e.target.result;
         updateCount();
         renderStats();
+        idbPutPlayer({...S.players[idx], category:S.meta.category}).catch(()=>{});
+        autosave();
       };
       reader.readAsDataURL(photoInput.files[0]);
     }
   };
 
   // Save
-  q("modalSaveBtn").onclick = () => {
+  q("modalSaveBtn").onclick = async () => {
     const oldName = S.players[idx].name;
     const newName = q("modalNameInput").value.trim() || oldName;
 
     // Update player fields
-    S.players[idx].id = q("modalId").value.trim();
-    S.players[idx].aadhar = q("modalAadhar").value.trim();
-    S.players[idx].name = newName;
-    S.players[idx].age = q("modalAge").value.trim();
-    S.players[idx].country = q("modalCountry").value.trim();
-    S.players[idx].bio = q("modalBio").value.trim();
-    S.players[idx].videos = [q("modalVideo").value.trim()];
+    const updated = {
+      ...S.players[idx],
+      id: p.id,
+      aadhar: q("modalAadhar").value.trim(),
+      name: newName,
+      age: q("modalAge").value.trim(),
+      country: q("modalCountry").value.trim(),
+      bio: q("modalBio").value.trim(),
+      videos: [q("modalVideo").value.trim()],
+      category: S.meta.category
+    };
+    S.players[idx] = updated;
+    try{ await idbPutPlayer(updated); }catch(_){ }
 
     if (newName !== oldName) {
       migrateStatsName(oldName, newName);
@@ -515,6 +500,7 @@ function showPlayerDetails(p, idx) {
 
     updateCount();
     renderStats();
+    autosave();
     modal.classList.add('hidden');
   };
 
@@ -524,11 +510,13 @@ function showPlayerDetails(p, idx) {
   modal.onclick = e => { if (e.target === modal) modal.classList.add('hidden'); };
 
   // Delete
-  q("modalDeleteBtn").onclick = () => {
+  q("modalDeleteBtn").onclick = async () => {
     if (!confirm('Delete this player?')) return;
+    if(p.id) await idbDelPlayer(p.id).catch(()=>{});
     S.players.splice(idx, 1);
     updateCount();
     renderStats();
+    autosave();
     modal.classList.add('hidden');
   };
 
@@ -536,84 +524,56 @@ function showPlayerDetails(p, idx) {
   q("modalPrevBtn").disabled = (idx <= 0);
   q("modalNextBtn").disabled = (idx >= S.players.length - 1);
 
-  q("modalPrevBtn").onclick = () => {
-    if (idx > 0) showPlayerDetails(S.players[idx - 1], idx - 1);
-  };
-  q("modalNextBtn").onclick = () => {
-    if (idx < S.players.length - 1) showPlayerDetails(S.players[idx + 1], idx + 1);
-  };
+  q("modalPrevBtn").onclick = () => { if (idx > 0) showPlayerDetails(S.players[idx - 1], idx - 1); };
+  q("modalNextBtn").onclick = () => { if (idx < S.players.length - 1) showPlayerDetails(S.players[idx + 1], idx + 1); };
 
   modal.classList.remove('hidden');
 }
-
-
 
 function migrateStatsName(oldName, newName) {
   if (oldName === newName) return;
   const old = S.stats.get(oldName);
   if (!old) return;
   const tgt = S.stats.get(newName);
-  if (tgt) {
-    // merge if target exists
-    tgt.P += old.P; tgt.W += old.W; tgt.L += old.L;
-    tgt.PF += old.PF; tgt.PA += old.PA;
-    S.stats.set(newName, tgt);
-  } else {
-    S.stats.set(newName, old);
-  }
+  if (tgt) { tgt.P += old.P; tgt.W += old.W; tgt.L += old.L; tgt.PF += old.PF; tgt.PA += old.PA; S.stats.set(newName, tgt); }
+  else { S.stats.set(newName, old); }
   S.stats.delete(oldName);
 }
 
 function renameEverywhere(oldName, newName) {
-  // entries (exact matches)
-  if (Array.isArray(S.entries)) {
-    for (let i = 0; i < S.entries.length; i++) {
-      if (S.entries[i] === oldName) S.entries[i] = newName;
-    }
-  }
-
-  // bracket boxes (exact matches)
+  if (Array.isArray(S.entries)) { for (let i = 0; i < S.entries.length; i++) { if (S.entries[i] === oldName) S.entries[i] = newName; } }
   const boxes = board.querySelectorAll('.box');
-  boxes.forEach(b => {
-    if (b.dataset.name === oldName) {
-      b.dataset.name = newName;
-      const nm = b.querySelector('.name');
-      if (nm) nm.textContent = newName;
-    }
-  });
-
-  // refresh any scorecard labels to show new names
-  if (Array.isArray(S.rounds)) {
-    S.rounds.forEach(rnd => {
-      rnd.forEach(mo => {
-        if (mo && mo.card) {
-          const lab = mo.card.querySelector('.lab');
-          if (lab) {
-            lab.textContent = `${mo.A?.dataset.name || '—'} vs ${mo.B?.dataset.name || '—'}`;
-            lab.title = lab.textContent;
-          }
-        }
-      });
-    });
-  }
+  boxes.forEach(b => { if (b.dataset.name === oldName) { b.dataset.name = newName; const nm = b.querySelector('.name'); if (nm) nm.textContent = newName; } });
+  if (Array.isArray(S.rounds)) { S.rounds.forEach(rnd => { rnd.forEach(mo => { if (mo && mo.card) { const lab = mo.card.querySelector('.lab'); if (lab) { lab.textContent = `${mo.A?.dataset.name || '—'} vs ${mo.B?.dataset.name || '—'}`; lab.title = lab.textContent; } } }); }); }
 }
-
-
-
-
 
 function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 const BW=180,BH=48,CG=180,RG=28; const cy=t=>t+BH/2;
 
-// Add players
-addBtn.onclick=()=>{const v=playerName.value.trim(); if(!v) return; S.players.push({name:v}); playerName.value=''; updateCount();};
+// ===== Players add / bulk / clear (persisted) =====
+addBtn.onclick=async()=>{
+  const v=playerName.value.trim(); if(!v) return;
+  const p={ name:v, category:S.meta.category };
+  try{ p.id = await idbAddPlayer(p); }catch(_){ }
+  S.players.push(p); playerName.value=''; updateCount(); autosave();
+};
 playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-bulkBtn.onclick=()=>{bulk.value.split(/[,\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(n=>S.players.push({name:n})); bulk.value=''; updateCount();};
-clearBtn.onclick=()=>{S.players=[]; updateCount();};
+bulkBtn.onclick=async()=>{
+  const names = bulk.value.split(/[\,\r\n]+/).map(s=>s.trim()).filter(Boolean);
+  for(const n of names){ const p={name:n, category:S.meta.category}; try{ p.id=await idbAddPlayer(p);}catch(_){ } S.players.push(p); }
+  bulk.value=''; updateCount(); autosave();
+};
+clearBtn.onclick=async()=>{
+  if(!confirm('Remove ALL players in this category?')) return;
+  // delete all in current category from IDB
+  const list = await idbListPlayers(S.meta.category);
+  for(const p of list){ if(p.id) await idbDelPlayer(p.id).catch(()=>{}); }
+  S.players=[]; updateCount(); autosave();
+};
 
 // Actions
 buildBtn.onclick=()=>buildFromPlayers();
-resetBtn.onclick=()=>{ board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); S.rounds=[]; S.stats.clear(); S.players=[]; S.entries=[]; statsBody.innerHTML=''; updateCount(); };
+resetBtn.onclick=()=>{ board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); S.rounds=[]; S.stats.clear(); S.entries=[]; statsBody.innerHTML=''; updateCount(); autosave(); };
 printBtn.onclick=()=>window.print();
 
 function buildFromPlayers(){
@@ -622,7 +582,7 @@ function buildFromPlayers(){
   S.meta.date = tDate.value||new Date().toISOString().slice(0,10);
   S.meta.mode = modeSel.value;
   S.meta.format = formatSel.value;
-  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
+  updateTitle();
 
   let entries;
   if(S.meta.mode==='singles'){ entries=S.players.map(p=>p.name); if(shuffle.checked) shuffleArr(entries); }
@@ -642,26 +602,17 @@ function buildFromPlayers(){
   S.entries = entries;
   board.innerHTML='<svg id="lines"></svg>'; svg=q('lines');
   layout(entries);
-  resizeSVG(); renderStats();
+  resizeSVG(); renderStats(); autosave();
 }
 
 function padToPowerOfTwo(players){
   let n = players.length, p = 1;
   while (p < n) p <<= 1;
   if (p === n) return players;
-
-  const need = p - n;
-  const filled = [...players];
-
-  // BYE seeding: assign BYEs so that top seeds get them
-  // Place BYEs evenly spaced in the bracket to avoid BYE vs BYE
-  for (let i = 0; i < need; i++) {
-    // Insert BYE at every other slot near the end
-    filled.splice(filled.length - (i * 2 + 1), 0, 'BYE');
-  }
+  const need = p - n; const filled = [...players];
+  for (let i = 0; i < need; i++) { filled.splice(filled.length - (i * 2 + 1), 0, 'BYE'); }
   return filled;
 }
-
 
 function layout(entries){
   S.rounds=[]; const roundsCount=Math.log2(entries.length)|0;
@@ -747,30 +698,15 @@ function createScoreCard(label,T,mo){
   function inp(){const i=el('input'); i.type='number'; i.min='0'; i.step='1'; i.inputMode='numeric'; return i;}
   function btn(t){const b=el('button','btn'); b.textContent=t; return b;}
   function val(i){const v=i.value.trim(); if(v==='') return null; const n=parseInt(v,10); return Number.isNaN(n)?null:n;}
-  function disable(arr){arr.forEach(x=>x.disabled=true); mo.saved=true;}
+  function disable(arr){arr.forEach(x=>x.disabled=true); mo.saved=true; autosave();}
 }
 
 function forwardWinner(mo,winner,sa,sb,isBye,restoring=false){
   const loser = winner===mo.A.dataset.name ? mo.B.dataset.name : mo.A.dataset.name;
-
-  // forward name
   mo.T.dataset.name=winner; mo.T.querySelector('.name').textContent=winner;
-
-  // colour path
   const {hA,vU,hB,vL,hF}=mo.lines;
-  if(winner===mo.A.dataset.name){
-    hA.classList.add('win'); vU.classList.add('win');
-    hB.classList.add('loss'); vL.classList.add('loss');
-    hF.classList.add('win');
-    mo.A.classList.add('win'); if(mo.B.dataset.name!=='BYE') mo.B.classList.add('loss');
-  }else{
-    hB.classList.add('win'); vL.classList.add('win');
-    hA.classList.add('loss'); vU.classList.add('loss');
-    hF.classList.add('win');
-    mo.B.classList.add('win'); if(mo.A.dataset.name!=='BYE') mo.A.classList.add('loss');
-  }
-
-  // stats
+  if(winner===mo.A.dataset.name){ hA.classList.add('win'); vU.classList.add('win'); hB.classList.add('loss'); vL.classList.add('loss'); hF.classList.add('win'); mo.A.classList.add('win'); if(mo.B.dataset.name!=='BYE') mo.B.classList.add('loss'); }
+  else{ hB.classList.add('win'); vL.classList.add('win'); hA.classList.add('loss'); vU.classList.add('loss'); hF.classList.add('win'); mo.B.classList.add('win'); if(mo.A.dataset.name!=='BYE') mo.A.classList.add('loss'); }
   if(!restoring){
     if(!isBye && winner!=='BYE' && loser!=='BYE'){
       const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
@@ -779,38 +715,18 @@ function forwardWinner(mo,winner,sa,sb,isBye,restoring=false){
       L.P++;L.L++;L.PF+=Math.min(sa,sb);L.PA+=Math.max(sa,sb);
       S.stats.set(winner,W); S.stats.set(loser,L);
     } else if(isBye && winner!=='BYE'){
-      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0};
-      S.stats.set(winner,W);
+      const W=S.stats.get(winner)||{P:0,W:0,L:0,PF:0,PA:0}; S.stats.set(winner,W);
     }
-    renderStats();
+    renderStats(); autosave();
   }
-
-  // update downstream labels
-  for(const rnd of S.rounds){
-    for(const node of rnd){
-      if(node.card&&(node.A===mo.T||node.B===mo.T)){
-        const text=`${node.A.dataset.name} vs ${node.B.dataset.name}`;
-        node.card.querySelector('.lab').textContent=text;
-        node.card.querySelector('.lab').title=text;
-      }
-    }
-  }
-
-  // champion?
-  let usedLater=false;
-  for(const rnd of S.rounds){
-    for(const node of rnd){
-      if(node!==mo&&(node.A===mo.T||node.B===mo.T)){usedLater=true;break;}
-    }
-    if(usedLater) break;
-  }
-  if(!usedLater){sprinkleConfetti(mo.T); mo.T.classList.add('champ');}
+  for(const rnd of S.rounds){ for(const node of rnd){ if(node.card&&(node.A===mo.T||node.B===mo.T)){ const text=`${node.A.dataset.name} vs ${node.B.dataset.name}`; node.card.querySelector('.lab').textContent=text; node.card.querySelector('.lab').title=text; } } }
+  let usedLater=false; for(const rnd of S.rounds){ for(const node of rnd){ if(node!==mo&&(node.A===mo.T||node.B===mo.T)){usedLater=true;break;} } if(usedLater) break; }
+  if(!usedLater){sprinkleConfetti(mo.T); mo.T.classList.add('champ'); autosave();}
 }
 
 function renderStats(){
   statsBody.innerHTML='';
-  const sorted=[...S.stats.entries()]
-    .sort((a,b)=>(b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
+  const sorted=[...S.stats.entries()].sort((a,b)=>(b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
   sorted.forEach(([name,s],i)=>{
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${i+1}</td><td>${esc(name)}</td><td>${s.P}</td><td class="win">${s.W}</td><td class="loss">${s.L}</td><td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
@@ -821,53 +737,22 @@ function renderStats(){
 function resizeSVG(){
   const boxes=[...board.querySelectorAll('.box')];
   if(!boxes.length){svg.setAttribute('width',1200);svg.setAttribute('height',800);return;}
-  let maxX=0,maxY=0;
-  boxes.forEach(b=>{
-    const x=parseFloat(b.style.left)+BW, y=parseFloat(b.style.top)+BH;
-    if(x>maxX) maxX=x; if(y>maxY) maxY=y;
-  });
-  svg.setAttribute('width',Math.max(800,maxX+80));
-  svg.setAttribute('height',Math.max(600,maxY+80));
+  let maxX=0,maxY=0; boxes.forEach(b=>{ const x=parseFloat(b.style.left)+BW, y=parseFloat(b.style.top)+BH; if(x>maxX) maxX=x; if(y>maxY) maxY=y; });
+  svg.setAttribute('width',Math.max(800,maxX+80)); svg.setAttribute('height',Math.max(600,maxY+80));
 }
 
 function sprinkleConfetti(box){
   const rect=box.getBoundingClientRect(), off=board.getBoundingClientRect();
   const x=rect.left-off.left+rect.width/2, y=rect.top-off.top+rect.height/2;
   for(let i=0;i<25;i++){
-    const c=el('div','confetti',{
-      left:(x+(Math.random()*40-20))+'px',
-      top:y+'px',
-      background:`hsl(${Math.random()*360},100%,50%)`,
-      animationDuration:(1+Math.random()*2)+'s'
-    });
-    board.appendChild(c);
-    setTimeout(()=>c.remove(),3000);
+    const c=el('div','confetti',{ left:(x+(Math.random()*40-20))+'px', top:y+'px', background:`hsl(${Math.random()*360},100%,50%)`, animationDuration:(1+Math.random()*2)+'s' });
+    board.appendChild(c); setTimeout(()=>c.remove(),3000);
   }
 }
 
-// Export / Import
+// ===== Export / Import (file) =====
 exportBtn.onclick = () => {
-  const rounds = S.rounds.map(rnd =>
-    rnd.map(mo => ({
-      A: mo.A?.dataset.name,
-      B: mo.B?.dataset.name,
-      T: mo.T?.dataset.name,
-      winner: mo.T?.dataset.name,
-      saved: mo.saved || false,
-      scores: mo.card
-        ? [...mo.card.querySelectorAll("input")].map(i => i.value)
-        : null
-    }))
-  );
-
-  const data = JSON.stringify({
-    players: S.players,
-    entries: S.entries,
-    meta: S.meta,
-    stats: [...S.stats],   // save as array of [name, obj]
-    rounds: rounds
-  }, null, 2);
-
+  const data = stringifyState();
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -877,75 +762,51 @@ exportBtn.onclick = () => {
 
 importBtn.onclick=()=>importFile.click();
 importFile.onchange = e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const o = JSON.parse(ev.target.result);
-
-      S.players = Array.isArray(o.players) ? o.players : [];
-      S.entries = Array.isArray(o.entries) ? o.entries : [];
-      S.meta = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
-      S.stats = new Map(o.stats || []);
-
-      // restore UI
-      tName.value = S.meta.name || "";
-      tDate.value = S.meta.date || "";
-      modeSel.value = S.meta.mode || "singles";
-      formatSel.value = S.meta.format || "single";
-      updateCount();
-      renderStats();
-
-      // rebuild layout
-      if (S.entries.length >= 2) {
-        board.innerHTML = '<svg id="lines"></svg>';
-        svg = q("lines");
-        layout(S.entries);
-
-        if (o.rounds) {
-          S.rounds.forEach((rnd, i) => {
-            rnd.forEach((mo, j) => {
-              const saved = o.rounds[i]?.[j];
-              if (saved) {
-                if (saved.winner && saved.winner !== "BYE") {
-                  forwardWinner(mo, saved.winner, 0, 0, true, true);
-                  mo.saved = saved.saved;
-                }
-                // restore scores if available
-                if (saved.scores && mo.card) {
-                  const inputs = mo.card.querySelectorAll("input");
-                  saved.scores.forEach((val, idx) => {
-                    if (inputs[idx]) inputs[idx].value = val;
-                  });
-                  if (saved.saved) {
-                    inputs.forEach(inp => inp.disabled = true);
-                    const btn = mo.card.querySelector("button");
-                    if (btn) btn.disabled = true;
-                  }
-                }
-              }
-            });
-          });
-        }
-        resizeSVG();
-        renderStats();
-      } else {
-        alert("Imported file has no players/entries");
-      }
-    } catch (err) {
-      alert("Bad file");
-    }
-  };
+  const f = e.target.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = ev => { try { const o = JSON.parse(ev.target.result); restoreFromObject(o); autosave(); } catch (err) { alert("Bad file"); } };
   r.readAsText(f);
 };
 
+function stringifyState(){
+  const rounds = S.rounds.map(rnd => rnd.map(mo => ({ A: mo.A?.dataset.name, B: mo.B?.dataset.name, T: mo.T?.dataset.name, winner: mo.T?.dataset.name, saved: mo.saved || false, scores: mo.card ? [...mo.card.querySelectorAll("input")].map(i => i.value) : null })));
+  return JSON.stringify({ players: S.players, entries: S.entries, meta: S.meta, stats: [...S.stats], rounds: rounds }, null, 2);
+}
 
+function restoreFromObject(o){
+  S.players = Array.isArray(o.players) ? o.players.map(p=>({...p, category:o.meta?.category||S.meta.category})) : [];
+  S.entries = Array.isArray(o.entries) ? o.entries : [];
+  S.meta = Object.assign({ mode: "singles", format: "single", category:S.meta.category }, o.meta || {});
+  S.stats = new Map(o.stats || []);
+  tName.value = S.meta.name || ""; tDate.value = S.meta.date || ""; modeSel.value = S.meta.mode || "singles"; formatSel.value = S.meta.format || "single"; setCategory(S.meta.category||categorySel.value);
+  updateCount(); renderStats();
+  if (S.entries.length >= 2) { board.innerHTML = '<svg id="lines"></svg>'; svg = q("lines"); layout(S.entries); if (o.rounds) { S.rounds.forEach((rnd, i) => { rnd.forEach((mo, j) => { const saved = o.rounds[i]?.[j]; if (saved) { if (saved.winner && saved.winner !== "BYE") { forwardWinner(mo, saved.winner, 0, 0, true, true); mo.saved = saved.saved; } if (saved.scores && mo.card) { const inputs = mo.card.querySelectorAll("input"); saved.scores.forEach((val, idx) => { if (inputs[idx]) inputs[idx].value = val; }); if (saved.saved) { inputs.forEach(inp => inp.disabled = true); const btn = mo.card.querySelector("button"); if (btn) btn.disabled = true; } } } }); }); }
+    resizeSVG(); renderStats(); }
+  else { board.innerHTML='<svg id="lines"></svg>'; svg=q('lines'); statsBody.innerHTML=''; }
+}
+
+// ===== IndexedDB persistence controls =====
+saveDbBtn.onclick = async ()=>{ try{ await idbSaveTournament(S.meta.category, JSON.parse(stringifyState())); alert('Saved to IndexedDB ✔'); }catch(e){ alert('Save failed'); } };
+loadDbBtn.onclick = async ()=>{ const data = await idbLoadTournament(S.meta.category); if(!data){ alert('Nothing saved for this category'); return;} restoreFromObject(data); };
+
+let saveTimer=null; function autosave(){ clearTimeout(saveTimer); saveTimer=setTimeout(async()=>{ try{ await idbSaveTournament(S.meta.category, JSON.parse(stringifyState())); }catch(_){ } }, 500); }
+
+// ===== Category change =====
+categorySel.onchange = async ()=>{ setCategory(categorySel.value); await loadCategoryPlayers(); const data = await idbLoadTournament(S.meta.category); if(data) restoreFromObject(data); else { resetBtn.click(); updateTitle(); } };
+
+async function loadCategoryPlayers(){
+  const list = await idbListPlayers(S.meta.category); S.players = list; updateCount();
+}
+
+// ===== Boot =====
+(async function init(){
+  buildCategorySelect(); setCategory(CATEGORIES[0]);
+  await openDB();
+  await loadCategoryPlayers();
+  const saved = await idbLoadTournament(S.meta.category); if(saved) restoreFromObject(saved); else updateTitle();
 })();
 
-  
+})();
 </script>
-
 
 <!-- Player Edit Modal -->
 <div id="playerModal" class="modal hidden">
@@ -962,7 +823,7 @@ importFile.onchange = e => {
 
       <!-- RIGHT: form -->
       <div class="player-form">
-        <div class="f span-3"><label>ID</label><input id="modalId" type="text"></div>
+        <div class="f span-3"><label>ID</label><input id="modalId" type="text" disabled></div>
         <div class="f span-4"><label>Aadhaar</label><input id="modalAadhar" type="text"></div>
         <div class="f span-5"><label>Name</label><input id="modalNameInput" type="text"></div>
 
