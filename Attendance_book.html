@@ -180,13 +180,13 @@
     if(!name) return;
     if(S.players.includes(name)){ alert('Player already exists'); return; }
     S.players.push(name);
-    S.players.sort((a,b)=>a.localeCompare(b));
+    
     save(); renderToday(); renderMonth(); updateSummary();
   }
   function addBulk(text){
     const names = text.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
     names.forEach(n=>{ if(!S.players.includes(n)) S.players.push(n); });
-    S.players.sort((a,b)=>a.localeCompare(b));
+    
     save(); renderToday(); renderMonth(); updateSummary();
   }
   function delPlayer(name){
