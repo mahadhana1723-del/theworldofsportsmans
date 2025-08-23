@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🏸 Unified Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root{
     --bg:#0c0f13;
@@ -19,283 +19,246 @@
   }
   *{box-sizing:border-box}
   body{margin:0; font-family:system-ui,Segoe UI,Arial; background:var(--bg); color:var(--text);}
-  header{position:sticky; top:0; z-index:5; background:linear-gradient(to right, #0c0f13, #0d1220); border-bottom:1px solid var(--line);}
+  header{position:sticky; top:0; z-index:5; background:#0d1220; border-bottom:1px solid var(--line);}
   .wrap{max-width:1100px; margin:0 auto; padding:16px;}
-  h1{margin:0; font-size:22px; letter-spacing:.2px;}
+  h1{margin:0; font-size:22px;}
   .sub{color:var(--muted); font-size:13px; margin-top:4px}
-
   .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:14px;}
   .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.25);}
   .card h3{margin:0 0 8px; font-size:16px}
-  .kpi{display:flex; align-items:center; justify-content:space-between}
-  .kpi .big{font-size:28px; font-weight:700}
-  .kpi .pill{font-size:12px; padding:4px 8px; border-radius:999px; background:#0f1628; border:1px solid var(--line); color:var(--muted)}
-
-  .table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px}
-  .table th, .table td{padding:8px; border-bottom:1px solid var(--line); text-align:left}
-  .empty{color:var(--muted); text-align:center; padding:12px}
-
-  .row{display:grid; gap:14px; grid-template-columns:2fr 1fr}
-  .links a, .btn{display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:10px; border:1px solid var(--line); color:var(--text); text-decoration:none; background:#0f1628; cursor:pointer}
-  .btn:hover, .links a:hover{border-color:#2a82ff55}
-  .good{color:var(--good)}
-  .bad{color:var(--bad)}
-  .warn{color:var(--warn)}
-
-  .footer-note{color:var(--muted); font-size:12px; margin-top:18px}
+  .btn{padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:#0f1628; color:var(--text); cursor:pointer}
+  .btn:hover{border-color:var(--accent)}
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  th,td{padding:6px; border-bottom:1px solid var(--line); text-align:left}
+  .player-row{cursor:pointer;}
+  .player-row:hover{background:#1f2738;}
+  /* Modal */
+  .modal{position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:999;}
+  .modal-content{background:var(--card); border-radius:16px; padding:20px; width:90%; max-width:600px; max-height:90%; overflow:auto; position:relative;}
+  .close{position:absolute; top:10px; right:14px; cursor:pointer; font-size:20px; color:var(--muted);}
 </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <h1>🏸 Dashboard</h1>
-      <div class="sub">Live from Players, Round Robin, Bracket, and Attendance.</div>
+<header>
+  <div class="wrap">
+    <h1>🏸 Unified Dashboard</h1>
+    <div class="sub">Players, Round Robin, Bracket, and Attendance overview</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <div class="card">
+      <h3>Players</h3>
+      <div id="playerCount">—</div>
+      <button class="btn" onclick="goto('PlayerPage.html')">Manage</button>
     </div>
-  </header>
-
-  <main class="wrap">
-    <div class="grid" id="kpiGrid">
-      <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Players</div>
-            <div class="big" id="kpiPlayers">—</div>
-          </div>
-          <button class="btn" onclick="goto('PlayerPage.html')">Manage</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Round Robin</div>
-            <div class="big" id="kpiRR">—</div>
-          </div>
-          <button class="btn" onclick="goto('TournamentPage.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiRRSub">Loading…</div>
-      </div>
-
-      <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Bracket (KO)</div>
-            <div class="big" id="kpiKO">—</div>
-          </div>
-          <button class="btn" onclick="goto('Bracket_tournament.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiKOSub">Loading…</div>
-      </div>
-
-      <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Attendance (Today)</div>
-            <div class="big" id="kpiAttendance">—</div>
-          </div>
-          <button class="btn" onclick="goto('Attendance_book.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiAttendanceSub">Loading…</div>
-      </div>
+    <div class="card">
+      <h3>Round Robin</h3>
+      <div id="rrInfo">Loading…</div>
+      <button class="btn" onclick="goto('TournamentPage.html')">Open</button>
     </div>
-
-    <div class="row" style="margin-top:14px">
-      <div class="card">
-        <h3>Recent Winners & Saves</h3>
-        <table class="table" id="recentTable">
-          <thead><tr><th>Type</th><th>Category</th><th>Detail</th></tr></thead>
-          <tbody id="recentBody"><tr><td colspan="3" class="empty">No recent activity yet.</td></tr></tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <h3>Quick Links</h3>
-        <div class="links">
-          <p><a href="PlayerPage.html" onclick="return goto('PlayerPage.html')">👤 Players</a></p>
-          <p><a href="TournamentPage.html" onclick="return goto('TournamentPage.html')">🔁 Round Robin</a></p>
-          <p><a href="Bracket_tournament.html" onclick="return goto('Bracket_tournament.html')">🥊 Bracket (KO)</a></p>
-          <p><a href="Attendance_book.html" onclick="return goto('Attendance_book.html')">🗓️ Attendance</a></p>
-        </div>
-        <p class="footer-note">Tip: This dashboard runs entirely in your browser. If you clear site data, remember to export from each page first.</p>
-      </div>
+    <div class="card">
+      <h3>Bracket (KO)</h3>
+      <div id="koInfo">Loading…</div>
+      <button class="btn" onclick="goto('Bracket_tournament.html')">Open</button>
     </div>
-  </main>
+    <div class="card">
+      <h3>Attendance</h3>
+      <div id="attInfo">Loading…</div>
+      <button class="btn" onclick="goto('Attendance_book.html')">Open</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h3>Players List</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Category</th></tr></thead>
+      <tbody id="playerTable"><tr><td colspan="2">No players yet</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal" id="playerModal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 id="modalTitle">Player Stats</h2>
+    <canvas id="pieChart" height="150"></canvas>
+    <canvas id="barChart" height="150" style="margin-top:20px"></canvas>
+  </div>
+</div>
 
 <script>
-(function(){
-  // ---------- Helpers ----------
-  const today = () => (new Date()).toISOString().slice(0,10);
+function goto(file){
+  window.location.href = file;
+}
 
-  function goto(file){
-    try{
-      // If we're running inside index.html's iframe, update the parent iframe
-      if (window.top && window.top !== window) {
-        const frame = window.top.document.getElementById('contentFrame');
-        if (frame) { frame.src = file; return false; }
-      }
-    }catch(_){} // cross-origin safe
-    // Fallback: navigate in-place
-    window.location.href = file;
-    return false;
-  }
-  window.goto = goto;
-
-  // ---------- Players (IndexedDB: playerDB / store: players) ----------
-  function readAllFromIDB(dbName, storeName){
-    return new Promise((resolve,reject)=>{
-      const req = indexedDB.open(dbName);
-      req.onsuccess = () => {
-        const db = req.result;
-        const tx = db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const getAll = store.getAll();
-        getAll.onsuccess = () => resolve(getAll.result || []);
-        getAll.onerror = () => reject(getAll.error);
-      };
-      req.onerror = () => resolve([]); // no DB yet
-      req.onupgradeneeded = () => {}; // do nothing, we only read
-    });
-  }
-
-  // ---------- Round Robin (IndexedDB: TournamentDB / store: tournaments / key: 'data') ----------
-  function readTournamentDB(){
-    return new Promise((resolve)=>{
-      const req = indexedDB.open('TournamentDB', 1);
-      req.onsuccess = () => {
-        const db = req.result;
-        const tx = db.transaction('tournaments', 'readonly');
-        const store = tx.objectStore('tournaments');
-        const getReq = store.get('data');
-        getReq.onsuccess = () => {
-          try{
-            const parsed = JSON.parse(getReq.result || '{}');
-            resolve(parsed);
-          }catch{ resolve({}); }
-        };
-        getReq.onerror = () => resolve({});
-      };
-      req.onerror = () => resolve({});
-      req.onupgradeneeded = () => {}; // read-only pattern
-    });
-  }
-
-  // ---------- Bracket (IndexedDB: bracketDB / store: tournaments [keyPath 'category']) ----------
-  function readBracketDB(){
-    return new Promise((resolve)=>{
-      const req = indexedDB.open('bracketDB', 1);
-      req.onsuccess = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains('tournaments')) { resolve([]); return; }
-        const tx = db.transaction('tournaments','readonly');
-        const store = tx.objectStore('tournaments');
-        const items = [];
-        const cursor = store.openCursor();
-        cursor.onsuccess = (e)=>{
-          const cur = e.target.result;
-          if (cur){ items.push(cur.value); cur.continue(); }
-          else resolve(items);
-        };
-        cursor.onerror = () => resolve([]);
-      };
-      req.onerror = () => resolve([]);
-      req.onupgradeneeded = () => {}; // read-only
-    });
-  }
-
-  // ---------- Attendance (localStorage: attendance_v1) ----------
-  function readAttendance(){
-    try{
-      const data = JSON.parse(localStorage.getItem('attendance_v1') || '');
-      return data || { players:[], records:{} };
-    }catch(_){ return { players:[], records:{} }; }
-  }
-
-  // ---------- Render ----------
-  async function render(){
-    // Players
-    const players = await readAllFromIDB('playerDB','players');
-    document.getElementById('kpiPlayers').textContent = players.length;
-
-    // Round Robin summary
-    const rr = await readTournamentDB();
-    const rrCats = Object.keys(rr);
-    let rrSaved = 0, rrMatches = 0;
-    rrCats.forEach(cat=>{
-      const t = rr[cat] || {};
-      const matches = Array.isArray(t.matches) ? t.matches : [];
-      rrMatches += matches.length;
-      rrSaved += matches.filter(m => m && m.saved).length;
-    });
-    document.getElementById('kpiRR').textContent = rrCats.length || '0';
-    document.getElementById('kpiRRSub').textContent = rrCats.length
-      ? `${rrSaved}/${rrMatches} matches saved`
-      : 'No categories yet';
-
-    // Bracket summary
-    const ko = await readBracketDB();
-    const koCats = ko.map(x=>x && x.category || x?.data?.meta?.category).filter(Boolean);
-    let koEntries = 0, winners = 0;
-    ko.forEach(row=>{
-      const data = row?.data || row;
-      const entries = Array.isArray(data?.entries) ? data.entries : [];
-      koEntries += entries.length;
-      // try to infer winner as last non-BYE in last round
-      const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
-      const last = rounds[rounds.length-1];
-      if (Array.isArray(last)){
-        const any = last.find(m => m && (m.winner || m.T));
-        if (any && any.winner && any.winner !== 'BYE') winners += 1;
-      }
-    });
-    document.getElementById('kpiKO').textContent = koCats.length || '0';
-    document.getElementById('kpiKOSub').textContent = koCats.length
-      ? `${koEntries} entries • ${winners} winners decided`
-      : 'No brackets saved';
-
-    // Attendance
-    const att = readAttendance();
-    const recs = att.records || {};
-    const todayKey = today();
-    const todayRec = recs[todayKey] || {};
-    const total = (att.players || []).length;
-    const present = Object.values(todayRec).filter(v=>v==='P').length;
-    const absent  = Object.values(todayRec).filter(v=>v==='A').length;
-    document.getElementById('kpiAttendance').textContent = present + '/' + total;
-    document.getElementById('kpiAttendanceSub').textContent = (absent>0 ? `${absent} absent • ` : '') + (total ? `${Math.round((present/total)*100)}% present` : 'No players');
-
-    // Recent activity table (compose from RR + KO)
-    const recent = [];
-    // From Round Robin: last 5 saved matches across cats
-    rrCats.forEach(cat=>{
-      const t = rr[cat] || {};
-      const matches = Array.isArray(t.matches) ? t.matches : [];
-      matches.filter(m=>m && m.saved).slice(-5).forEach(m=>{
-        recent.push({type:'RR', category:cat, detail:`${m.a} ${m.sa} - ${m.sb} ${m.b}`});
+// -------- Player Sync --------
+function propagatePlayer(player){
+  // Round Robin
+  const req = indexedDB.open("TournamentDB",1);
+  req.onsuccess = ()=>{
+    const db = req.result;
+    if (!db.objectStoreNames.contains("tournaments")) return;
+    const tx = db.transaction("tournaments","readwrite");
+    const store = tx.objectStore("tournaments");
+    const g = store.get("data");
+    g.onsuccess = ()=>{
+      let all = {};
+      try{ all = JSON.parse(g.result || "{}"); }catch{}
+      Object.keys(all).forEach(cat=>{
+        if (!all[cat].players.find(p=>p.name===player.name)){
+          all[cat].players.push(player);
+        }
       });
-    });
-    // From Bracket: last categories (show name and entries)
-    ko.slice(-5).forEach(row=>{
-      const data = row?.data || row || {};
-      const cat = (row && row.category) || data?.meta?.category || '—';
-      const entries = Array.isArray(data?.entries) ? data.entries.length : 0;
-      recent.push({type:'KO', category:cat, detail:`${entries} entries`});
-    });
+      store.put(JSON.stringify(all),"data");
+    };
+  };
+  // Bracket
+  const br = indexedDB.open("bracketDB",1);
+  br.onsuccess = ()=>{
+    const db = br.result;
+    if (!db.objectStoreNames.contains("players")) return;
+    const tx = db.transaction("players","readwrite");
+    tx.objectStore("players").put({ category:"all", ...player });
+  };
+}
 
-    const body = document.getElementById('recentBody');
-    body.innerHTML = '';
-    if (!recent.length){
-      body.innerHTML = '<tr><td colspan="3" class="empty">No recent activity yet.</td></tr>';
-    } else {
-      recent.slice(-8).reverse().forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.type}</td><td>${r.category}</td><td>${r.detail}</td>`;
-        body.appendChild(tr);
-      });
+// -------- Load Players --------
+async function loadPlayers(){
+  const players = await readAllFromIDB("playerDB","players");
+  document.getElementById("playerCount").textContent = players.length;
+  const tbody = document.getElementById("playerTable");
+  tbody.innerHTML = "";
+  if (!players.length){ tbody.innerHTML="<tr><td colspan=2>No players</td></tr>"; return; }
+  players.forEach(p=>{
+    const tr = document.createElement("tr");
+    tr.className="player-row";
+    tr.innerHTML = `<td>${p.name}</td><td>${p.category||"-"}</td>`;
+    tr.onclick=()=>openModal(p.name);
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- IndexedDB Reader ----
+function readAllFromIDB(dbName, storeName){
+  return new Promise((resolve)=>{
+    const req = indexedDB.open(dbName);
+    req.onsuccess=()=>{
+      const db = req.result;
+      if (!db.objectStoreNames.contains(storeName)){resolve([]);return;}
+      const tx=db.transaction(storeName,"readonly");
+      const store=tx.objectStore(storeName);
+      const getAll=store.getAll();
+      getAll.onsuccess=()=>resolve(getAll.result||[]);
+      getAll.onerror=()=>resolve([]);
+    };
+    req.onerror=()=>resolve([]);
+  });
+}
+
+// -------- Player Modal --------
+let pieChart, barChart;
+async function openModal(playerName){
+  document.getElementById("modalTitle").textContent = "Stats: "+playerName;
+  const stats = await gatherStats(playerName);
+  const modal=document.getElementById("playerModal");
+  modal.style.display="flex";
+
+  // Pie Chart (Wins vs Losses)
+  const pieCtx=document.getElementById("pieChart").getContext("2d");
+  if (pieChart) pieChart.destroy();
+  pieChart=new Chart(pieCtx,{
+    type:"pie",
+    data:{
+      labels:["Wins","Losses"],
+      datasets:[{data:[stats.wins,stats.losses],backgroundColor:["#22c55e","#ef4444"]}]
     }
-  }
+  });
 
-  render();
-})();
+  // Bar Chart (Points)
+  const barCtx=document.getElementById("barChart").getContext("2d");
+  if (barChart) barChart.destroy();
+  barChart=new Chart(barCtx,{
+    type:"bar",
+    data:{
+      labels:["Points For","Points Against"],
+      datasets:[{label:"Points",data:[stats.pointsFor,stats.pointsAgainst],backgroundColor:["#2a82ff","#f59e0b"]}]
+    },
+    options:{scales:{y:{beginAtZero:true}}}
+  });
+}
+
+function closeModal(){document.getElementById("playerModal").style.display="none";}
+
+// ---- Gather Stats from DBs ----
+async function gatherStats(name){
+  let wins=0,losses=0,pointsFor=0,pointsAgainst=0;
+
+  // Round Robin
+  const rrReq=indexedDB.open("TournamentDB",1);
+  await new Promise(res=>{
+    rrReq.onsuccess=()=>{
+      const db=rrReq.result;
+      if (!db.objectStoreNames.contains("tournaments")){res();return;}
+      const tx=db.transaction("tournaments","readonly");
+      const store=tx.objectStore("tournaments");
+      const g=store.get("data");
+      g.onsuccess=()=>{
+        try{
+          const all=JSON.parse(g.result||"{}");
+          Object.values(all).forEach(cat=>{
+            (cat.matches||[]).forEach(m=>{
+              if (!m.saved) return;
+              if (m.a===name||m.b===name){
+                const myScore=(m.a===name)?m.sa:m.sb;
+                const oppScore=(m.a===name)?m.sb:m.sa;
+                pointsFor+=myScore;
+                pointsAgainst+=oppScore;
+                if (myScore>oppScore) wins++; else losses++;
+              }
+            });
+          });
+        }catch{}
+        res();
+      };
+    }; rrReq.onerror=()=>res();
+  });
+
+  // Bracket
+  const brReq=indexedDB.open("bracketDB",1);
+  await new Promise(res=>{
+    brReq.onsuccess=()=>{
+      const db=brReq.result;
+      if (!db.objectStoreNames.contains("tournaments")){res();return;}
+      const tx=db.transaction("tournaments","readonly");
+      const store=tx.objectStore("tournaments");
+      const c=store.openCursor();
+      c.onsuccess=e=>{
+        const cur=e.target.result;
+        if (cur){
+          const data=cur.value.data||cur.value;
+          (data.rounds||[]).flat().forEach(m=>{
+            if (m.a===name||m.b===name){
+              const myScore=(m.a===name)?m.sa:m.sb;
+              const oppScore=(m.a===name)?m.sb:m.sa;
+              pointsFor+=myScore||0;
+              pointsAgainst+=oppScore||0;
+              if (m.winner===name) wins++; else if (m.winner && m.winner!=="BYE") losses++;
+            }
+          });
+          cur.continue();
+        } else res();
+      };
+    }; brReq.onerror=()=>res();
+  });
+
+  return {wins,losses,pointsFor,pointsAgainst};
+}
+
+// ---- Init ----
+loadPlayers();
 </script>
 </body>
 </html>
