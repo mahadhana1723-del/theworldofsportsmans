@@ -1,228 +1,301 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daily Budget Calculator (HTML • CSS • JS only)</title>
-  <style>
-    :root{
-      --bg:#0b1020;--card:#121a33;--muted:#a3b1d1;--text:#e8eeff;--accent:#7aa2ff;--accent2:#49dcb1;--danger:#ff6b6b;--warning:#ffd166
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#0b1020 0%,#0e1630 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
-    .container{max-width:980px;margin:32px auto;padding:0 16px}
-    .app{background:var(--card);border:1px solid rgba(255,255,255,.08);box-shadow:0 10px 30px rgba(0,0,0,.35);border-radius:20px;overflow:hidden}
-    header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
-    header h1{font-size:20px;margin:0;letter-spacing:.4px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .date-picker input{background:#0b1329;border:1px solid rgba(255,255,255,.1);color:var(--text);padding:10px 12px;border-radius:12px}
-    .card{padding:18px 20px}
-    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .stat{background:#0b1329;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px}
-    .stat .label{color:var(--muted);font-size:12px}
-    .stat .value{font-size:22px;font-weight:700;margin-top:6px}
-    .warning{color:var(--warning)}
-    .danger{color:var(--danger)}
-    .success{color:var(--accent2)}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🏸 Unified Dashboard</title>
+<style>
+  :root{
+    --bg:#0c0f13;
+    --card:#131826;
+    --muted:#9aa4b2;
+    --text:#f2f5f9;
+    --accent:#2a82ff;
+    --good:#22c55e;
+    --warn:#f59e0b;
+    --bad:#ef4444;
+    --line:#1f2738;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,Segoe UI,Arial; background:var(--bg); color:var(--text);}
+  header{position:sticky; top:0; z-index:5; background:linear-gradient(to right, #0c0f13, #0d1220); border-bottom:1px solid var(--line);}
+  .wrap{max-width:1100px; margin:0 auto; padding:16px;}
+  h1{margin:0; font-size:22px; letter-spacing:.2px;}
+  .sub{color:var(--muted); font-size:13px; margin-top:4px}
 
-    .form-grid{display:grid;grid-template-columns:2fr 1fr auto;gap:10px;align-items:center;margin-top:6px}
-    input[type=text], input[type=number], input[type=date]{width:100%;background:#0b1329;border:1px solid rgba(255,255,255,.1);color:var(--text);padding:12px 12px;border-radius:12px}
-    input[type=number]{appearance:textfield}
-    button{border:0;padding:12px 14px;border-radius:12px;background:var(--accent);color:#0b1020;font-weight:700;cursor:pointer}
-    button.secondary{background:#253156;color:var(--text)}
-    button.ghost{background:transparent;color:var(--muted);border:1px dashed rgba(255,255,255,.2)}
-    button.danger{background:var(--danger);color:white}
-    button:disabled{opacity:.6;cursor:not-allowed}
+  .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:14px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.25);}
+  .card h3{margin:0 0 8px; font-size:16px}
+  .kpi{display:flex; align-items:center; justify-content:space-between}
+  .kpi .big{font-size:28px; font-weight:700}
+  .kpi .pill{font-size:12px; padding:4px 8px; border-radius:999px; background:#0f1628; border:1px solid var(--line); color:var(--muted)}
 
-    table{width:100%;border-collapse:separate;border-spacing:0 10px;margin-top:12px}
-    thead th{font-size:12px;color:var(--muted);text-align:left;padding:0 10px}
-    tbody tr{background:#0b1329;border:1px solid rgba(255,255,255,.08)}
-    tbody td{padding:14px 10px}
-    tbody tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
-    tbody tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
-    .empty{color:var(--muted);text-align:center;padding:24px}
+  .table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px}
+  .table th, .table td{padding:8px; border-bottom:1px solid var(--line); text-align:left}
+  .empty{color:var(--muted); text-align:center; padding:12px}
 
-    footer{display:flex;gap:10px;justify-content:flex-end;align-items:center;padding:18px 20px;border-top:1px solid rgba(255,255,255,.08)}
-    .note{color:var(--muted);font-size:12px}
+  .row{display:grid; gap:14px; grid-template-columns:2fr 1fr}
+  .links a, .btn{display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:10px; border:1px solid var(--line); color:var(--text); text-decoration:none; background:#0f1628; cursor:pointer}
+  .btn:hover, .links a:hover{border-color:#2a82ff55}
+  .good{color:var(--good)}
+  .bad{color:var(--bad)}
+  .warn{color:var(--warn)}
 
-    @media(max-width:700px){
-      .stats{grid-template-columns:1fr}
-      .form-grid{grid-template-columns:1fr}
-      header{flex-direction:column;align-items:flex-start}
-      footer{flex-direction:column;align-items:stretch}
-    }
-  </style>
+  .footer-note{color:var(--muted); font-size:12px; margin-top:18px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <div class="app">
-      <header>
-        <h1>Daily Budget Calculator</h1>
-        <div class="row date-picker">
-          <label for="date" class="note">Pick date</label>
-          <input type="date" id="date" />
+  <header>
+    <div class="wrap">
+      <h1>🏸 Dashboard</h1>
+      <div class="sub">Live from Players, Round Robin, Bracket, and Attendance.</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid" id="kpiGrid">
+      <div class="card">
+        <div class="kpi">
+          <div>
+            <div class="pill">Players</div>
+            <div class="big" id="kpiPlayers">—</div>
+          </div>
+          <button class="btn" onclick="goto('PlayerPage.html')">Manage</button>
         </div>
-      </header>
+      </div>
 
       <div class="card">
-        <div class="stats">
-          <div class="stat">
-            <div class="label">Total Spent</div>
-            <div class="value" id="totalDisplay">₹0.00</div>
+        <div class="kpi">
+          <div>
+            <div class="pill">Round Robin</div>
+            <div class="big" id="kpiRR">—</div>
           </div>
-          <div class="stat">
-            <div class="label">Daily Target</div>
-            <div class="value" style="display:flex;gap:8px;align-items:center">
-              <input type="number" step="0.01" min="0" id="targetInput" placeholder="e.g. 1500" />
-              <button class="secondary" id="saveTargetBtn">Save</button>
-            </div>
-          </div>
-          <div class="stat">
-            <div class="label">Remaining</div>
-            <div class="value" id="remainingDisplay">— set a target —</div>
-          </div>
+          <button class="btn" onclick="goto('TournamentPage.html')">Open</button>
         </div>
+        <div class="sub" id="kpiRRSub">Loading…</div>
+      </div>
 
-        <div class="form-grid">
-          <input type="text" id="desc" placeholder="Description (e.g. Vegetables, Auto, Milk)" autocomplete="off" />
-          <input type="number" id="cost" step="0.01" min="0" placeholder="Cost (₹)" />
-          <button type="button" id="addBtn">+ Add</button>
+      <div class="card">
+        <div class="kpi">
+          <div>
+            <div class="pill">Bracket (KO)</div>
+            <div class="big" id="kpiKO">—</div>
+          </div>
+          <button class="btn" onclick="goto('Bracket_tournament.html')">Open</button>
         </div>
+        <div class="sub" id="kpiKOSub">Loading…</div>
+      </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th style="width:60%">Description</th>
-              <th style="width:20%">Cost (₹)</th>
-              <th style="width:20%">Action</th>
-            </tr>
-          </thead>
-          <tbody id="itemsBody">
-            <tr><td colspan="3" class="empty">No items yet. Add your first expense above.</td></tr>
-          </tbody>
+      <div class="card">
+        <div class="kpi">
+          <div>
+            <div class="pill">Attendance (Today)</div>
+            <div class="big" id="kpiAttendance">—</div>
+          </div>
+          <button class="btn" onclick="goto('Attendance_book.html')">Open</button>
+        </div>
+        <div class="sub" id="kpiAttendanceSub">Loading…</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div class="card">
+        <h3>Recent Winners & Saves</h3>
+        <table class="table" id="recentTable">
+          <thead><tr><th>Type</th><th>Category</th><th>Detail</th></tr></thead>
+          <tbody id="recentBody"><tr><td colspan="3" class="empty">No recent activity yet.</td></tr></tbody>
         </table>
       </div>
 
-      <footer>
-        <div class="note">Data is saved in your browser (localStorage) per date. No server needed.</div>
-        <div style="flex:1"></div>
-        <button class="ghost" id="clearDayBtn">Clear Day</button>
-        <button class="secondary" id="exportBtn">Export CSV</button>
-      </footer>
+      <div class="card">
+        <h3>Quick Links</h3>
+        <div class="links">
+          <p><a href="PlayerPage.html" onclick="return goto('PlayerPage.html')">👤 Players</a></p>
+          <p><a href="TournamentPage.html" onclick="return goto('TournamentPage.html')">🔁 Round Robin</a></p>
+          <p><a href="Bracket_tournament.html" onclick="return goto('Bracket_tournament.html')">🥊 Bracket (KO)</a></p>
+          <p><a href="Attendance_book.html" onclick="return goto('Attendance_book.html')">🗓️ Attendance</a></p>
+        </div>
+        <p class="footer-note">Tip: This dashboard runs entirely in your browser. If you clear site data, remember to export from each page first.</p>
+      </div>
     </div>
-  </div>
+  </main>
 
-  <script>
-    const STORAGE_KEY = 'budget_data_v1';
-    function readStore(){
-      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
-    }
-    function writeStore(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+<script>
+(function(){
+  // ---------- Helpers ----------
+  const today = () => (new Date()).toISOString().slice(0,10);
 
-    const dateInput = document.getElementById('date');
-    const descInput = document.getElementById('desc');
-    const costInput = document.getElementById('cost');
-    const addBtn = document.getElementById('addBtn');
-    const itemsBody = document.getElementById('itemsBody');
-    const totalDisplay = document.getElementById('totalDisplay');
-    const targetInput = document.getElementById('targetInput');
-    const saveTargetBtn = document.getElementById('saveTargetBtn');
-    const remainingDisplay = document.getElementById('remainingDisplay');
-    const clearDayBtn = document.getElementById('clearDayBtn');
-    const exportBtn = document.getElementById('exportBtn');
-
-    function todayStr(){ return new Date().toISOString().substring(0,10); }
-
-    function render(){
-      const store = readStore();
-      const d = dateInput.value || todayStr();
-      const dayData = store[d] || {items:[], target:null};
-
-      itemsBody.innerHTML = '';
-      if(dayData.items.length===0){
-        itemsBody.innerHTML = '<tr><td colspan="3" class="empty">No items yet. Add your first expense above.</td></tr>';
-      } else {
-        dayData.items.forEach((it,i)=>{
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${it.desc}</td><td>₹${it.cost.toFixed(2)}</td><td><button class="danger" onclick="deleteItem('${d}',${i})">Delete</button></td>`;
-          itemsBody.appendChild(tr);
-        });
+  function goto(file){
+    try{
+      // If we're running inside index.html's iframe, update the parent iframe
+      if (window.top && window.top !== window) {
+        const frame = window.top.document.getElementById('contentFrame');
+        if (frame) { frame.src = file; return false; }
       }
+    }catch(_){} // cross-origin safe
+    // Fallback: navigate in-place
+    window.location.href = file;
+    return false;
+  }
+  window.goto = goto;
 
-      const total = dayData.items.reduce((a,b)=>a+b.cost,0);
-      totalDisplay.textContent = '₹'+total.toFixed(2);
+  // ---------- Players (IndexedDB: playerDB / store: players) ----------
+  function readAllFromIDB(dbName, storeName){
+    return new Promise((resolve,reject)=>{
+      const req = indexedDB.open(dbName);
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const getAll = store.getAll();
+        getAll.onsuccess = () => resolve(getAll.result || []);
+        getAll.onerror = () => reject(getAll.error);
+      };
+      req.onerror = () => resolve([]); // no DB yet
+      req.onupgradeneeded = () => {}; // do nothing, we only read
+    });
+  }
 
-      if(dayData.target!=null){
-        targetInput.value = dayData.target;
-        const rem = dayData.target - total;
-        remainingDisplay.textContent = '₹'+rem.toFixed(2);
-        remainingDisplay.className = 'value ' + (rem<0? 'danger': 'success');
-      } else {
-        remainingDisplay.textContent = '— set a target —';
-        remainingDisplay.className = 'value';
+  // ---------- Round Robin (IndexedDB: TournamentDB / store: tournaments / key: 'data') ----------
+  function readTournamentDB(){
+    return new Promise((resolve)=>{
+      const req = indexedDB.open('TournamentDB', 1);
+      req.onsuccess = () => {
+        const db = req.result;
+        const tx = db.transaction('tournaments', 'readonly');
+        const store = tx.objectStore('tournaments');
+        const getReq = store.get('data');
+        getReq.onsuccess = () => {
+          try{
+            const parsed = JSON.parse(getReq.result || '{}');
+            resolve(parsed);
+          }catch{ resolve({}); }
+        };
+        getReq.onerror = () => resolve({});
+      };
+      req.onerror = () => resolve({});
+      req.onupgradeneeded = () => {}; // read-only pattern
+    });
+  }
+
+  // ---------- Bracket (IndexedDB: bracketDB / store: tournaments [keyPath 'category']) ----------
+  function readBracketDB(){
+    return new Promise((resolve)=>{
+      const req = indexedDB.open('bracketDB', 1);
+      req.onsuccess = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('tournaments')) { resolve([]); return; }
+        const tx = db.transaction('tournaments','readonly');
+        const store = tx.objectStore('tournaments');
+        const items = [];
+        const cursor = store.openCursor();
+        cursor.onsuccess = (e)=>{
+          const cur = e.target.result;
+          if (cur){ items.push(cur.value); cur.continue(); }
+          else resolve(items);
+        };
+        cursor.onerror = () => resolve([]);
+      };
+      req.onerror = () => resolve([]);
+      req.onupgradeneeded = () => {}; // read-only
+    });
+  }
+
+  // ---------- Attendance (localStorage: attendance_v1) ----------
+  function readAttendance(){
+    try{
+      const data = JSON.parse(localStorage.getItem('attendance_v1') || '');
+      return data || { players:[], records:{} };
+    }catch(_){ return { players:[], records:{} }; }
+  }
+
+  // ---------- Render ----------
+  async function render(){
+    // Players
+    const players = await readAllFromIDB('playerDB','players');
+    document.getElementById('kpiPlayers').textContent = players.length;
+
+    // Round Robin summary
+    const rr = await readTournamentDB();
+    const rrCats = Object.keys(rr);
+    let rrSaved = 0, rrMatches = 0;
+    rrCats.forEach(cat=>{
+      const t = rr[cat] || {};
+      const matches = Array.isArray(t.matches) ? t.matches : [];
+      rrMatches += matches.length;
+      rrSaved += matches.filter(m => m && m.saved).length;
+    });
+    document.getElementById('kpiRR').textContent = rrCats.length || '0';
+    document.getElementById('kpiRRSub').textContent = rrCats.length
+      ? `${rrSaved}/${rrMatches} matches saved`
+      : 'No categories yet';
+
+    // Bracket summary
+    const ko = await readBracketDB();
+    const koCats = ko.map(x=>x && x.category || x?.data?.meta?.category).filter(Boolean);
+    let koEntries = 0, winners = 0;
+    ko.forEach(row=>{
+      const data = row?.data || row;
+      const entries = Array.isArray(data?.entries) ? data.entries : [];
+      koEntries += entries.length;
+      // try to infer winner as last non-BYE in last round
+      const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
+      const last = rounds[rounds.length-1];
+      if (Array.isArray(last)){
+        const any = last.find(m => m && (m.winner || m.T));
+        if (any && any.winner && any.winner !== 'BYE') winners += 1;
       }
+    });
+    document.getElementById('kpiKO').textContent = koCats.length || '0';
+    document.getElementById('kpiKOSub').textContent = koCats.length
+      ? `${koEntries} entries • ${winners} winners decided`
+      : 'No brackets saved';
+
+    // Attendance
+    const att = readAttendance();
+    const recs = att.records || {};
+    const todayKey = today();
+    const todayRec = recs[todayKey] || {};
+    const total = (att.players || []).length;
+    const present = Object.values(todayRec).filter(v=>v==='P').length;
+    const absent  = Object.values(todayRec).filter(v=>v==='A').length;
+    document.getElementById('kpiAttendance').textContent = present + '/' + total;
+    document.getElementById('kpiAttendanceSub').textContent = (absent>0 ? `${absent} absent • ` : '') + (total ? `${Math.round((present/total)*100)}% present` : 'No players');
+
+    // Recent activity table (compose from RR + KO)
+    const recent = [];
+    // From Round Robin: last 5 saved matches across cats
+    rrCats.forEach(cat=>{
+      const t = rr[cat] || {};
+      const matches = Array.isArray(t.matches) ? t.matches : [];
+      matches.filter(m=>m && m.saved).slice(-5).forEach(m=>{
+        recent.push({type:'RR', category:cat, detail:`${m.a} ${m.sa} - ${m.sb} ${m.b}`});
+      });
+    });
+    // From Bracket: last categories (show name and entries)
+    ko.slice(-5).forEach(row=>{
+      const data = row?.data || row || {};
+      const cat = (row && row.category) || data?.meta?.category || '—';
+      const entries = Array.isArray(data?.entries) ? data.entries.length : 0;
+      recent.push({type:'KO', category:cat, detail:`${entries} entries`});
+    });
+
+    const body = document.getElementById('recentBody');
+    body.innerHTML = '';
+    if (!recent.length){
+      body.innerHTML = '<tr><td colspan="3" class="empty">No recent activity yet.</td></tr>';
+    } else {
+      recent.slice(-8).reverse().forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.type}</td><td>${r.category}</td><td>${r.detail}</td>`;
+        body.appendChild(tr);
+      });
     }
+  }
 
-    function addItem(){
-      const d = dateInput.value || todayStr();
-      const store = readStore();
-      if(!store[d]) store[d] = {items:[], target:null};
-      const desc = descInput.value.trim();
-      const cost = parseFloat(costInput.value);
-      if(!desc || isNaN(cost)) return;
-      store[d].items.push({desc, cost});
-      writeStore(store);
-      descInput.value=''; costInput.value='';
-      render();
-    }
-
-    function deleteItem(d,i){
-      const store = readStore();
-      if(store[d]){ store[d].items.splice(i,1); writeStore(store);} 
-      render();
-    }
-
-    function saveTarget(){
-      const d = dateInput.value || todayStr();
-      const store = readStore();
-      if(!store[d]) store[d]={items:[],target:null};
-      const val = parseFloat(targetInput.value);
-      if(!isNaN(val)) store[d].target = val;
-      writeStore(store);
-      render();
-    }
-
-    function clearDay(){
-      const d = dateInput.value || todayStr();
-      const store = readStore();
-      delete store[d];
-      writeStore(store);
-      render();
-    }
-
-    function exportCSV(){
-      const store = readStore();
-      let csv = 'Date,Description,Cost\n';
-      for(const d in store){
-        store[d].items.forEach(it=>{
-          csv += `${d},"${it.desc.replace(/\"/g,'"')} ",${it.cost}\n`;
-        });
-      }
-      const blob = new Blob([csv],{type:'text/csv'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download='budget.csv';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
-
-    addBtn.onclick=addItem;
-    saveTargetBtn.onclick=saveTarget;
-    clearDayBtn.onclick=clearDay;
-    exportBtn.onclick=exportCSV;
-    dateInput.onchange=render;
-
-    dateInput.value=todayStr();
-    render();
-  </script>
+  render();
+})();
+</script>
 </body>
 </html>
