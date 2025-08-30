@@ -56,18 +56,5 @@ function broadcast(type, payload){
   channel.postMessage({type,payload});
 }
 
-import { put, broadcast } from "./db.js";
 
-async function addPlayer(player){
-  await openDB();
-  await put("players", player);
-  broadcast("playerAdded", player);
-}
-import { put, broadcast } from "./db.js";
-
-async function addPlayer(player){
-  await openDB();
-  await put("players", player);
-  broadcast("playerAdded", player);
-}
 

@@ -1079,6 +1079,22 @@ function loadTournaments() {
     header.style.display = headerVisible ? "flex" : "none";
     toggleBtn.textContent = headerVisible ? "Hide Header" : "Show Header";
   });
+
+
+  import { put, broadcast } from "./db.js";
+
+async function addPlayer(player){
+  await openDB();
+  await put("players", player);
+  broadcast("playerAdded", player);
+}
+import { put, broadcast } from "./db.js";
+
+async function addPlayer(player){
+  await openDB();
+  await put("players", player);
+  broadcast("playerAdded", player);
+}
 </script>
 
 </body>
