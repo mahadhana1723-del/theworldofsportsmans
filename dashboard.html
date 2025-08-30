@@ -1,301 +1,273 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🏸 Unified Dashboard</title>
-<style>
-  :root{
-    --bg:#0c0f13;
-    --card:#131826;
-    --muted:#9aa4b2;
-    --text:#f2f5f9;
-    --accent:#2a82ff;
-    --good:#22c55e;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-    --line:#1f2738;
-  }
-  *{box-sizing:border-box}
-  body{margin:0; font-family:system-ui,Segoe UI,Arial; background:var(--bg); color:var(--text);}
-  header{position:sticky; top:0; z-index:5; background:linear-gradient(to right, #0c0f13, #0d1220); border-bottom:1px solid var(--line);}
-  .wrap{max-width:1100px; margin:0 auto; padding:16px;}
-  h1{margin:0; font-size:22px; letter-spacing:.2px;}
-  .sub{color:var(--muted); font-size:13px; margin-top:4px}
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard - Badminton Manager</title>
 
-  .grid{display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); margin-top:14px;}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:0 8px 24px rgba(0,0,0,.25);}
-  .card h3{margin:0 0 8px; font-size:16px}
-  .kpi{display:flex; align-items:center; justify-content:space-between}
-  .kpi .big{font-size:28px; font-weight:700}
-  .kpi .pill{font-size:12px; padding:4px 8px; border-radius:999px; background:#0f1628; border:1px solid var(--line); color:var(--muted)}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  .table{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px}
-  .table th, .table td{padding:8px; border-bottom:1px solid var(--line); text-align:left}
-  .empty{color:var(--muted); text-align:center; padding:12px}
+  <style>
+    :root{
+      --bg:#fdf4ff; --card:#ffffff; --text:#1f1029; --muted:#6b5a86;
+      --primary:#d946ef; --accent:#9333ea; --danger:#dc2626;
+      --warn:#d97706; --line:#e5e0eb;
+    }
+    :root.dark{
+      --bg:#0b1020; --card:#12172a; --text:#e9efff; --muted:#9fb2d9;
+      --primary:#a855f7; --accent:#ec4899; --danger:#ef4444;
+      --warn:#f59e0b; --line:#293250;
+    }
 
-  .row{display:grid; gap:14px; grid-template-columns:2fr 1fr}
-  .links a, .btn{display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:10px; border:1px solid var(--line); color:var(--text); text-decoration:none; background:#0f1628; cursor:pointer}
-  .btn:hover, .links a:hover{border-color:#2a82ff55}
-  .good{color:var(--good)}
-  .bad{color:var(--bad)}
-  .warn{color:var(--warn)}
+    *{box-sizing:border-box}
+    body{margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
 
-  .footer-note{color:var(--muted); font-size:12px; margin-top:18px}
-</style>
+    .container{max-width:1200px;margin:0 auto;padding:20px}
+    .grid{display:grid;gap:20px;grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+    h3{margin:0 0 12px}
+    .kpi{font-size:1.6rem;font-weight:bold}
+
+    .btn{border:1px solid var(--line);background:transparent;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;border-color:transparent}
+    .btn:hover{opacity:.9}
+
+    /* ===== Results Ticker ===== */
+    .ticker{
+      width:100%;
+      background:linear-gradient(90deg,var(--primary),var(--accent));
+      color:#fff;
+      padding:6px 0;
+      overflow:hidden;
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    .ticker-content{
+      display:inline-block;
+      white-space:nowrap;
+      padding-left:100%;
+      animation:scroll 18s linear infinite;
+    }
+    @keyframes scroll{
+      from{transform:translateX(0);}
+      to{transform:translateX(-100%);}
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <h1>🏸 Dashboard</h1>
-      <div class="sub">Live from Players, Round Robin, Bracket, and Attendance.</div>
+  <!-- Moving results ticker -->
+  <div class="ticker">
+    <div class="ticker-content" id="resultsTicker">
+      🏸 No results yet
     </div>
-  </header>
+  </div>
 
-  <main class="wrap">
-    <div class="grid" id="kpiGrid">
+  <div class="container">
+    <h2>Dashboard</h2>
+
+    <div class="grid">
       <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Players</div>
-            <div class="big" id="kpiPlayers">—</div>
-          </div>
-          <button class="btn" onclick="goto('PlayerPage.html')">Manage</button>
-        </div>
+        <h3>Total Players</h3>
+        <div id="kpiPlayers" class="kpi">0</div>
       </div>
-
       <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Round Robin</div>
-            <div class="big" id="kpiRR">—</div>
-          </div>
-          <button class="btn" onclick="goto('TournamentPage.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiRRSub">Loading…</div>
+        <h3>Total Tournaments</h3>
+        <div id="kpiTournaments" class="kpi">0</div>
       </div>
-
       <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Bracket (KO)</div>
-            <div class="big" id="kpiKO">—</div>
-          </div>
-          <button class="btn" onclick="goto('Bracket_tournament.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiKOSub">Loading…</div>
-      </div>
-
-      <div class="card">
-        <div class="kpi">
-          <div>
-            <div class="pill">Attendance (Today)</div>
-            <div class="big" id="kpiAttendance">—</div>
-          </div>
-          <button class="btn" onclick="goto('Attendance_book.html')">Open</button>
-        </div>
-        <div class="sub" id="kpiAttendanceSub">Loading…</div>
+        <h3>Attendance Today</h3>
+        <div id="kpiAttendance" class="kpi">0%</div>
       </div>
     </div>
 
-    <div class="row" style="margin-top:14px">
+    <div class="grid" style="margin-top:20px">
       <div class="card">
-        <h3>Recent Winners & Saves</h3>
-        <table class="table" id="recentTable">
-          <thead><tr><th>Type</th><th>Category</th><th>Detail</th></tr></thead>
-          <tbody id="recentBody"><tr><td colspan="3" class="empty">No recent activity yet.</td></tr></tbody>
-        </table>
+        <h3>Players by Gender</h3>
+        <canvas id="chartGender" height="220"></canvas>
       </div>
-
       <div class="card">
-        <h3>Quick Links</h3>
-        <div class="links">
-          <p><a href="PlayerPage.html" onclick="return goto('PlayerPage.html')">👤 Players</a></p>
-          <p><a href="TournamentPage.html" onclick="return goto('TournamentPage.html')">🔁 Round Robin</a></p>
-          <p><a href="Bracket_tournament.html" onclick="return goto('Bracket_tournament.html')">🥊 Bracket (KO)</a></p>
-          <p><a href="Attendance_book.html" onclick="return goto('Attendance_book.html')">🗓️ Attendance</a></p>
-        </div>
-        <p class="footer-note">Tip: This dashboard runs entirely in your browser. If you clear site data, remember to export from each page first.</p>
+        <h3>Matches Played</h3>
+        <canvas id="chartMatches" height="220"></canvas>
+      </div>
+      <div class="card">
+        <h3>Players by Age Group</h3>
+        <canvas id="playersBar" height="220"></canvas>
       </div>
     </div>
-  </main>
 
-<script>
-(function(){
-  // ---------- Helpers ----------
-  const today = () => (new Date()).toISOString().slice(0,10);
+    <div class="grid" style="margin-top:20px">
+      <div class="card">
+        <h3>Top Players</h3>
+        <ul id="topPlayers"></ul>
+      </div>
+      <div class="card">
+        <h3>Upcoming Tournaments</h3>
+        <ul id="upcomingTournaments"></ul>
+      </div>
+      <div class="card">
+        <h3>Recent Matches</h3>
+        <ul id="recentMatches"></ul>
+      </div>
+    </div>
+  </div>
 
-  function goto(file){
-    try{
-      // If we're running inside index.html's iframe, update the parent iframe
-      if (window.top && window.top !== window) {
-        const frame = window.top.document.getElementById('contentFrame');
-        if (frame) { frame.src = file; return false; }
-      }
-    }catch(_){} // cross-origin safe
-    // Fallback: navigate in-place
-    window.location.href = file;
-    return false;
-  }
-  window.goto = goto;
+  <script>
+    // Dummy loaders (replace later with backend API if needed)
+    function fetchPlayers(){
+      return JSON.parse(localStorage.getItem('players')||'[]');
+    }
+    function fetchTournaments(){
+      return JSON.parse(localStorage.getItem('tournaments')||'[]');
+    }
+    function fetchState(){
+      return (JSON.parse(localStorage.getItem('state'))||{});
+    }
 
-  // ---------- Players (IndexedDB: playerDB / store: players) ----------
-  function readAllFromIDB(dbName, storeName){
-    return new Promise((resolve,reject)=>{
-      const req = indexedDB.open(dbName);
-      req.onsuccess = () => {
-        const db = req.result;
-        const tx = db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-        const getAll = store.getAll();
-        getAll.onsuccess = () => resolve(getAll.result || []);
-        getAll.onerror = () => reject(getAll.error);
-      };
-      req.onerror = () => resolve([]); // no DB yet
-      req.onupgradeneeded = () => {}; // do nothing, we only read
-    });
-  }
+    function render(){
+      const players=fetchPlayers();
+      const tournaments=fetchTournaments();
 
-  // ---------- Round Robin (IndexedDB: TournamentDB / store: tournaments / key: 'data') ----------
-  function readTournamentDB(){
-    return new Promise((resolve)=>{
-      const req = indexedDB.open('TournamentDB', 1);
-      req.onsuccess = () => {
-        const db = req.result;
-        const tx = db.transaction('tournaments', 'readonly');
-        const store = tx.objectStore('tournaments');
-        const getReq = store.get('data');
-        getReq.onsuccess = () => {
-          try{
-            const parsed = JSON.parse(getReq.result || '{}');
-            resolve(parsed);
-          }catch{ resolve({}); }
-        };
-        getReq.onerror = () => resolve({});
-      };
-      req.onerror = () => resolve({});
-      req.onupgradeneeded = () => {}; // read-only pattern
-    });
-  }
+      document.getElementById('kpiPlayers').textContent=players.length;
+      document.getElementById('kpiTournaments').textContent=tournaments.length;
+      const present=players.filter(p=>p.present).length;
+      const pct=players.length?Math.round(present/players.length*100):0;
+      document.getElementById('kpiAttendance').textContent=pct+"%";
 
-  // ---------- Bracket (IndexedDB: bracketDB / store: tournaments [keyPath 'category']) ----------
-  function readBracketDB(){
-    return new Promise((resolve)=>{
-      const req = indexedDB.open('bracketDB', 1);
-      req.onsuccess = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains('tournaments')) { resolve([]); return; }
-        const tx = db.transaction('tournaments','readonly');
-        const store = tx.objectStore('tournaments');
-        const items = [];
-        const cursor = store.openCursor();
-        cursor.onsuccess = (e)=>{
-          const cur = e.target.result;
-          if (cur){ items.push(cur.value); cur.continue(); }
-          else resolve(items);
-        };
-        cursor.onerror = () => resolve([]);
-      };
-      req.onerror = () => resolve([]);
-      req.onupgradeneeded = () => {}; // read-only
-    });
-  }
+      drawGenderChart(players);
+      drawMatchesChart(tournaments);
+      drawPlayersChart(players);
+      renderExtras(players,tournaments);
+    }
 
-  // ---------- Attendance (localStorage: attendance_v1) ----------
-  function readAttendance(){
-    try{
-      const data = JSON.parse(localStorage.getItem('attendance_v1') || '');
-      return data || { players:[], records:{} };
-    }catch(_){ return { players:[], records:{} }; }
-  }
-
-  // ---------- Render ----------
-  async function render(){
-    // Players
-    const players = await readAllFromIDB('playerDB','players');
-    document.getElementById('kpiPlayers').textContent = players.length;
-
-    // Round Robin summary
-    const rr = await readTournamentDB();
-    const rrCats = Object.keys(rr);
-    let rrSaved = 0, rrMatches = 0;
-    rrCats.forEach(cat=>{
-      const t = rr[cat] || {};
-      const matches = Array.isArray(t.matches) ? t.matches : [];
-      rrMatches += matches.length;
-      rrSaved += matches.filter(m => m && m.saved).length;
-    });
-    document.getElementById('kpiRR').textContent = rrCats.length || '0';
-    document.getElementById('kpiRRSub').textContent = rrCats.length
-      ? `${rrSaved}/${rrMatches} matches saved`
-      : 'No categories yet';
-
-    // Bracket summary
-    const ko = await readBracketDB();
-    const koCats = ko.map(x=>x && x.category || x?.data?.meta?.category).filter(Boolean);
-    let koEntries = 0, winners = 0;
-    ko.forEach(row=>{
-      const data = row?.data || row;
-      const entries = Array.isArray(data?.entries) ? data.entries : [];
-      koEntries += entries.length;
-      // try to infer winner as last non-BYE in last round
-      const rounds = Array.isArray(data?.rounds) ? data.rounds : [];
-      const last = rounds[rounds.length-1];
-      if (Array.isArray(last)){
-        const any = last.find(m => m && (m.winner || m.T));
-        if (any && any.winner && any.winner !== 'BYE') winners += 1;
-      }
-    });
-    document.getElementById('kpiKO').textContent = koCats.length || '0';
-    document.getElementById('kpiKOSub').textContent = koCats.length
-      ? `${koEntries} entries • ${winners} winners decided`
-      : 'No brackets saved';
-
-    // Attendance
-    const att = readAttendance();
-    const recs = att.records || {};
-    const todayKey = today();
-    const todayRec = recs[todayKey] || {};
-    const total = (att.players || []).length;
-    const present = Object.values(todayRec).filter(v=>v==='P').length;
-    const absent  = Object.values(todayRec).filter(v=>v==='A').length;
-    document.getElementById('kpiAttendance').textContent = present + '/' + total;
-    document.getElementById('kpiAttendanceSub').textContent = (absent>0 ? `${absent} absent • ` : '') + (total ? `${Math.round((present/total)*100)}% present` : 'No players');
-
-    // Recent activity table (compose from RR + KO)
-    const recent = [];
-    // From Round Robin: last 5 saved matches across cats
-    rrCats.forEach(cat=>{
-      const t = rr[cat] || {};
-      const matches = Array.isArray(t.matches) ? t.matches : [];
-      matches.filter(m=>m && m.saved).slice(-5).forEach(m=>{
-        recent.push({type:'RR', category:cat, detail:`${m.a} ${m.sa} - ${m.sb} ${m.b}`});
-      });
-    });
-    // From Bracket: last categories (show name and entries)
-    ko.slice(-5).forEach(row=>{
-      const data = row?.data || row || {};
-      const cat = (row && row.category) || data?.meta?.category || '—';
-      const entries = Array.isArray(data?.entries) ? data.entries.length : 0;
-      recent.push({type:'KO', category:cat, detail:`${entries} entries`});
-    });
-
-    const body = document.getElementById('recentBody');
-    body.innerHTML = '';
-    if (!recent.length){
-      body.innerHTML = '<tr><td colspan="3" class="empty">No recent activity yet.</td></tr>';
-    } else {
-      recent.slice(-8).reverse().forEach(r=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.type}</td><td>${r.category}</td><td>${r.detail}</td>`;
-        body.appendChild(tr);
+    // Gender chart
+    function drawGenderChart(players){
+      const ctx=document.getElementById('chartGender');
+      if(!ctx)return;
+      const males=players.filter(p=>p.gender==='man'||p.gender==='boy').length;
+      const females=players.filter(p=>p.gender==='woman'||p.gender==='girl').length;
+      if(window.genderChart){window.genderChart.destroy();}
+      window.genderChart=new Chart(ctx,{
+        type:'doughnut',
+        data:{labels:['Male','Female'],
+          datasets:[{data:[males,females],backgroundColor:['#d946ef','#9333ea']}]},
+        options:{plugins:{legend:{labels:{color:getCss('--muted')}}}}
       });
     }
-  }
 
-  render();
-})();
-</script>
+    // Matches chart (dummy count)
+    function drawMatchesChart(tournaments){
+      const ctx=document.getElementById('chartMatches');
+      if(!ctx)return;
+      const total=tournaments.length*10;
+      const played=Math.round(total*0.6);
+      if(window.matchChart){window.matchChart.destroy();}
+      window.matchChart=new Chart(ctx,{
+        type:'bar',
+        data:{labels:['Played','Scheduled'],
+          datasets:[{data:[played,total-played],backgroundColor:['#9333ea','#d946ef'],borderRadius:6}]},
+        options:{plugins:{legend:{display:false}},
+          scales:{x:{ticks:{color:getCss('--muted')}},y:{ticks:{color:getCss('--muted')},beginAtZero:true}}}
+      });
+    }
+
+    // Players by Age Group chart
+    function drawPlayersChart(players){
+      const ctx=document.getElementById('playersBar');
+      if(!ctx)return;
+      const groups=["U9","U11","U13","U15","U17","U19","Men","Women","30+","35+","40+","45+"];
+      const counts=groups.map(g=>players.filter(p=>p.age===g).length);
+      if(window.playersChart){window.playersChart.destroy();}
+      window.playersChart=new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:groups,
+          datasets:[{
+            label:'Players',
+            data:counts,
+            backgroundColor:'rgba(217,70,239,0.7)',
+            borderRadius:6
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:getCss('--muted')}},
+            y:{ticks:{color:getCss('--muted')},beginAtZero:true}
+          }
+        }
+      });
+    }
+
+    // Collect recent matches from state (Round Robin + KO)
+    function getRecentMatches(){
+      const state = fetchState();
+      const rec = [];
+
+      // Round Robin
+      if(state.rr){
+        Object.values(state.rr).forEach(rr=>{
+          rr.groups?.forEach(g=>{
+            g.matches?.forEach(m=>{
+              if(m.done){
+                rec.push({
+                  a: m.a.name,
+                  b: m.b.name,
+                  score: `${m.scoreA}–${m.scoreB}`
+                });
+              }
+            });
+          });
+        });
+      }
+
+      // Knockout
+      if(state.ko){
+        Object.values(state.ko).forEach(ko=>{
+          ko.rounds?.forEach(r=>{
+            r.forEach(m=>{
+              if(m.done){
+                rec.push({
+                  a: m.a?.name||'TBD',
+                  b: m.b?.name||'TBD',
+                  score: `${m.scoreA}–${m.scoreB}`
+                });
+              }
+            });
+          });
+        });
+      }
+
+      return rec.slice(-5).reverse(); // last 5
+    }
+
+    // Extra dashboard cards
+    function renderExtras(players,tournaments){
+      // Top players by wins
+      const top=players.slice().sort((a,b)=>(b.stats?.W||0)-(a.stats?.W||0)).slice(0,5);
+      document.getElementById('topPlayers').innerHTML=top.map(p=>`<li>${p.name} — ${p.stats?.W||0} wins</li>`).join('')||'<li>No data</li>';
+
+      // Upcoming tournaments
+      const upcoming=tournaments.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,5);
+      document.getElementById('upcomingTournaments').innerHTML=upcoming.map(t=>`<li>${t.name} (${t.date})</li>`).join('')||'<li>No tournaments</li>';
+
+      // Recent matches from state
+      const rec = getRecentMatches();
+      document.getElementById('recentMatches').innerHTML = rec.map(m=>`<li>${m.a} vs ${m.b} — ${m.score}</li>`).join('') || '<li>No completed matches</li>';
+
+      // Update ticker with same matches
+      const ticker = document.getElementById('resultsTicker');
+      ticker.textContent = rec.length ? "🏸 Latest Results: " + rec.map(m=>`${m.a} beat ${m.b} ${m.score}`).join(" | ") : "No results yet";
+    }
+
+    function getCss(name){
+      return getComputedStyle(document.documentElement).getPropertyValue(name);
+    }
+
+    render();
+  </script>
 </body>
 </html>
