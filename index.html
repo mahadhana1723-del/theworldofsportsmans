@@ -1,420 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dhana Badminton Manager</title>
-
-  <!-- Font Awesome -->
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Badminton Manager - Practice</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Lottie Player -->
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
   <style>
-:root {
-  --primary1: #9333ea;  /* Purple */
-  --primary2: #ec4899;  /* Pink */
-  --secondary: #14b8a6; /* Teal */
-  --bg1: #fafafa;
-  --bg2: #f0fdf4;       /* soft green tint */
-  --card: #ffffff;
-  --border: #e5e7eb;
-  --muted: #6b7280;
-  --text: #1e293b;
+    :root{
+      --bg:#fdf4ff; --card:#ffffff; --text:#1f1029; --muted:#6b5a86;
+      --primary:#d946ef; --accent:#9333ea; --danger:#dc2626;
+      --warn:#d97706; --line:#e5e0eb;
+    }
+    :root.dark{
+      --bg:#0b1020; --card:#12172a; --text:#e9efff; --muted:#9fb2d9;
+      --primary:#a855f7; --accent:#ec4899; --danger:#ef4444;
+      --warn:#f59e0b; --line:#293250;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,Arial}
+    body{background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+
+    .hidden{display:none}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+
+    .btn{border:1px solid var(--line);background:transparent;padding:10px 14px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;border-color:transparent;width:100%}
+    .btn:hover{opacity:.9}
+
+    /* Floating label form fields */
+    .form-group { position: relative; margin: 16px 0; }
+    .form-group input {
+      width: 100%; padding: 14px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: transparent; color: inherit; font-size: 1rem;
+    }
+    .form-group input:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+    }
+    .form-group label {
+      position: absolute; top: 14px; left: 12px; font-size: .9rem;
+      color: var(--muted); pointer-events: none; transition: 0.25s ease;
+      background: var(--card); padding: 0 4px; border-radius: 6px;
+    }
+    .form-group input:focus + label,
+    .form-group input:not(:placeholder-shown) + label {
+      top: -8px; left: 10px; font-size: .75rem; color: var(--primary);
+    }
+
+    /* Auth layout */
+    #authView {
+      display:flex; align-items:center; justify-content:center;
+      height:100vh; padding:20px;
+    }
+    .auth-wrap {
+      display:flex; align-items:center; justify-content:center;
+      gap:40px; max-width:1000px; width:100%;
+    }
+    .auth-anim {
+      flex:1; display:flex; align-items:center; justify-content:center;
+    }
+    .auth-anim lottie-player {
+      width:100%; max-width:420px;
+    }
+    .auth-box { width:360px; flex-shrink:0; }
+    .auth-tabs{display:flex;gap:8px;margin-bottom:12px}
+    .auth-tabs .chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);cursor:pointer}
+    .auth-tabs .chip.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border-color:transparent}
+
+    /* Titles */
+ .auth-box h2 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text); /* always normal text color */
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Poppins", system-ui, sans-serif;
-}
-
-body {
-  background: linear-gradient(135deg, var(--bg1), var(--bg2));
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text);
-  padding: 0;
-  margin: 0;
-}
-
-/* ------ FULLSCREEN APP ------ */
-.frame {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ------ LOGIN SCREEN ------ */
-.login-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3rem;
-  animation: fadeInUp 0.8s ease forwards;
-  opacity: 0;
-}
-@keyframes fadeInUp {
-  from { transform: translateY(40px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.sign-in {
-  background: var(--card);
-  padding: 50px;
-  border-radius: 20px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
-  width: 400px;
-}
-.sign-in h1 {
-  font-size: 2rem;
-  margin-bottom: 8px;
-  color: var(--primary1);
-}
-.sign-in p.lead {
-  color: var(--muted);
-  margin-bottom: 24px;
-}
-.form-group {
-  position: relative;
-  margin-bottom: 22px;
-}
-.form-group input {
-  width: 100%;
-  padding: 14px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #f9fafb;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-.form-group input:focus {
-  border-color: var(--primary1);
-  box-shadow: 0 0 0 3px rgba(147,51,234,0.25);
-  outline: none;
-}
-.form-group label {
-  position: absolute;
-  top: 14px;
-  left: 14px;
+.auth-box p.lead {
+  margin: 0 0 16px;
   font-size: 0.9rem;
   color: var(--muted);
-  transition: 0.25s ease;
-  pointer-events: none;
-}
-.form-group input:focus + label,
-.form-group input:not(:placeholder-shown) + label {
-  top: -8px;
-  left: 12px;
-  font-size: 0.75rem;
-  background: #fff;
-  padding: 0 6px;
-  border-radius: 6px;
-  color: var(--primary1);
 }
 
-/* ------ BUTTONS ------ */
-.btn {
-  display: inline-block;
-  padding: 14px 22px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-.btn-primary {
-  background: linear-gradient(90deg, var(--primary1), var(--primary2));
-  color: white;
-}
-.btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 20px rgba(147,51,234,0.3);
+/* Gradient only for Sign Up subtitle */
+#signUpForm p.lead {
+  background: linear-gradient(90deg,var(--primary),var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* ------ APP DASHBOARD ------ */
-.app {
-  flex: 1;
-  display: none;
-  flex-direction: column;
-  background: linear-gradient(180deg, #fafafa, #f0f9ff);
-}
 
-/* Topbar */
-.topbar {
-  display: flex;
-  align-items: center;
-  padding: 16px 24px;
-  background: var(--card);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-}
-.brand .logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--primary1), var(--primary2));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-/* ------ Tabs (Full pill half-button style) ------ */
-.tabs {
-  display: flex;
-  gap: 12px;
-  margin-left: 40px;
-  background: #f1f5f9;
-  padding: 6px;
-  border-radius: 14px;
-}
-.tab {
-  padding: 12px 20px;
-  border-radius: 20px;
-  font-weight: 500;
-  cursor: pointer;
-  color: var(--muted);
-  background: linear-gradient(to bottom, #fff, #e5e7eb);
-  border: 1px solid #d1d5db;
-  transition: all 0.35s ease;
-}
-.tab:hover {
-  color: var(--primary1);
-  background: linear-gradient(to bottom, #fefeff, #e0e7ff);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(147,51,234,0.15);
-}
-.tab.active {
-  color: #fff;
-  font-weight: 600;
-  background: linear-gradient(to bottom, var(--primary1), var(--primary2));
-  border: 1px solid var(--primary1);
-  box-shadow: 0 4px 12px rgba(147,51,234,0.3);
-  transform: translateY(-2px);
-}
-
-/* Content Pane */
-.pane {
-  flex: 1;
-  display: flex;
-}
-.pane iframe {
-  width: 100%;
-  border: none;
-  background: #fff;
-}
-
-/* Responsive */
-.menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 22px;
-  cursor: pointer;
-}
-@media (max-width: 768px) {
-  .tabs {
-    display: none;
-    flex-direction: column;
-    width: 100%;
-    margin: 0;
-    border-radius: 0;
-  }
-  .tabs.open { display: flex; }
-  .tab { text-align: center; }
-  .menu-btn { display: block; color: var(--text); }
-}
-
+    /* App shell */
+    #appView{display:none;flex-direction:column;height:100vh;width:100%}
+    .topbar{background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+    .tabs{display:flex;gap:8px;margin:0}
+    .tabs .tab{padding:10px 12px;border:1px solid var(--line);border-bottom:2px solid transparent;border-radius:10px;cursor:pointer;background:transparent}
+    .tabs .tab.active{border-bottom-color:var(--primary);box-shadow:inset 0 -2px 0 var(--primary);color:var(--primary)}
+    .pane{flex:1;display:flex}
+    .pane iframe{flex:1;border:none;background:var(--card)}
   </style>
 </head>
 <body>
 
-  <div class="frame">
+<!-- AUTH -->
+<div id="authView">
+  <div class="auth-wrap">
+    <div class="auth-anim">
+      <!-- Typing animation -->
+              <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_kyu7xb1v.json"  background="transparent"  speed="1"  loop autoplay></lottie-player>
 
-    <!-- LOGIN AREA -->
-    <div id="signInView" class="login-container">
-      <div class="login-animation">
-        <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_kyu7xb1v.json"  background="transparent"  speed="1"  loop autoplay></lottie-player>
+    </div>
+    <div class="auth-box card">
+      <div class="auth-tabs">
+        <div id="tabSignIn" class="chip active">Sign In</div>
+        <div id="tabSignUp" class="chip">Sign Up</div>
       </div>
 
-      <div class="sign-in">
-        <h1>Welcome Back 👋</h1>
+      <!-- Sign In -->
+      <div id="signInForm">
+        <h2>Welcome Back 👋</h2>
         <p class="lead">Log in to continue managing your badminton tournaments.</p>
-
         <div class="form-group">
-          <input id="username" type="text" placeholder=" " />
+          <input id="username" type="text" placeholder=" "/>
           <label for="username">Username</label>
         </div>
-
         <div class="form-group">
-          <input id="password" type="password" placeholder=" " />
+          <input id="password" type="password" placeholder=" "/>
           <label for="password">Password</label>
         </div>
+        <button id="signInBtn" class="btn primary">Sign In</button>
+      </div>
 
-        <div style="display:flex;gap:12px;margin-top:20px;">
-          <button id="signInBtn" class="btn btn-primary">Sign In</button>
+      <!-- Sign Up -->
+      <div id="signUpForm" class="hidden">
+        <h2>Create Account ✨</h2>
+        <p class="lead">Register below to get started with Badminton Manager.</p>
+        <div class="form-group">
+          <input id="newName" type="text" placeholder=" "/>
+          <label for="newName">Name</label>
         </div>
+        <div class="form-group">
+          <input id="newEmail" type="email" placeholder=" "/>
+          <label for="newEmail">Email</label>
+        </div>
+        <div class="form-group">
+          <input id="newPass" type="password" placeholder=" "/>
+          <label for="newPass">Password</label>
+        </div>
+        <div class="form-group">
+          <input id="newPass2" type="password" placeholder=" "/>
+          <label for="newPass2">Confirm Password</label>
+        </div>
+        <button id="signUpBtn" class="btn primary">Create Account</button>
       </div>
     </div>
-
-    <!-- APP AREA -->
-    <div id="appView" class="app hidden" aria-hidden="true">
-      <div class="topbar">
-       <button id="menuToggle" class="menu-btn">
-  <i class="fa fa-bars"></i>
-</button>
- 
-        <div class="brand">
-          <div class="logo">DP</div>
-          <div>
-            <div style="font-size:14px">Dhana Prasad</div>
-            <div style="font-size:12px;color:var(--muted)">Badminton Manager</div>
-          </div>
-        </div>
-
-        <div class="tabs" role="tablist">
-          <div class="tab active" data-target="dashboard">Dashboard</div>
-          <div class="tab" data-target="players">Players</div>
-          <div class="tab" data-target="tournament">Tournament</div>
-          <div class="tab" data-target="roundrobin">Round Robin</div>
-          <div class="tab" data-target="attendance">Attendance</div>
-          <div class="tab" data-target="bracket">Bracket</div>
-        </div>
-
-        <div class="top-actions">
-          <div id="currentUser" style="font-size:13px;color:var(--muted)">Signed in</div>
-          <button id="signOutBtn" class="btn btn-ghost" title="Sign out"><i class="fa fa-sign-out-alt"></i></button>
-        </div>
-      </div>
-
-      <div class="pane">
-        <iframe id="contentFrame" src="" frameborder="0" title="content"></iframe>
-      </div>
-    </div>
-
   </div>
+</div>
 
-  <script>
-    const FILES = {
-      dashboard: 'dashboard.html',
-      players: 'PlayerPage.html',
-      tournament: 'TournamentPage.html',
-      roundrobin: 'Round_Robin_updated.html',
-      attendance: 'Attendance_book.html',
-      bracket: 'Bracket_tournament.html'
-    };
+<!-- APP -->
+<div id="appView">
+  <div class="topbar">
+    <div class="tabs">
+      <div class="tab active" data-target="dashboard"><i class="fa fa-home"></i> Dashboard</div>
+      <div class="tab" data-target="players"><i class="fa fa-users"></i> Players</div>
+      <div class="tab" data-target="tournament"><i class="fa fa-trophy"></i> Tournament</div>
+      <div class="tab" data-target="roundrobin"><i class="fa fa-layer-group"></i> Round Robin</div>
+      <div class="tab" data-target="attendance"><i class="fa fa-check-square"></i> Attendance</div>
+      <div class="tab" data-target="bracket"><i class="fa fa-sitemap"></i> Bracket</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="currentUser" style="font-size:13px;color:var(--muted)">Signed in</span>
+      <button id="signOutBtn" class="btn">Sign Out</button>
+      <button id="themeBtn" class="btn">🌓</button>
+    </div>
+  </div>
+  <div class="pane"><iframe id="contentFrame"></iframe></div>
+</div>
 
-    const signInView = document.getElementById('signInView');
-    const appView = document.getElementById('appView');
-    const contentFrame = document.getElementById('contentFrame');
-    const signInBtn = document.getElementById('signInBtn');
-    const signOutBtn = document.getElementById('signOutBtn');
-    const tabs = document.querySelectorAll('.tab');
-    const currentUser = document.getElementById('currentUser');
+<script>
+  const FILES={
+    dashboard:'dashboard.html',
+    players:'PlayerPage.html',
+    tournament:'TournamentPage.html',
+    roundrobin:'Round_Robin_updated.html',
+    attendance:'Attendance_book.html',
+    bracket:'Bracket_tournament.html'
+  };
 
-    const menuToggle = document.getElementById('menuToggle');
-const tabsContainer = document.querySelector('.tabs');
+  const authView=document.getElementById('authView');
+  const appView=document.getElementById('appView');
+  const tabs=document.querySelectorAll('.tab');
+  const currentUser=document.getElementById('currentUser');
 
-menuToggle.addEventListener('click', () => {
-  tabsContainer.classList.toggle('open');
-});
+  // Tabs toggle
+  const tS=document.getElementById('tabSignIn');
+  const tU=document.getElementById('tabSignUp');
+  const fS=document.getElementById('signInForm');
+  const fU=document.getElementById('signUpForm');
 
-// 🔥 Close menu after clicking a tab (mobile)
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const target = tab.getAttribute('data-target');
-    if (!loggedUser) {
-      alert("You must be logged in to access!");
-      return;
-    }
-    loadTab(target);
+  tS.onclick=()=>{tS.classList.add('active');tU.classList.remove('active');fS.classList.remove('hidden');fU.classList.add('hidden');};
+  tU.onclick=()=>{tU.classList.add('active');tS.classList.remove('active');fU.classList.remove('hidden');fS.classList.add('hidden');};
 
-    // close the mobile menu
-    tabsContainer.classList.remove('open');
+  // LocalStorage users
+  function getUsers(){return JSON.parse(localStorage.getItem('users')||'[]');}
+  function saveUsers(u){localStorage.setItem('users',JSON.stringify(u));}
+
+  // Ensure default admin exists
+  let users=getUsers();
+  if(!users.find(u=>u.username==='admin')){users.push({username:'admin',email:'admin@local',password:'1234'});saveUsers(users);}
+
+  function doSignIn(u){
+    authView.style.display='none';
+    appView.style.display='flex';
+    currentUser.textContent=`Signed in as ${u.username}`;
+    loadTab('dashboard');
+  }
+
+  document.getElementById('signInBtn').onclick=()=>{
+    const uname=document.getElementById('username').value.trim();
+    const pass=document.getElementById('password').value.trim();
+    const user=getUsers().find(u=>u.username===uname && u.password===pass);
+    if(user){doSignIn(user);}else alert("Invalid credentials");
+  };
+
+  document.getElementById('signUpBtn').onclick=()=>{
+    const n=document.getElementById('newName').value.trim();
+    const e=document.getElementById('newEmail').value.trim();
+    const p=document.getElementById('newPass').value.trim();
+    const c=document.getElementById('newPass2').value.trim();
+    if(!n||!e||!p){alert("Fill all fields");return;}
+    if(p!==c){alert("Passwords do not match");return;}
+    let users=getUsers();
+    if(users.find(u=>u.username===n)){alert("User already exists");return;}
+    users.push({username:n,email:e,password:p});
+    saveUsers(users);
+    alert("Account created! You can now log in.");
+    tS.click();
+  };
+
+  document.getElementById('signOutBtn').onclick=()=>{
+    appView.style.display='none';
+    authView.style.display='flex';
+    document.getElementById('contentFrame').src='';
+  };
+
+  tabs.forEach(tab=>tab.onclick=()=>{
+    tabs.forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    loadTab(tab.dataset.target);
   });
-});
 
+  function loadTab(t){if(FILES[t])document.getElementById('contentFrame').src=FILES[t];}
 
-    // ---- Set your login credentials ----
-    const VALID_USER = "admin";
-    const VALID_PASS = "1234";
-
-    let loggedUser = null;
-
-    function doSignIn(username) {
-      loggedUser = username;
-      signInView.style.display = 'none';
-      appView.classList.remove('hidden');
-      appView.style.display = 'flex';
-      appView.classList.add('fullscreen');  
-      currentUser.textContent = `Signed in as ${username}`;
-      loadTab('dashboard');
-    }
-
-    signInBtn.addEventListener('click', () => {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
-
-      if (user === VALID_USER && pass === VALID_PASS) {
-        doSignIn(user);
-      } else {
-        alert("Invalid username or password!");
-      }
-    });
-
-    signOutBtn.addEventListener('click', () => {
-      if (!confirm('Sign out and return to login?')) return;
-      appView.style.display = 'none';
-      appView.classList.add('hidden');
-      signInView.style.display = 'flex';
-      document.getElementById('username').value = '';
-      document.getElementById('password').value = '';
-      currentUser.textContent = 'Signed in';
-      contentFrame.src = '';
-      window.scrollTo(0,0);
-      loggedUser = null;
-    });
-
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const target = tab.getAttribute('data-target');
-        if (!loggedUser) {
-          alert("You must be logged in to access!");
-          return;
-        }
-        loadTab(target);
-      });
-    });
-
-    function setActiveTab(target) {
-      tabs.forEach(t => t.classList.toggle('active', t.getAttribute('data-target') === target));
-    }
-
-    function loadTab(target) {
-      const file = FILES[target];
-      if (!file) { alert('Page not found: ' + target); return; }
-      setActiveTab(target);
-      contentFrame.src = file;
-    }
-
-    // Force login view at start
-    window.addEventListener("DOMContentLoaded", () => {
-      signInView.style.display = 'flex';
-      appView.classList.add('hidden');
-      appView.style.display = 'none';
-    });
-  </script>
+  // Theme toggle
+  document.getElementById('themeBtn').onclick=()=>{
+    document.documentElement.classList.toggle('dark');
+  };
+</script>
 </body>
 </html>
