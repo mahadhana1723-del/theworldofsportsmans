@@ -1,273 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Dashboard - Badminton Manager</title>
+<meta charset="UTF-8" />
+<title>🏸 Tournament Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js for data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="db.js"></script>
 
-  <style>
-    :root{
-      --bg:#fdf4ff; --card:#ffffff; --text:#1f1029; --muted:#6b5a86;
-      --primary:#d946ef; --accent:#9333ea; --danger:#dc2626;
-      --warn:#d97706; --line:#e5e0eb;
-    }
-    :root.dark{
-      --bg:#0b1020; --card:#12172a; --text:#e9efff; --muted:#9fb2d9;
-      --primary:#a855f7; --accent:#ec4899; --danger:#ef4444;
-      --warn:#f59e0b; --line:#293250;
-    }
+<style>
+:root {
+  --bg:#fdf4ff; 
+  --panel:#ffffff; 
+  --panel-2:#f9f5ff;
+  --muted:#6b5a86; 
+  --text:#2d103f;
+  --accent:#d946ef; 
+  --win:#22c55e;    
+  --loss:#ef4444;
+  --neutral:#7b88a8; 
+}
+body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,Arial; }
+header {
+  position:sticky; top:0; z-index:5; padding:12px 14px;
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  background:linear-gradient(90deg,#fdf4ff,#f9f5ff);
+  border-bottom:1px solid #e5e0eb;
+}
+h1{margin:0; font-size:18px;}
+.controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
 
-    *{box-sizing:border-box}
-    body{margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+.dashboard { display:grid; grid-template-columns: repeat(12,1fr); gap:16px; padding:16px; }
+.card { background:var(--panel); border:1px solid #e5e0eb; border-radius:14px; padding:16px; }
+.card-header { display:flex; justify-content:space-between; margin-bottom:12px; }
+.card-title { margin:0; font-size:16px; }
 
-    .container{max-width:1200px;margin:0 auto;padding:20px}
-    .grid{display:grid;gap:20px;grid-template-columns:repeat(3,minmax(0,1fr))}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card-full { grid-column: span 12; }
+.card-wide { grid-column: span 8; }
+.card-medium { grid-column: span 6; }
+.card-narrow { grid-column: span 4; }
 
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
-    h3{margin:0 0 12px}
-    .kpi{font-size:1.6rem;font-weight:bold}
+.ticker-container { overflow:hidden; height:40px; background:var(--panel-2); border-radius:10px; position:relative; }
+.ticker { display:flex; position:absolute; white-space:nowrap; animation:ticker-scroll 30s linear infinite; }
+.ticker-item { padding:0 20px; display:inline-flex; align-items:center; }
+.ticker-score { font-weight:bold; margin:0 8px; color:var(--accent); }
+@keyframes ticker-scroll { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
 
-    .btn{border:1px solid var(--line);background:transparent;padding:10px 14px;border-radius:10px;cursor:pointer}
-    .btn.primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;border-color:transparent}
-    .btn:hover{opacity:.9}
+.chart-container { height:300px; position:relative; }
 
-    /* ===== Results Ticker ===== */
-    .ticker{
-      width:100%;
-      background:linear-gradient(90deg,var(--primary),var(--accent));
-      color:#fff;
-      padding:6px 0;
-      overflow:hidden;
-      position:sticky;
-      top:0;
-      z-index:100;
-    }
-    .ticker-content{
-      display:inline-block;
-      white-space:nowrap;
-      padding-left:100%;
-      animation:scroll 18s linear infinite;
-    }
-    @keyframes scroll{
-      from{transform:translateX(0);}
-      to{transform:translateX(-100%);}
-    }
-  </style>
+.kpi-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.kpi-card { background:var(--panel-2); border-radius:10px; padding:12px; text-align:center; }
+.kpi-value { font-size:24px; font-weight:bold; margin:8px 0; color:var(--accent); }
+.kpi-label { font-size:12px; color:var(--muted); }
+
+.activity-feed { max-height:300px; overflow-y:auto; }
+.activity-item { padding:8px 0; border-bottom:1px solid #e5e0eb; font-size:14px; }
+.activity-time { font-size:12px; color:var(--muted); }
+
+@media(max-width:768px){ .dashboard{grid-template-columns:1fr;} .card-wide,.card-medium,.card-narrow{grid-column:span 1;} }
+</style>
 </head>
 <body>
-  <!-- Moving results ticker -->
-  <div class="ticker">
-    <div class="ticker-content" id="resultsTicker">
-      🏸 No results yet
+
+<header>
+  <h1>🏸 Tournament Dashboard</h1>
+  <div class="controls">
+    <input type="date" id="dashboardDate">
+    <select id="categoryFilter">
+      <option value="all">All Categories</option>
+      <option>U11-Boys</option><option>U11-Girls</option>
+      <option>U13-Boys</option><option>U13-Girls</option>
+      <option>U15-Boys</option><option>U15-Girls</option>
+      <option>U17-Boys</option><option>U17-Girls</option>
+      <option>U19-Boys</option><option>U19-Girls</option>
+      <option>Men</option><option>Women</option>
+    </select>
+    <button class="btn" id="refreshBtn">🔄 Refresh</button>
+  </div>
+</header>
+
+<div class="dashboard">
+  <!-- Live Ticker -->
+  <div class="card card-full">
+    <div class="card-header"><h2 class="card-title">Live Results</h2></div>
+    <div class="ticker-container"><div class="ticker" id="liveTicker"></div></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="card card-wide">
+    <div class="card-header"><h2 class="card-title">Tournament Overview</h2></div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Total Players</div><div class="kpi-value" id="totalPlayers">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">Matches Played</div><div class="kpi-value" id="matchesPlayed">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">Matches Remaining</div><div class="kpi-value" id="matchesRemaining">0</div></div>
+      <div class="kpi-card"><div class="kpi-label">Attendance Today</div><div class="kpi-value" id="attendanceToday">0%</div></div>
     </div>
   </div>
 
-  <div class="container">
-    <h2>Dashboard</h2>
-
-    <div class="grid">
-      <div class="card">
-        <h3>Total Players</h3>
-        <div id="kpiPlayers" class="kpi">0</div>
-      </div>
-      <div class="card">
-        <h3>Total Tournaments</h3>
-        <div id="kpiTournaments" class="kpi">0</div>
-      </div>
-      <div class="card">
-        <h3>Attendance Today</h3>
-        <div id="kpiAttendance" class="kpi">0%</div>
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:20px">
-      <div class="card">
-        <h3>Players by Gender</h3>
-        <canvas id="chartGender" height="220"></canvas>
-      </div>
-      <div class="card">
-        <h3>Matches Played</h3>
-        <canvas id="chartMatches" height="220"></canvas>
-      </div>
-      <div class="card">
-        <h3>Players by Age Group</h3>
-        <canvas id="playersBar" height="220"></canvas>
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:20px">
-      <div class="card">
-        <h3>Top Players</h3>
-        <ul id="topPlayers"></ul>
-      </div>
-      <div class="card">
-        <h3>Upcoming Tournaments</h3>
-        <ul id="upcomingTournaments"></ul>
-      </div>
-      <div class="card">
-        <h3>Recent Matches</h3>
-        <ul id="recentMatches"></ul>
-      </div>
-    </div>
+  <!-- Performance Chart -->
+  <div class="card card-medium">
+    <div class="card-header"><h2 class="card-title">Player Performance</h2></div>
+    <div class="chart-container"><canvas id="performanceChart"></canvas></div>
   </div>
 
-  <script>
-    // Dummy loaders (replace later with backend API if needed)
-    function fetchPlayers(){
-      return JSON.parse(localStorage.getItem('players')||'[]');
-    }
-    function fetchTournaments(){
-      return JSON.parse(localStorage.getItem('tournaments')||'[]');
-    }
-    function fetchState(){
-      return (JSON.parse(localStorage.getItem('state'))||{});
-    }
+  <!-- Category Chart -->
+  <div class="card card-medium">
+    <div class="card-header"><h2 class="card-title">Category Distribution</h2></div>
+    <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+  </div>
 
-    function render(){
-      const players=fetchPlayers();
-      const tournaments=fetchTournaments();
+  <!-- Recent Activity -->
+  <div class="card card-wide">
+    <div class="card-header"><h2 class="card-title">Recent Activity</h2></div>
+    <div class="activity-feed" id="activityFeed"></div>
+  </div>
 
-      document.getElementById('kpiPlayers').textContent=players.length;
-      document.getElementById('kpiTournaments').textContent=tournaments.length;
-      const present=players.filter(p=>p.present).length;
-      const pct=players.length?Math.round(present/players.length*100):0;
-      document.getElementById('kpiAttendance').textContent=pct+"%";
+  <!-- Upcoming Matches -->
+  <div class="card card-wide">
+    <div class="card-header"><h2 class="card-title">Upcoming Matches</h2></div>
+    <div id="upcomingMatches"></div>
+  </div>
+</div>
 
-      drawGenderChart(players);
-      drawMatchesChart(tournaments);
-      drawPlayersChart(players);
-      renderExtras(players,tournaments);
-    }
+<script>
+// ---------- Charts ----------
+function initCharts(){
+  const perfCtx=document.getElementById("performanceChart").getContext("2d");
+  window.performanceChart=new Chart(perfCtx,{type:"bar",data:{labels:[],datasets:[
+    {label:"Wins",data:[],backgroundColor:"#22c55e"},
+    {label:"Losses",data:[],backgroundColor:"#ef4444"}]},options:{responsive:true,maintainAspectRatio:false}});
+  const catCtx=document.getElementById("categoryChart").getContext("2d");
+  window.categoryChart=new Chart(catCtx,{type:"doughnut",data:{labels:[],datasets:[{data:[],backgroundColor:["#d946ef","#a855f7","#3b82f6"]}]},options:{responsive:true}});
+}
 
-    // Gender chart
-    function drawGenderChart(players){
-      const ctx=document.getElementById('chartGender');
-      if(!ctx)return;
-      const males=players.filter(p=>p.gender==='man'||p.gender==='boy').length;
-      const females=players.filter(p=>p.gender==='woman'||p.gender==='girl').length;
-      if(window.genderChart){window.genderChart.destroy();}
-      window.genderChart=new Chart(ctx,{
-        type:'doughnut',
-        data:{labels:['Male','Female'],
-          datasets:[{data:[males,females],backgroundColor:['#d946ef','#9333ea']}]},
-        options:{plugins:{legend:{labels:{color:getCss('--muted')}}}}
-      });
-    }
+// ---------- Refresh ----------
+async function refreshDashboard(){
+  await openDB();
+  const players=await getAll("players");
+  const matches=await getAll("matches");
 
-    // Matches chart (dummy count)
-    function drawMatchesChart(tournaments){
-      const ctx=document.getElementById('chartMatches');
-      if(!ctx)return;
-      const total=tournaments.length*10;
-      const played=Math.round(total*0.6);
-      if(window.matchChart){window.matchChart.destroy();}
-      window.matchChart=new Chart(ctx,{
-        type:'bar',
-        data:{labels:['Played','Scheduled'],
-          datasets:[{data:[played,total-played],backgroundColor:['#9333ea','#d946ef'],borderRadius:6}]},
-        options:{plugins:{legend:{display:false}},
-          scales:{x:{ticks:{color:getCss('--muted')}},y:{ticks:{color:getCss('--muted')},beginAtZero:true}}}
-      });
-    }
+  // KPIs
+  document.getElementById("totalPlayers").textContent=players.length;
+  const played=matches.filter(m=>m.status==="completed").length;
+  document.getElementById("matchesPlayed").textContent=played;
+  document.getElementById("matchesRemaining").textContent=matches.length-played;
 
-    // Players by Age Group chart
-    function drawPlayersChart(players){
-      const ctx=document.getElementById('playersBar');
-      if(!ctx)return;
-      const groups=["U9","U11","U13","U15","U17","U19","Men","Women","30+","35+","40+","45+"];
-      const counts=groups.map(g=>players.filter(p=>p.age===g).length);
-      if(window.playersChart){window.playersChart.destroy();}
-      window.playersChart=new Chart(ctx,{
-        type:'bar',
-        data:{
-          labels:groups,
-          datasets:[{
-            label:'Players',
-            data:counts,
-            backgroundColor:'rgba(217,70,239,0.7)',
-            borderRadius:6
-          }]
-        },
-        options:{
-          responsive:true,
-          plugins:{legend:{display:false}},
-          scales:{
-            x:{ticks:{color:getCss('--muted')}},
-            y:{ticks:{color:getCss('--muted')},beginAtZero:true}
-          }
-        }
-      });
-    }
+  // Attendance (today)
+  const today=new Date().toISOString().slice(0,10);
+  let attended=0;
+  players.forEach(p=>{
+    if(p.attendance?.some(a=>a.date===today && a.status==="Present")) attended++;
+  });
+  document.getElementById("attendanceToday").textContent=players.length?Math.round((attended/players.length)*100)+"%":"0%";
 
-    // Collect recent matches from state (Round Robin + KO)
-    function getRecentMatches(){
-      const state = fetchState();
-      const rec = [];
+  // Charts
+  window.performanceChart.data.labels=players.map(p=>p.name);
+  window.performanceChart.data.datasets[0].data=players.map(p=>p.stats?.wins||0);
+  window.performanceChart.data.datasets[1].data=players.map(p=>p.stats?.losses||0);
+  window.performanceChart.update();
 
-      // Round Robin
-      if(state.rr){
-        Object.values(state.rr).forEach(rr=>{
-          rr.groups?.forEach(g=>{
-            g.matches?.forEach(m=>{
-              if(m.done){
-                rec.push({
-                  a: m.a.name,
-                  b: m.b.name,
-                  score: `${m.scoreA}–${m.scoreB}`
-                });
-              }
-            });
-          });
-        });
-      }
+  const counts={};
+  players.forEach(p=>{ const cat=p.category||"Uncategorized"; counts[cat]=(counts[cat]||0)+1; });
+  window.categoryChart.data.labels=Object.keys(counts);
+  window.categoryChart.data.datasets[0].data=Object.values(counts);
+  window.categoryChart.update();
 
-      // Knockout
-      if(state.ko){
-        Object.values(state.ko).forEach(ko=>{
-          ko.rounds?.forEach(r=>{
-            r.forEach(m=>{
-              if(m.done){
-                rec.push({
-                  a: m.a?.name||'TBD',
-                  b: m.b?.name||'TBD',
-                  score: `${m.scoreA}–${m.scoreB}`
-                });
-              }
-            });
-          });
-        });
-      }
+  // Live ticker
+  const ticker=document.getElementById("liveTicker");
+  ticker.innerHTML="";
+  matches.slice(-5).forEach(m=>{
+    const div=document.createElement("div");
+    div.className="ticker-item";
+    div.innerHTML=`${m.p1} <span class="ticker-score">${m.s1}-${m.s2}</span> ${m.p2}`;
+    ticker.appendChild(div);
+  });
+  if(matches.length===0) ticker.innerHTML="<div class='ticker-item'>No matches</div>";
 
-      return rec.slice(-5).reverse(); // last 5
-    }
+  // Recent activity
+  const feed=document.getElementById("activityFeed"); feed.innerHTML="";
+  players.slice(-5).reverse().forEach(p=>{
+    const item=document.createElement("div");
+    item.className="activity-item";
+    item.innerHTML=`👤 <strong>${p.name}</strong> (${p.country||"?"}) added/updated`;
+    feed.appendChild(item);
+  });
 
-    // Extra dashboard cards
-    function renderExtras(players,tournaments){
-      // Top players by wins
-      const top=players.slice().sort((a,b)=>(b.stats?.W||0)-(a.stats?.W||0)).slice(0,5);
-      document.getElementById('topPlayers').innerHTML=top.map(p=>`<li>${p.name} — ${p.stats?.W||0} wins</li>`).join('')||'<li>No data</li>';
+  // Upcoming matches
+  const up=document.getElementById("upcomingMatches"); up.innerHTML="";
+  matches.filter(m=>m.status!=="completed").slice(0,5).forEach(m=>{
+    const d=document.createElement("div");
+    d.className="activity-item";
+    d.textContent=`${m.p1} vs ${m.p2} on ${m.date||"TBD"}`;
+    up.appendChild(d);
+  });
+  if(up.innerHTML==="") up.innerHTML="<div class='activity-item'>No upcoming matches</div>";
+}
 
-      // Upcoming tournaments
-      const upcoming=tournaments.slice().sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,5);
-      document.getElementById('upcomingTournaments').innerHTML=upcoming.map(t=>`<li>${t.name} (${t.date})</li>`).join('')||'<li>No tournaments</li>';
+// ---------- Sync ----------
+channel.onmessage=e=>{
+  if(["playerAdded","playerUpdated","matchAdded","matchUpdated"].includes(e.data.type)){
+    refreshDashboard();
+  }
+};
 
-      // Recent matches from state
-      const rec = getRecentMatches();
-      document.getElementById('recentMatches').innerHTML = rec.map(m=>`<li>${m.a} vs ${m.b} — ${m.score}</li>`).join('') || '<li>No completed matches</li>';
-
-      // Update ticker with same matches
-      const ticker = document.getElementById('resultsTicker');
-      ticker.textContent = rec.length ? "🏸 Latest Results: " + rec.map(m=>`${m.a} beat ${m.b} ${m.score}`).join(" | ") : "No results yet";
-    }
-
-    function getCss(name){
-      return getComputedStyle(document.documentElement).getPropertyValue(name);
-    }
-
-    render();
-  </script>
+// ---------- Init ----------
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("dashboardDate").valueAsDate=new Date();
+  initCharts();
+  refreshDashboard();
+  document.getElementById("refreshBtn").onclick=refreshDashboard;
+});
+</script>
 </body>
 </html>

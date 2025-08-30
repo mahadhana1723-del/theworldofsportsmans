@@ -6,103 +6,84 @@
 <title>🏸 Player Attendance</title>
 <style>
 :root {
-  --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
-  --accent:#49a8ff; --present:#22c55e; --absent:#ef4444; --holiday:#f59e0b; --border:#1f2738;
+  --bg:#fdf4ff;
+  --panel:#ffffff;
+  --panel-2:#f9f5ff;
+  --muted:#6b5a86;
+  --text:#2d103f;
+  --accent:#d946ef;
+  --present:#22c55e;
+  --absent:#ef4444;
+  --holiday:#f59e0b;
+  --border:#e5e0eb;
+  --win:#22c55e; 
 }
 *{box-sizing:border-box}
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
-  /* allow horizontal scroll when tables/aside are wide */
-  overflow-x: auto;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
+  overflow-x:auto;
 }
 
 /* Header */
 header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 12px 14px;
-  border-bottom: 1px solid #1a2233;
+  position:sticky; top:0; z-index:10;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
 
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  justify-content: space-between;
+  display:flex; flex-wrap:wrap;
+  align-items:center; gap:10px; justify-content:space-between;
 
-  /* 🔑 expand background with content */
-  min-width: 100%;
-  width: max-content;
+  min-width:100%; width:max-content;
 
-  background:
-    radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
-    radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
-    linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
-
-  box-shadow: 0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  background:linear-gradient(90deg,#fdf4ff,#f9f5ff);
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
 }
+h1 { margin:0; font-size:18px; color:var(--accent); font-weight:600; }
+.controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 
-h1 {
-  margin:0;
-  font-size:18px;
-  color:var(--accent);
-  letter-spacing:.2px
-}
-.controls {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  align-items:center
-}
-input, textarea, select, button {
+input,textarea,select,button {
   padding:6px 10px;
   border-radius:10px;
   border:1px solid var(--border);
-  background:#0e1320;
+  background:var(--panel);
   color:var(--text);
   font-size:14px;
 }
-textarea { width:220px; height:64px }
-button { background:#132037; cursor:pointer }
-button.primary { background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8 }
+textarea { width:220px; height:64px; resize:vertical; }
+button { cursor:pointer; }
+button.primary { background:linear-gradient(180deg,#d946ef,#a855f7); color:#fff; border:none; }
 button.good { background:var(--present); color:#fff }
 button.bad { background:var(--absent); color:#fff }
 button.warn { background:var(--holiday); color:#111 }
-button.ghost { background:#0e1320 }
+button.ghost { background:var(--panel-2); color:var(--text); }
 button:disabled { opacity:.6; cursor:not-allowed }
 
 main {
   display:grid;
   grid-template-columns: 1fr 420px;
   gap:14px;
-  padding:14px
+  padding:14px;
 }
 section, aside {
-  border:1px solid #1a2233;
+  border:1px solid var(--border);
   border-radius:14px;
   background:var(--panel);
   padding:12px;
-  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.03) inset;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
 }
-h2 { margin:6px 6px 10px; font-size:16px }
+h2 { margin:6px 6px 10px; font-size:16px; font-weight:600; }
 
 /* Today list */
-.toolbar {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  align-items:center;
-  margin:6px 0 12px
-}
+.toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 12px }
 .pill {
   padding:4px 8px;
   border:1px solid var(--border);
   border-radius:999px;
-  background:#0e1422;
-  color:var(--muted)
+  background:var(--panel-2);
+  color:var(--muted);
 }
 .today-row {
   display:grid;
@@ -112,14 +93,14 @@ h2 { margin:6px 6px 10px; font-size:16px }
   padding:6px 8px;
   border:1px solid var(--border);
   border-radius:10px;
-  background:#0e1320
+  background:var(--panel-2);
 }
-.today-row + .today-row { margin-top:6px }
+.today-row + .today-row { margin-top:6px; }
 .status-dot { width:10px; height:10px; border-radius:50% }
 .dot-P { background:var(--present) }
 .dot-A { background:var(--absent) }
 .dot-H { background:var(--holiday) }
-.status-badge { font-size:12px; color:#cbd5e1 }
+.status-badge { font-size:12px; }
 .status-badge.P { color:var(--present) }
 .status-badge.A { color:var(--absent) }
 .status-badge.H { color:var(--holiday) }
@@ -129,17 +110,16 @@ h2 { margin:6px 6px 10px; font-size:16px }
   border:1px solid var(--border);
   border-radius:12px;
   overflow:auto;
-  background:var(--panel-2)
+  background:var(--panel-2);
 }
 table {
   width:max(820px,100%);
   border-collapse:separate;
-  border-spacing:0
+  border-spacing:0;
 }
 thead th {
-  position:sticky;
-  top:0;
-  background:#0e1422;
+  position:sticky; top:0;
+  background:var(--panel-2);
   color:var(--muted);
   border-bottom:1px solid var(--border);
   font-weight:600;
@@ -156,9 +136,9 @@ tbody td, tbody th {
 tbody th {
   position:sticky;
   left:0;
-  background:#0e1320;
+  background:var(--panel);
   text-align:left;
-  z-index:1
+  z-index:1;
 }
 td.badge { font-weight:700 }
 .bP { color:var(--present) }
@@ -167,89 +147,54 @@ td.badge { font-weight:700 }
 tfoot td {
   position:sticky;
   bottom:0;
-  background:#0e1422;
+  background:var(--panel-2);
   color:var(--muted);
-  font-weight:600
+  font-weight:600;
 }
 
 /* Side panel */
 .card {
   border:1px solid var(--border);
   border-radius:12px;
-  background:#0f1422;
+  background:var(--panel-2);
   padding:10px;
-  margin-bottom:10px
+  margin-bottom:10px;
 }
-.grid {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px
-}
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:8px }
 .stat {
-  background:#0e1320;
+  background:var(--panel);
   border:1px solid var(--border);
   border-radius:10px;
-  padding:10px
+  padding:10px;
 }
 .stat h3 { margin:0 0 4px; font-size:13px; color:var(--muted) }
 .stat p { margin:0; font-size:18px; font-weight:700 }
 
 /* Mobile view */
-@media (max-width: 600px) {
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-
-    /* 🔑 same fix on mobile */
-    min-width: 100%;
-    width: max-content;
-
-    margin: 0;
-    padding: 6px 12px;
-    box-sizing: border-box;
-  }
-  header h1 {
-    font-size: 13px;
-    margin-bottom: 2px;
-  }
-  header .controls { gap: 3px; }
+@media (max-width:600px) {
+  header { padding:6px 12px; }
+  header h1 { font-size:13px; }
+  header .controls { gap:3px; }
   header .controls input,
   header .controls textarea,
   header .controls select,
   header .controls button {
-    font-size: 11px;
-    padding: 3px 5px;
-    border-radius: 5px;
+    font-size:11px;
+    padding:3px 5px;
+    border-radius:5px;
   }
-  header .controls textarea {
-    height: 24px;
-    width: 90px;
-  }
-  header .controls button { min-width: 40px; }
-
-  main {
-    grid-template-columns: 1fr 280px;
-    gap: 8px;
-    padding: 8px;
-  }
-
-  .today-row { gap: 3px; padding: 4px 5px; }
-  .today-row strong { font-size: 12px; }
-  .today-row .status-badge { font-size: 10px; }
-  .today-row > button {
-    font-size: 10px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    min-width: 34px;
-  }
-
-  .card { padding: 6px; }
-  .stat h3 { font-size: 10px; }
-  .stat p { font-size: 12px; }
-
-  table { font-size: 9px; }
-  thead th, tbody td, tbody th { padding: 2px; }
+  header .controls textarea { height:24px; width:90px; }
+  header .controls button { min-width:40px; }
+  main { grid-template-columns: 1fr 280px; gap:8px; padding:8px; }
+  .today-row { gap:3px; padding:4px 5px; }
+  .today-row strong { font-size:12px; }
+  .today-row .status-badge { font-size:10px; }
+  .today-row > button { font-size:10px; padding:2px 4px; border-radius:4px; min-width:34px; }
+  .card { padding:6px; }
+  .stat h3 { font-size:10px; }
+  .stat p { font-size:12px; }
+  table { font-size:9px; }
+  thead th, tbody td, tbody th { padding:2px; }
 }
 
 /* Print */
@@ -259,10 +204,31 @@ tfoot td {
 }
 
 
+header.hidden { display: none !important; }
+#toggleHeaderBtn {
+   position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 200;
+  background: linear-gradient(90deg,var(--accent),var(--win));
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+
+
 </style>
 </head>
 <body>
+  <button id="toggleHeaderBtn">Hide Header</button>
+
 <header>
+  
   <h1>🏸 Attendance Manager</h1>
   <div class="controls">
     <input id="playerName" placeholder="Add player…"/>
@@ -276,7 +242,9 @@ tfoot td {
   </div>
 </header>
 
+
 <main>
+  
   <!-- Today -->
   <section>
     <h2>Today's Attendance</h2>
@@ -321,6 +289,10 @@ tfoot td {
     </div>
   </aside>
 </main>
+
+
+<script src="db.js"></script>
+
 
 <script>
 (function(){
@@ -650,6 +622,28 @@ tfoot td {
     showHistory(name);
   };
 })();
+
+function saveAttendance(att) {
+  localStorage.setItem("attendance", JSON.stringify(att));
+}
+
+function loadAttendance() {
+  return JSON.parse(localStorage.getItem("attendance") || "[]");
+}
+
+// ====== Header toggle ======
+const header = document.querySelector("header");
+const toggleBtn = document.getElementById("toggleHeaderBtn");
+
+toggleBtn.onclick = () => {
+  header.classList.toggle("hidden");
+  toggleBtn.textContent = header.classList.contains("hidden")
+    ? "Show Header"
+    : "Hide Header";
+};
+
+
+
 </script>
 
 <!-- Player Attendance History Popup -->

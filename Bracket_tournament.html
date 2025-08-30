@@ -6,42 +6,51 @@
 <title>🏸 Badminton Knockout + IndexedDB</title>
 <style>
   :root{
-  --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
-  --accent:#49a8ff; --win:#22c55e; --loss:#ef4444; --neutral:#7b88a8;
-  --box-w:180px; --box-h:48px; --col-gap:180px; --row-gap:28px;
+  --bg:#fdf4ff; 
+  --panel:#ffffff; 
+  --panel-2:#f9f5ff; 
+  --muted:#6b5a86; 
+  --text:#2d103f;
+  --accent:#d946ef; 
+  --win:#22c55e; 
+  --loss:#ef4444; 
+  --neutral:#7b88a8;
+  --box-w:180px; 
+  --box-h:48px; 
+  --col-gap:180px; 
+  --row-gap:28px;
 }
 *{box-sizing:border-box}
 body{margin:0;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;background:var(--bg);} 
 
-/* Dart-style gradient header */
+/* Header */
 header{
-  position:sticky; top:0; z-index:50; padding:12px 14px; border-bottom:1px solid #1a2233;
+  position:sticky; top:0; z-index:50; padding:12px 14px; border-bottom:1px solid #e5e0eb;
   display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-  background:
-    radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
-    radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
-    linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
-  box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+  background:linear-gradient(90deg,#fdf4ff,#f9f5ff);
+  box-shadow:0 2px 4px rgba(0,0,0,.08);
 }
-h1{margin:0 6px 0 0; font-size:18px; letter-spacing:.2px}
+h1{margin:0 6px 0 0; font-size:18px; font-weight:600}
 .controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-input,textarea,select{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#0e1320; color:var(--text)}
-textarea{width:220px; height:60px}
-.btn{padding:6px 10px; border-radius:10px; border:1px solid #1f2738; background:#132037; color:var(--text); cursor:pointer}
-.btn.primary{background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8}
+input,textarea,select{
+  padding:6px 10px; border-radius:10px; border:1px solid #e5e0eb; 
+  background:#fff; color:var(--text);
+}
+textarea{width:220px; height:60px; resize:vertical;}
+.btn{padding:6px 10px; border-radius:10px; border:1px solid #e5e0eb; background:var(--panel-2); color:var(--text); cursor:pointer; transition:.2s;}
+.btn:hover{background:#f3e8ff; transform:translateY(-1px);}
+.btn.primary{background:linear-gradient(180deg,#d946ef,#a855f7); border:none; color:#fff;}
 .legend{font-size:12px; color:var(--muted); margin-left:4px}
 
 /* Player list panel */
 #playerPanel {
   position: fixed;
-  top: 15%;
-  left: 0;
-  height: 70%;
-  width: 240px;
+  top: 15%; left: 0;
+  height: 70%; width: 240px;
   background: var(--panel);
   border-radius: 0 12px 12px 0;
   overflow-y: auto;
-  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.15);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: 150;
@@ -52,135 +61,117 @@ textarea{width:220px; height:60px}
   background: var(--panel);
   padding: 8px 12px;
   display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  z-index: 10;
+  border-bottom: 1px solid #e5e0eb;
 }
 
 /* Player cards inside sidebar */
 .player-card {
-  background: #121a2b;
-  border: 1px solid #1f2738;
+  background: var(--panel-2);
+  border: 1px solid #e5e0eb;
   border-radius: 12px;
   padding: 10px;
   margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   cursor: pointer;
   transition: background 0.2s ease, transform .08s ease;
 }
 .player-card:hover {
-  background: #1b2338;
+  background: #f3e8ff;
   transform: translateY(-2px);
 }
 .player-card img {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: 10px;
   object-fit: cover;
   border: 2px solid var(--accent);
 }
 .player-info { flex: 1; display: flex; flex-direction: column; }
-.player-name { font-size: 14px; font-weight: 600; }
+.player-name { font-size: 14px; font-weight: 600; color:var(--text);}
 .player-meta { font-size: 12px; color: var(--muted); }
 
-#playerList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+/* Player list */
+#playerList { list-style: none; padding: 0; margin: 0; }
 #playerList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  border-bottom: 1px solid #333;
-  font-size: 14px;
-  color: #eee;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 10px; border-bottom: 1px solid #e5e0eb;
+  font-size: 14px; color: var(--text);
 }
 #playerList li:last-child { border-bottom: none; }
 #playerList button {
-  background: #206ed3;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s ease;
+  background: var(--accent); color: white; border: none;
+  padding: 4px 8px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; transition: background 0.2s ease;
 }
-#playerList button:hover { background: #d32f2f; }
+#playerList button:hover { background: #c026d3; }
 
-main {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 14px;
-  padding: 14px;
-}
-.board{position:relative; overflow:auto; border:1px solid #1a2233; border-radius:14px; background:
-    radial-gradient(900px 260px at 25% 0%, rgba(73,168,255,.10), transparent),
-    radial-gradient(900px 260px at 70% 100%, rgba(123,220,255,.08), transparent),
-    linear-gradient(180deg,#0c111a,#0b0f17);} 
+main { display:grid; grid-template-columns:1fr 260px; gap:14px; padding:14px; }
+.board{position:relative; overflow:auto; border:1px solid #e5e0eb; border-radius:14px; background:var(--panel); box-shadow:0 2px 6px rgba(0,0,0,.05);} 
 .board-inner{position:relative; margin:28px; min-width:960px; min-height:620px}
 svg#lines{position:absolute; inset:0; pointer-events:none}
 
 .box{
   width:var(--box-w); height:var(--box-h); position:absolute;
-  background:#121a2b; border:2px solid var(--accent); border-radius:10px;
+  background:var(--panel-2); border:2px solid var(--accent); border-radius:10px;
   display:flex; align-items:center; gap:8px; padding:0 10px; font-weight:700;
-  box-shadow:0 6px 18px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.03) inset;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
 }
-.box.win{border-color:var(--win); background:rgba(34,197,94,.11)}
-.box.loss{border-color:var(--loss); background:rgba(239,68,68,.10)}
-.seed{font-size:11px; color:#b7c6ff; background:#0b1220; border:1px solid #1f2940; padding:3px 6px; border-radius:8px; min-width:34px; text-align:center}
+.box.win{border-color:var(--win); background:rgba(34,197,94,.12)}
+.box.loss{border-color:var(--loss); background:rgba(239,68,68,.12)}
+.seed{font-size:11px; color:var(--muted); background:var(--panel); border:1px solid #e5e0eb; padding:3px 6px; border-radius:8px; min-width:34px; text-align:center}
 .name{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.bye{opacity:.7; font-style:italic}
+.bye{opacity:.6; font-style:italic}
 
 .scorecard{
   position:absolute; transform:translate(-50%,-130%);
-  background:var(--panel); border:1px solid #202637; border-radius:10px;
+  background:var(--panel); border:1px solid #e5e0eb; border-radius:10px;
   display:flex; align-items:center; gap:6px; padding:6px 8px; z-index:10;
-  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
 }
-.scorecard .lab{font-size:12px; color:#d9e6ff; max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.scorecard input{width:56px; text-align:center}
+.scorecard .lab{font-size:12px; color:var(--muted); max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.scorecard input{width:56px; text-align:center; border:1px solid #e5e0eb; border-radius:6px; background:var(--panel-2);}
 .scorecard .btn{padding:6px 10px}
 
-.edge{stroke:var(--neutral); stroke-width:2; fill:none; vector-effect:non-scaling-stroke; shape-rendering:crispEdges}
+.edge{stroke:var(--neutral); stroke-width:2; fill:none; vector-effect:non-scaling-stroke;}
 .edge.win{stroke:var(--win)} .edge.loss{stroke:var(--loss)}
 
-aside{border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto}
+aside{
+  border:1px solid #e5e0eb; border-radius:14px;
+  background:var(--panel); padding:10px; position:sticky; top:82px;
+  height:calc(100vh - 110px); overflow:auto;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
 aside h3{margin:6px 6px 10px; font-size:16px}
 table{width:100%; border-collapse:separate; border-spacing:0 6px}
 th,td{font-size:12px; padding:6px 8px; text-align:right}
 th:first-child,td:first-child{text-align:left}
-th{background:#0e1422; color:var(--muted); position:sticky; top:0}
-tr{background:#0e1320; border:1px solid #1f2633}
+th{background:var(--panel-2); color:var(--muted); position:sticky; top:0}
+tr{background:var(--panel-2); border:1px solid #e5e0eb}
 td.win{color:var(--win)} td.loss{color:var(--loss)}
 
-.champ{border-color:gold; color:gold; background:#1e1a0f}
+.champ{border-color:gold; color:gold; background:#fff8dc}
 .confetti{position:absolute; width:8px; height:8px; background:gold; animation:fall 2.2s linear forwards}
 
-/* ===== Player Modal (improved order) ===== */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 200; }
+/* Player Modal */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 200; }
 .modal.hidden { display: none; }
-.modal-content { background: var(--panel); padding: 20px; border-radius: 14px; width: min(900px, 94vw); max-height: 90vh; overflow-y: auto; color: var(--text); text-align: left; position: relative; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
-.modal-content .close { position: absolute; top: 12px; right: 14px; font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--text); }
+.modal-content { background: var(--panel); padding: 20px; border-radius: 14px; width: min(900px, 94vw); max-height: 90vh; overflow-y: auto; color: var(--text); text-align: left; position: relative; box-shadow: 0 12px 30px rgba(0,0,0,.15); }
+.modal-content .close { position: absolute; top: 12px; right: 14px; font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--muted); }
+
 .player-editor { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
 @media (max-width: 720px){ .player-editor{ grid-template-columns: 1fr; } }
-.player-avatar { background: var(--panel-2); border: 1px solid #1f2738; border-radius: 12px; padding: 14px; text-align: center; }
+.player-avatar { background: var(--panel-2); border: 1px solid #e5e0eb; border-radius: 12px; padding: 14px; text-align: center; }
 .player-avatar img { width: 160px; height: 160px; border-radius: 50%; border: 3px solid var(--accent); object-fit: cover; margin-bottom: 12px; }
 .player-form { display: grid; grid-template-columns: repeat(12,1fr); gap: 14px; }
 .f { display:flex; flex-direction:column; gap:6px; }
 .f label { font-size: 12px; color: var(--muted); }
-.f input, .f textarea { padding: 8px 10px; border-radius: 10px; border: 1px solid #1f2738; background: #0e1320; color: var(--text); }
+.f input, .f textarea { padding: 8px 10px; border-radius: 10px; border: 1px solid #e5e0eb; background: var(--panel-2); color: var(--text); }
 .f textarea { min-height: 80px; resize: vertical; }
 .span-3{grid-column:span 3;} .span-4{grid-column:span 4;}
 .span-5{grid-column:span 5;} .span-6{grid-column:span 6;}
 .span-12{grid-column:1/-1;}
-#modalStats { background:#0e1320; border:1px solid #1f2738; border-radius:12px; padding:10px; font-size:13px; }
+#modalStats { background:var(--panel-2); border:1px solid #e5e0eb; border-radius:12px; padding:10px; font-size:13px; }
 .modal-actions { grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
-.modal-actions button { padding:8px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600; background:#1f2738; color:var(--text); }
+.modal-actions button { padding:8px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:600; background:var(--panel-2); color:var(--text); transition:.2s; }
 #modalSaveBtn{background:var(--accent); color:#fff;}
 #modalDeleteBtn{background:var(--loss); color:#fff;}
 
@@ -189,19 +180,45 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
 @media print { header, aside { display:none !important; } body{ background:#fff; color:#000 } .board{ overflow:visible !important; border:none !important } .board-inner{ margin:0 !important; transform:scale(0.70); transform-origin:top left } .edge{ stroke-width:2; vector-effect:non-scaling-stroke; shape-rendering:crispEdges } .edge.win{ stroke:#22c55e !important } .edge.loss{ stroke:#ef4444 !important } }
 
 /* Player sidebar slide-in */
-#playerSidebar { position: fixed; top: 15%; left: 0; height: 70%; width: 240px; background: var(--panel); border-radius: 0 12px 12px 0; overflow-y: auto; box-shadow: 2px 4px 12px rgba(0,0,0,0.4); transform: translateX(-100%); transition: transform 0.7s ease; z-index: 150; }
+#playerSidebar { position: fixed; top: 15%; left: 0; height: 70%; width: 240px; background: var(--panel); border-radius: 0 12px 12px 0; overflow-y: auto; box-shadow: 2px 4px 12px rgba(0,0,0,0.15); transform: translateX(-100%); transition: transform 0.7s ease; z-index: 150; }
 #playerSidebar.active { transform: translateX(0); }
-#playerSidebar .header { position: sticky; top: 0; background: var(--panel); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 10; }
+#playerSidebar .header { position: sticky; top: 0; background: var(--panel); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e0eb; z-index: 10; }
 
 /* Menu button hidden on desktop */
 #menuToggle { display: none; margin-left: auto; background: var(--accent); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 
-/* Mobile mode */
-@media (max-width: 768px) { header { flex-wrap: wrap; align-items: flex-start; } .controls { display:none; flex-direction:column; gap:8px; width:100%; margin-top:10px; } .controls.open { display:flex; } #menuToggle { display:block; } }
+/* Mobile */
+@media (max-width: 768px) { 
+  header { flex-wrap: wrap; align-items: flex-start; } 
+  .controls { display:none; flex-direction:column; gap:8px; width:100%; margin-top:10px; } 
+  .controls.open { display:flex; } 
+  #menuToggle { display:block; } 
+}
+
+header.hidden { display:none !important; }
+#toggleHeaderBtn {
+   position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 200;
+  background: linear-gradient(90deg,var(--accent),var(--win));
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+
 </style>
 </head>
 <body>
+  <button id="toggleHeaderBtn">Hide Header</button>
 <header>
+  
+
   <h1 id="title">🏸 Badminton Knockout</h1>
   
   <!-- Menu button for mobile -->
@@ -805,7 +822,52 @@ async function loadCategoryPlayers(){
   const saved = await idbLoadTournament(S.meta.category); if(saved) restoreFromObject(saved); else updateTitle();
 })();
 
+// ==== Sync with Dashboard ====
+const channel = new BroadcastChannel("tournament-sync");
+
+channel.onmessage = (e) => {
+  if (e.data.type === "playerAdded" || e.data.type === "playerUpdated") {
+    // Reload players from IndexedDB
+    loadCategoryPlayers().then(renderStats);
+  }
+  if (e.data.type === "matchUpdated") {
+    // Reload tournament state if needed
+    idbLoadTournament(S.meta.category).then(data => {
+      if (data) restoreFromObject(data);
+    });
+  }
+};
+
+
 })();
+
+
+
+// ====== Header toggle ======
+const header = document.querySelector("header");
+const toggleBtn = document.getElementById("toggleHeaderBtn");
+
+toggleBtn.onclick = () => {
+  header.classList.toggle("hidden");
+  toggleBtn.textContent = header.classList.contains("hidden")
+    ? "Show Header"
+    : "Hide Header";
+};
+
+// ====== Sync with Dashboard ======
+const channel = new BroadcastChannel("tournament-sync");
+
+channel.onmessage = (e) => {
+  if (e.data.type === "playerAdded" || e.data.type === "playerUpdated") {
+    loadCategoryPlayers().then(renderStats);
+  }
+  if (e.data.type === "matchUpdated") {
+    idbLoadTournament(S.meta.category).then(data => {
+      if (data) restoreFromObject(data);
+    });
+  }
+};
+
 </script>
 
 <!-- Player Edit Modal -->

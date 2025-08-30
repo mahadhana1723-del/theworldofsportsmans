@@ -1,71 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>🏸 Badminton Round Robin</title>
+<meta charset="UTF-8" />
+<title>Practice Round Robin — Multi‑Category</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <style>
-:root {
-  --bg:#0c0f13; --panel:#131826; --panel-2:#0f1422; --muted:#9aa4b2; --text:#f2f5f9;
-  --accent:#49a8ff; --win:#22c55e; --loss:#ef4444; --neutral:#7b88a8;
+:root{
+  --bg:#fdf4ff; 
+  --panel:#ffffff; 
+  --panel-2:#f9f5ff;
+  --muted:#6b5a86; 
+  --text:#2d103f;
+  --accent:#d946ef; /* Pink */
+  --win:#22c55e;    /* Violet */
+  --loss:#ef4444;
+  --neutral:#7b88a8; 
 }
-* { box-sizing: border-box }
-body {
+
+*{box-sizing:border-box}
+body{
   margin:0; color:var(--text);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;
   background:var(--bg);
 }
 
-/* === Header === */
-header {
-  position:sticky; top:0; z-index:5; padding:12px 14px; border-bottom:1px solid #1a2233;
+/* Header */
+header{
+  position:sticky; top:0; z-index:5; padding:12px 14px;
+  border-bottom:1px solid #e5e0eb;
   display:flex; flex-wrap:wrap; gap:10px; align-items:center;
   background:
-    radial-gradient(1200px 320px at 15% -10%, rgba(73,168,255,.22), transparent),
-    radial-gradient(1000px 320px at 85% 110%, rgba(123,220,255,.18), transparent),
-    linear-gradient(90deg,#0d1220,#121a2e 35%,#0f1f24 65%,#111625);
-  box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+    radial-gradient(1200px 320px at 15% -10%, rgba(217,70,239,.15), transparent),
+    radial-gradient(1000px 320px at 85% 110%, rgba(147,51,234,.12), transparent),
+    linear-gradient(90deg,#fdf4ff,#f9f5ff);
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
-h1 { margin:0 6px 0 0; font-size:18px; letter-spacing:.2px }
-.controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap }
-input,textarea,select {
-  padding:6px 2px; border-radius:10px; border:1px solid #1f2738;
-  background:#0e1320; color:var(--text)
-}
-textarea { width:220px; height:60px }
-.btn {
+h1{margin:0 6px 0 0; font-size:18px; letter-spacing:.2px}
+.controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+
+input,textarea,select{
   padding:6px 10px; border-radius:10px;
-  border:1px solid #1f2738; background:#132037; color:var(--text);
-  cursor:pointer
+  border:1px solid #e5e0eb; background:#fff; color:var(--text)
 }
-.btn.primary {
-  background:linear-gradient(180deg,#2a82ff,#1b73f8); border-color:#1b73f8
+textarea{width:220px; height:60px}
+.btn{
+  padding:6px 10px; border-radius:10px;
+  border:1px solid #e5e0eb; background:#f9f5ff; color:var(--text); cursor:pointer
 }
-.legend { font-size:12px; color:var(--muted); margin-left:4px }
-
-/* === Layout === */
-main { display:grid; grid-template-columns:1fr 320px; gap:14px; padding:14px }
-.board { border:1px solid #1a2233; border-radius:14px; background:var(--panel-2); padding:14px; overflow:auto }
-
-/* Matches table */
-table.matches { width:100%; border-collapse:collapse; margin-top:8px }
-table.matches th,table.matches td { border:1px solid #1f2738; padding:6px 8px; font-size:13px }
-table.matches th { background:#0e1422; color:var(--muted) }
-table.matches td input { width:40px;text-align:center }
-
-/* Stats sidebar */
-aside {
-  border:1px solid #1a2233; border-radius:14px; background:var(--panel-2);
-  padding:10px; position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto
+.btn.primary{
+  background:linear-gradient(90deg,var(--accent),var(--win));
+  border-color:transparent; color:#fff
 }
-aside h3 { margin:6px 6px 10px; font-size:16px }
-table.stats { width:100%; border-collapse:separate; border-spacing:0 6px }
-th,td { font-size:12px; padding:6px 8px; text-align:right }
-th:first-child,td:first-child { text-align:left }
-th { background:#0e1422; color:var(--muted); position:sticky; top:0 }
-tr { background:#0e1320; border:1px solid #1f2633 }
+.legend{font-size:12px; color:var(--muted); margin-left:4px}
+
+/* Layout */
+main{display:grid; grid-template-columns:1fr 320px; gap:14px; padding:14px}
+.board{
+  border:1px solid #e5e0eb; border-radius:14px;
+  background:var(--panel-2); padding:14px; overflow:auto
+}
+
+table.matches{width:100%; border-collapse:collapse; margin-top:8px}
+table.matches th,table.matches td{
+  border:1px solid #e5e0eb; padding:6px 8px; font-size:13px
+}
+table.matches th{background:#f9f5ff; color:var(--muted)}
+table.matches td input{width:56px;text-align:center}
+
+aside{
+  border:1px solid #e5e0eb; border-radius:14px;
+  background:var(--panel-2); padding:10px;
+  position:sticky; top:82px; height:calc(100vh - 110px); overflow:auto
+}
+aside h3{margin:6px 6px 10px; font-size:16px}
+table.stats{width:100%; border-collapse:separate; border-spacing:0 6px}
+th,td{font-size:12px; padding:6px 8px; text-align:left}
+th:first-child,td:first-child{text-align:left}
+th{background:#f9f5ff; color:var(--muted); position:sticky; top:0}
+tr{background:#fff; border:1px solid #e5e0eb}
 td.win{color:var(--win)} td.loss{color:var(--loss)}
+
 .champ{border:2px solid gold; color:gold}
+
+/* Player Sidebar */
+#playerSidebar {
+  position: fixed; top: 15%; left: 0;
+  height: 70%; width: 260px;
+  background: var(--panel);
+  border-radius: 0 12px 12px 0;
+  overflow-y: auto;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 150; padding:12px;
+}
+#playerSidebar.active { transform: translateX(0); }
+#playerSidebar .header {
+  position: sticky; top: 0; background: var(--panel);
+  padding: 8px 4px 10px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #e5e0eb; z-index: 10;
+}
+#playerSidebar h3 { margin: 0; font-size: 16px; color: var(--text); }
+
+/* Player mini-cards */
+.player-card {
+  background: #f9f5ff;
+  border: 1px solid #e5e0eb;
+  border-radius: 12px;
+  padding: 10px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: transform 0.2s, background 0.2s;
+}
+.player-card:hover { background: #fdf4ff; transform: translateY(-2px); }
+.player-card img {
+  width: 38px; height: 38px; border-radius: 50%;
+  object-fit: cover; border: 2px solid var(--accent);
+}
+.player-info { flex:1 }
+.player-name { font-size: 14px; font-weight: 600 }
+.player-meta { font-size: 12px; color: var(--muted) }
+.player-del {
+  background:#f3d1ff; color:#5b21b6; border:0;
+  border-radius:8px; padding:4px 8px; cursor:pointer
+}
+.player-del:hover { background:#ec4899; color:#fff }
+
+/* Modal */
+#playerModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 200; }
+#playerModal.open { display: flex; }
+#playerModal .overlay { position:absolute; inset:0; background:rgba(0,0,0,.5) }
+#playerModal .modal-content {
+  position: relative; background: var(--panel);
+  border-radius: 20px; padding: 18px;
+  width: 720px; max-width: 92vw;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+  z-index: 210;
+}
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.modal-header h2{margin:0; font-size:18px}
+.modal-header .close{ background:none; border:0; color:var(--muted); cursor:pointer; font-size:22px; line-height:1 }
+.modal-header .close:hover{ color:var(--accent) }
+
+.player-editor{ display:grid; grid-template-columns: 180px 1fr; gap:16px }
+.player-avatar{
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  background:linear-gradient(145deg,#fdf4ff,#f9f5ff);
+  border-radius:16px; padding:12px;
+  box-shadow: inset 0 0 10px rgba(217,70,239,0.15);
+}
+.player-avatar img{
+  width:140px; height:140px; border-radius:50%; object-fit:cover;
+  border:3px solid var(--accent);
+  box-shadow:0 0 10px rgba(217,70,239,0.3);
+}
+.player-form{
+  display:grid; grid-template-columns: repeat(12, 1fr); gap:10px;
+  background:#fff; border:1px solid #e5e0eb;
+  border-radius:12px; padding:12px;
+}
+.f{display:flex; flex-direction:column; gap:6px}
+.f label{font-size:12px; color:var(--muted)}
+.f input, .f textarea{width:100%}
+.span-3{grid-column: span 3}
+.span-4{grid-column: span 4}
+.span-5{grid-column: span 5}
+.span-6{grid-column: span 6}
+.span-12{grid-column: 1 / -1}
+.modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:10px }
+
+/* Mobile */
+@media (max-width: 768px) {
+  header { flex-direction: column; align-items: flex-start; padding: 10px; gap: 8px; position: static; }
+  .controls { flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
+  .controls input, .controls select, .controls textarea, .controls button { width: 100%; max-width: 100%; }
+  main { display: block; padding: 10px; }
+  aside { position: static; height: auto; margin-top: 12px; }
+  .player-editor{ grid-template-columns: 1fr; }
+}
 
 /* Print */
 @media print {
@@ -77,661 +190,892 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
   table.stats th, table.stats td {
     border:1px solid #000 !important; color:#000 !important;
   }
-  .champ { border:2px solid gold !important; }
 }
 
-/* === Player Sidebar === */
-#playerSidebar {
-  position: fixed; top: 15%; left: 0;
-  height: 70%; width: 240px;
-  background: var(--panel);
-  border-radius: 0 12px 12px 0;
-  overflow-y: auto;
-  box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: 150;
-}
-#playerSidebar.active { transform: translateX(0); }
-#playerSidebar .header {
-  position: sticky; top: 0;
-  background: var(--panel); padding: 8px 12px;
-  display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-#playerSidebar h3 { margin: 0; font-size: 16px; color: var(--text); }
 
-/* === Mobile Fix === */
-@media (max-width: 768px) {
-  header { flex-direction: column; align-items: flex-start; padding: 10px; gap: 8px; position: static; }
-  .controls { flex-direction: column; align-items: stretch; gap: 6px; width: 100%; }
-  .controls input, .controls select, .controls textarea, .controls button { width: 100%; max-width: 100%; }
-  main { display: block; padding: 10px; }
-  aside { position: static; height: auto; margin-top: 12px; }
-}
-
-/* ===== Player Modal (improved order) ===== */
-.modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; justify-content: center; align-items: center;
+/* Toggle header button */
+#toggleHeaderBtn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
   z-index: 200;
+  background: linear-gradient(90deg,var(--accent),var(--win));
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
-.modal.hidden { display: none; }
-.modal-content {
-  background: var(--panel);
-  padding: 20px;
-  border-radius: 14px;
-  width: min(900px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
-  color: var(--text);
-  text-align: left;
-  position: relative;
-  box-shadow: 0 18px 40px rgba(0,0,0,.45);
+#toggleHeaderBtn:hover {
+  opacity: 0.9;
 }
-.modal-content .close {
-  position: absolute; top: 12px; right: 14px;
-  font-size: 22px; cursor: pointer; background: transparent; border: 0; color: var(--text);
-}
-@keyframes fadeIn { from{opacity:0; transform:scale(.95)} to{opacity:1; transform:scale(1)} }
 
-/* Modal header */
-#playerModal .modal-header {
-  display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:16px;
-}
-#playerModal .modal-header h3 { margin:0; font-size:18px; color:var(--text); }
-#playerModal .modal-header button.close {
-  background:none; border:none; font-size:22px; color:var(--muted);
-  cursor:pointer; transition:color .2s;
-}
-#playerModal .modal-header button.close:hover { color:var(--accent); }
-/* === Player Editor Layout === */
-.player-editor { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
-@media (max-width: 720px){ .player-editor{ grid-template-columns: 1fr; } }
-.player-avatar {
-  background: var(--panel-2);
-  border: 1px solid #1f2738;
-  border-radius: 12px;
-  padding: 14px;
-  text-align: center;
-}
-.player-avatar img {
-  width: 160px; height: 160px;
-  border-radius: 50%;
-  border: 3px solid var(--accent);
-  object-fit: cover;
-  margin-bottom: 12px;
-}
-.player-form {
-  display: grid;
-  grid-template-columns: repeat(12,1fr);
-  gap: 14px;
-}
-.f { display:flex; flex-direction:column; gap:6px; }
-.f label { font-size: 12px; color: var(--muted); }
-.f input, .f textarea {
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #1f2738;
-  background: #0e1320;
-  color: var(--text);
-}
-.f textarea { min-height: 80px; resize: vertical; }
-.span-3{grid-column:span 3;} .span-4{grid-column:span 4;}
-.span-5{grid-column:span 5;} .span-6{grid-column:span 6;}
-.span-12{grid-column:1/-1;}
-#modalStats {
-  background:#0e1320; border:1px solid #1f2738;
-  border-radius:12px; padding:10px; font-size:13px;
-}
-.modal-actions {
-  grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;
-}
-.modal-actions button {
-  padding:8px 14px; border-radius:10px; border:0; cursor:pointer;
-  font-weight:600; background:#1f2738; color:var(--text);
-}
-#modalSaveBtn{background:var(--accent); color:#fff;}
-#modalDeleteBtn{background:var(--loss); color:#fff;}
-/* Player list cards */
-#playerList .player-card {
-  background:#141c2b;
-  border:1px solid #1f2738;
-  border-radius:12px;
-  padding:10px;
-  margin-bottom:10px;
-  display:flex; align-items:center; gap:10px;
-  cursor:pointer;
-  transition: transform 0.8s ease, background 0.2s;
-}
-#playerList .player-card:hover { background:#1b2538; transform:translateY(-2px); }
-#playerList .player-card img {
-   width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 2px solid var(--accent);
-}
-#playerList .player-card span {
-  font-size:14px; font-weight:500; color:var(--text);
-}
+
 </style>
-
 </head>
 <body>
-<header>
-  <h1 id="title">🏸 Badminton Round Robin</h1>
-  <div class="controls">
-    <button class="btn" id="togglePlayersBtn">👥 Players</button>
 
-    <select id="mode">
-      <option value="singles">Singles</option>
-      <option value="doubles">Doubles</option>
-      <option value="auto_doubles">Auto Doubles</option>
-    </select>
-    <select id="format">
-      <option value="single">Single game</option>
-      <option value="bo3">Best of 3</option>
-    </select>
-    <input id="tName" placeholder="Tournament Name" style="width:190px">
-    <input id="tDate" type="date" style="width:155px">
+    <button id="toggleHeaderBtn">Hide Header</button>
 
-    <label><input type="checkbox" id="shuffle"> Randomize</label>
 
-    <button class="btn primary" id="buildBtn">Generate</button>
-    <button class="btn" id="resetBtn">Reset</button>
-    <button class="btn" id="exportBtn">Export</button>
-    <input id="importFile" type="file" accept="application/json" style="display:none">
-    <button class="btn" id="importBtn">Import</button>
-    <button class="btn" id="printBtn">Print</button>
+  <header>
+    <button id="toggleHeaderBtn">Hide Header</button>
+    <h1>Tournament-Round Robin</h1>
 
-    <span class="legend" id="count">0 players</span>
+    <div class="controls">
+      <!-- Category + Gender -->
+      <label>Category</label>
+      <select id="categorySelect">
+        <option>U11</option><option>U13</option><option>U15</option><option>U17</option><option>U19</option>
+        <option>Men</option><option>Women</option>
+        <option>Batch1</option><option>Batch2</option><option>Batch3</option><option>Batch4</option><option>Batch5</option>
+      </select>
+      <div class="category-nav" style="margin:10px 0;">
+  <button id="prevCategoryBtn">⬅️ Prev Category</button>
+  <button id="nextCategoryBtn">➡️ Next Category</button>
+</div>
+      <label id="genderLabel">Gender</label>
+      <select id="genderSelect">
+        <option>Boys</option>
+        <option>Girls</option>
+      </select>
 
-    <input id="playerName" placeholder="Add player/team">
-    <button class="btn" id="addBtn">＋ Add</button>
-    <textarea id="bulk" placeholder="Paste names list"></textarea>
-    <button class="btn" id="bulkBtn">Add List</button>
-    <button class="btn" id="clearBtn">Clear All</button>
+      <span id="currentKeyTag" class="legend"></span>
+    </div>
+
+    <div class="controls">
+      <!-- Players quick add -->
+      <input id="playerName" placeholder="Player name" />
+      <button class="btn" id="addBtn">Add</button>
+
+      <textarea id="bulk" placeholder="Bulk add (one per line)"></textarea>
+      <button class="btn" id="bulkBtn">Bulk Add</button>
+      <button class="btn" id="clearBtn">Clear Players</button>
+
+      <span class="legend" id="count">0 players</span>
+    </div>
+
+    <div class="controls">
+      <!-- Matches + IO -->
+      <button class="btn primary" id="buildBtn">Generate Matches</button>
+      <button class="btn" id="resetBtn">Reset Matches</button>
+      <button class="btn" id="printBtn">Print</button>
+
+      <button class="btn" id="exportBtn">Export (All)</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="btn" id="importBtn">Import (All)</button>
+
+      <!-- Toggle sidebar -->
+      <button class="btn" id="togglePlayersBtn">Players Sidebar</button>
+    </div>
+  </header>
+
+  <!-- Slide-in Players Sidebar -->
+  <div id="playerSidebar">
+    <div class="header">
+      <h3>Players</h3>
+      <button class="btn" id="closeSidebarBtn">Close</button>
+    </div>
+    <div id="playerList"></div>
   </div>
-</header>
 
-<main>
-  <section class="board">
-    <h2>Matches</h2>
-    <div id="matches"></div>
-  </section>
-  <aside>
-    <h3>📊 Standings</h3>
-    <table class="stats">
-      <thead><tr><th>#</th><th>Player/Team</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>±</th></tr></thead>
-      <tbody id="statsBody"></tbody>
-    </table>
-  </aside>
-</main>
-<!-- Slide-in Player Sidebar -->
-<aside id="playerSidebar">
-  <div class="header">
-    <h3 style="margin:0;font-size:16px;">Players</h3>
-    <button id="closeSidebarBtn"
-      style="background:none;border:0;font-size:20px;cursor:pointer;color:var(--text);">
-      ×
-    </button>
+  <main>
+    <div class="board">
+      <h2 id="matchesTitle">Matches</h2>
+      <table class="matches" id="matchesTable"></table>
+    </div>
+
+    <aside>
+      <h3>Stats</h3>
+      <table class="stats">
+        <thead>
+          <tr>
+            <th>#</th><th>Player</th><th>P</th><th class="win">W</th><th class="loss">L</th><th>PF</th><th>PA</th><th>±</th>
+          </tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </aside>
+  </main>
+
+  <!-- Player Modal -->
+  <div id="playerModal">
+    <div class="overlay" onclick="closeModal()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Player</h2>
+        <button class="close" id="modalX">&times;</button>
+      </div>
+
+      <div class="player-editor">
+        <!-- LEFT: photo -->
+        <div class="player-avatar">
+          <img id="modalPhoto" src="https://via.placeholder.com/160" alt="Player Photo">
+          <input type="file" id="modalPhotoInput" accept="image/*">
+        </div>
+
+        <!-- RIGHT: form -->
+        <div class="player-form">
+          <div class="f span-3"><label>ID</label><input id="modalId" type="text"></div>
+          <div class="f span-4"><label>Aadhaar</label><input id="modalAadhar" type="text"></div>
+          <div class="f span-5"><label>Name</label><input id="modalNameInput" type="text"></div>
+
+          <div class="f span-3"><label>Age</label><input id="modalAge" type="number" min="1"></div>
+          <div class="f span-4"><label>Country</label><input id="modalCountry" type="text"></div>
+          <div class="f span-5"><label>Video URL</label><input id="modalVideo" type="text" placeholder="https://..."></div>
+
+          <div class="f span-12"><label>Bio</label><textarea id="modalBio" rows="3"></textarea></div>
+
+          <div class="span-12">
+            <div id="modalStats" style="font-size:13px; line-height:1.6"></div>
+          </div>
+
+          <div class="span-12 modal-actions">
+            <button class="btn primary" id="modalSaveBtn">💾 Save</button>
+            <button class="btn" id="modalCancelBtn">❌ Cancel</button>
+            <button class="btn" id="modalDeleteBtn">🗑️ Delete</button>
+            <button class="btn" id="modalPrevBtn">⬅️ Prev</button>
+            <button class="btn" id="modalNextBtn">➡️ Next</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
-  <div id="playerList"></div>
-</aside>
+
+
+  <script src="db.js"></script>
 
 
 <script>
-(function(){
-  const S={players:[],matches:[],stats:new Map(),meta:{name:'',date:'',mode:'singles',format:'single'}};
-  const q=id=>document.getElementById(id);
-  const matchesDiv=q('matches'), statsBody=q('statsBody');
-  const addBtn=q('addBtn'), bulkBtn=q('bulkBtn'), clearBtn=q('clearBtn');
-  const buildBtn=q('buildBtn'), resetBtn=q('resetBtn');
-  const exportBtn=q('exportBtn'), importBtn=q('importBtn'), importFile=q('importFile');
-  const printBtn = document.getElementById('printBtn');
-  printBtn.onclick = ()=>window.print();
-  const playerName=q('playerName'), bulk=q('bulk'), count=q('count');
-  const modeSel=q('mode'), formatSel=q('format'), tName=q('tName'), tDate=q('tDate'), shuffle=q('shuffle'), title=q('title');
+(() => {
+  // ---------- State per category/gender ----------
+  const TOURNAMENTS = {}; // { key: { players:[], matches:[], stats: Map(), meta:{} } }
 
- const togglePlayersBtn = q('togglePlayersBtn');
-const closeSidebarBtn = q('closeSidebarBtn');
-const playerSidebar = q('playerSidebar');
-const playerList = document.getElementById('playerList');
+  // ---------- Quick DOM helpers ----------
+  const q = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, m =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])
+);
 
-// Toggle sidebar
-togglePlayersBtn.onclick = () => {
-  playerSidebar.classList.add('active');
-};
-closeSidebarBtn.onclick = () => {
-  playerSidebar.classList.remove('active');
-};
+  const on = (el, evt, fn) => el && el.addEventListener(evt, fn);
 
-// Populate player list dynamically
-function renderPlayersSidebar() {
-  playerList.innerHTML = '';
-  (S.players || []).forEach((p, i) => {
-    const div = document.createElement('div');
-    div.className = 'player-card';
-    div.innerHTML = `
-      <img src="${p.photo || 'https://via.placeholder.com/30'}" 
-           style="width:30px;height:30px;border-radius:50%;margin-right:8px;">
-      <span>${p.name}</span>
-    `;
-    div.onclick = () => showPlayerDetails(i);
-    playerList.appendChild(div);
-  });
+  // ---------- UI refs ----------
+  const categorySelect = q('categorySelect');
+  const genderSelect   = q('genderSelect');
+  const genderLabel    = q('genderLabel');
+  const currentKeyTag  = q('currentKeyTag');
+
+  const playerName = q('playerName');
+  const addBtn     = q('addBtn');
+  const bulk       = q('bulk');
+  const bulkBtn    = q('bulkBtn');
+  const clearBtn   = q('clearBtn');
+  const count      = q('count');
+
+  const buildBtn   = q('buildBtn');
+  const resetBtn   = q('resetBtn');
+  const printBtn   = q('printBtn');
+  const exportBtn  = q('exportBtn');
+  const importBtn  = q('importBtn');
+  const importFile = q('importFile');
+
+  const togglePlayersBtn = q('togglePlayersBtn');
+  const closeSidebarBtn  = q('closeSidebarBtn');
+  const playerSidebar    = q('playerSidebar');
+  const playerList       = q('playerList');
+
+  const matchesTable = q('matchesTable');
+  const statsBody    = q('statsBody');
+  const matchesTitle = q('matchesTitle');
+
+  // Modal refs (select .close OR #modalX safely)
+  const modal            = q('playerModal');
+  const modalPhoto       = q('modalPhoto');
+  const modalPhotoInput  = q('modalPhotoInput');
+  const modalId          = q('modalId');
+  const modalAadhar      = q('modalAadhar');
+  const modalNameInput   = q('modalNameInput');
+  const modalAge         = q('modalAge');
+  const modalCountry     = q('modalCountry');
+  const modalVideo       = q('modalVideo');
+  const modalBio         = q('modalBio');
+  const modalStats       = q('modalStats');
+  const modalSaveBtn     = q('modalSaveBtn');
+  const modalCancelBtn   = q('modalCancelBtn');
+  const modalDeleteBtn   = q('modalDeleteBtn');
+  const modalPrevBtn     = q('modalPrevBtn');
+  const modalNextBtn     = q('modalNextBtn');
+
+  // This will match either a span/button with class "close" OR an element with id "modalX"
+  const modalX = modal ? modal.querySelector('.close, #modalX') : null;
+
+  // ---------- IndexedDB ----------
+  const DB_NAME = "TournamentDB";
+  const DB_STORE = "tournaments";
+  let db;
+
+
+  // ---------- Category Navigation (Prev/Next Buttons) ----------
+/* ---------- Category Navigation (Prev/Next Buttons) ---------- */
+const categories = [
+  "U11-Boys", "U11-Girls",
+  "U13-Boys", "U13-Girls",
+  "U15-Boys", "U15-Girls",
+  "U17-Boys", "U17-Girls",
+  "U19-Boys", "U19-Girls",
+  "Men", "Women",
+  "Batch1", "Batch2", "Batch3", "Batch4", "Batch5" // <-- capital B to match <select>
+];
+
+function getCategoryIndex() {
+  return categories.indexOf(getKey());
 }
 
-function updatePlayerStatsInModal(p){
-  const statsBox = document.getElementById('modalStats');
-  if (!statsBox || !p) return;
-  const stats = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
-  statsBox.innerHTML = `
-    <p><strong>Played:</strong> ${stats.P}</p>
-    <p><strong>Wins:</strong> ${stats.W}</p>
-    <p><strong>Losses:</strong> ${stats.L}</p>
-    <p><strong>Points For:</strong> ${stats.PF}</p>
-    <p><strong>Points Against:</strong> ${stats.PA}</p>
-  `;
-}
-
-
-function showPlayerDetails(idx) {
-  const p = S.players[idx];
-  const modal   = q('playerModal');
-
-  if (!modal) return;
-
-  // Elements
-  const photoEl   = q('modalPhoto');
-  const fileInp   = q('modalPhotoInput');
-  const nameInp   = q('modalNameInput');
-  const idInp     = q('modalId');
-  const aadhaarInp= q('modalAadhar');
-  const ageInp    = q('modalAge');
-  const countryInp= q('modalCountry');
-  const videoInp  = q('modalVideo');
-  const bioInp    = q('modalBio');
-  const statsBox  = q('modalStats');
-
-  const saveBtn   = q('modalSaveBtn');
-  const cancelBtn = q('modalCancelBtn');
-  const deleteBtn = q('modalDeleteBtn');
-  const prevBtn   = q('modalPrevBtn');
-  const nextBtn   = q('modalNextBtn');
-
-  // === Fill fields ===
-  photoEl.src    = p.photo || 'https://via.placeholder.com/160';
-  nameInp.value  = p.name || "";
-  idInp.value    = p.id || "";
-  aadhaarInp.value= p.aadhaar || "";
-  ageInp.value   = p.age || "";
-  countryInp.value= p.country || "";
-  videoInp.value = p.video || "";
-  bioInp.value   = p.bio || "";
-
-  const stats = S.stats.get(p.name) || {P:0,W:0,L:0,PF:0,PA:0};
-  statsBox.innerHTML = `
-    <p><strong>Played:</strong> ${stats.P}</p>
-    <p><strong>Wins:</strong> ${stats.W}</p>
-    <p><strong>Losses:</strong> ${stats.L}</p>
-    <p><strong>Points For:</strong> ${stats.PF}</p>
-    <p><strong>Points Against:</strong> ${stats.PA}</p>
-  `;
-
-  modal.style.display = 'flex';
-  modal.classList.add('open');
-
-  // === Save ===
-  saveBtn.onclick = () => {
-    const newName = nameInp.value.trim() || p.name;
-    if (newName !== p.name) renameParticipant(p.name, newName);
-
-    p.name    = newName;
-    p.id      = idInp.value.trim();
-    p.aadhaar = aadhaarInp.value.trim();
-    p.age     = ageInp.value.trim();
-    p.country = countryInp.value.trim();
-    p.video   = videoInp.value.trim();
-    p.bio     = bioInp.value.trim();
-
-    if (fileInp.files && fileInp.files[0]) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        p.photo = e.target.result;
-        finish();
-      };
-      reader.readAsDataURL(fileInp.files[0]);
-    } else {
-      finish();
-    }
-
-    function finish() {
-      S.players[idx] = p;
-      renderPlayersSidebar();
-      renderMatches();
-      renderStats();
-      updateCount();
-      closeModal();
-    }
-  };
-
-  // Navigation
-  prevBtn.onclick = () => idx > 0 && showPlayerDetails(idx-1);
-  nextBtn.onclick = () => idx < S.players.length-1 && showPlayerDetails(idx+1);
-
-  // Delete
-  deleteBtn.onclick = () => {
-    if (confirm(`Delete ${p.name}?`)) {
-      S.players.splice(idx,1);
-      renderPlayersSidebar();
-      renderMatches();
-      renderStats();
-      updateCount();
-      closeModal();
-    }
-  };
-
-  // Cancel
-  cancelBtn.onclick = closeModal;
-}
-
-// ✅ global closeModal
-window.closeModal = function() {
-  const modal = q('playerModal');
-  if (modal) {
-    modal.classList.remove('open');
-    modal.style.display = 'none';
+function maybeAutoBuild() {
+  const st = getState();
+  if (st.players.length >= 2 && st.matches.length === 0) {
+    st.matches = generateRoundRobin(st.players.map(p => p.name));
+    recomputeStats();
+    saveDB();
   }
-};
-// Attach the X button inside the modal
-document.addEventListener("DOMContentLoaded", () => {
-  const modal = q("playerModal");
-  const xBtn = modal?.querySelector(".close");
-  if (xBtn) {
-    xBtn.addEventListener("click", closeModal);
-  }
+}
+
+function setCategoryByIndex(i) {
+  if (i < 0 || i >= categories.length) return;
+  const parts = categories[i].split("-");
+  const cat = parts[0];
+  const gen = parts[1] || "";
+
+  categorySelect.value = cat;
+  if (gen) genderSelect.value = gen;
+
+  updateGenderVisibility();
+  updateKeyTag();
+  localStorage.setItem("lastCategoryKey", getKey());
+
+  // Auto-generate matches for this category if needed
+  maybeAutoBuild();
+  renderAll();
+}
+
+// Wire the buttons
+on(q("prevCategoryBtn"), "click", () => {
+  const i = getCategoryIndex();
+  if (i > 0) setCategoryByIndex(i - 1);
+});
+on(q("nextCategoryBtn"), "click", () => {
+  const i = getCategoryIndex();
+  if (i < categories.length - 1) setCategoryByIndex(i + 1);
 });
 
 
 
-function renameParticipant(oldName,newName){
-  if(S.stats.has(oldName)){
-    const v=S.stats.get(oldName);
-    S.stats.delete(oldName);
-    S.stats.set(newName,v);
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains(DB_STORE)) {
+          db.createObjectStore(DB_STORE);
+        }
+      };
+      req.onsuccess = e => { db = e.target.result; resolve(db); };
+      req.onerror = e => reject(e);
+    });
   }
+
+ // --- Ensure DB is ready before saving ---
+function saveDB() {
+  if (!db) return;
+  const out = {};
+  for (const [k, v] of Object.entries(TOURNAMENTS)) {
+    out[k] = {
+      players: v.players,
+      matches: v.matches,
+      stats: Object.fromEntries(v.stats || new Map()),
+      meta: v.meta || {}
+    };
+  }
+  const tx = db.transaction(DB_STORE, "readwrite");
+  tx.objectStore(DB_STORE).put(JSON.stringify(out), "data");
+  tx.oncomplete = () => console.log("Saved to DB (Edge safe)");
 }
 
-// Removed stray closing brace here
-
-function updateCount(){count.textContent=`${S.players.length} players`;}
-  function shuffleArr(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
-
-addBtn.onclick=()=>{
-  const v = playerName.value.trim();
-  if(!v) return;
-  S.players.push({ name: v, photo: null });
-  playerName.value = '';
-  updateCount();
-  renderPlayersSidebar();
-};
-  playerName.addEventListener('keydown',e=>{if(e.key==='Enter') addBtn.click();});
-bulkBtn.onclick = () => {
-  bulk.value.split(/[,\r\n]+/)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .forEach(n => S.players.push({ name: n, photo: null }));
-  bulk.value = '';
-  updateCount();
-  renderPlayersSidebar();
-};
-
-clearBtn.onclick=()=>{
-  S.players=[];
-  updateCount();
-  renderPlayersSidebar();
-};
-
-  buildBtn.onclick=()=>build();
-  resetBtn.onclick=()=>{S.players=[];S.matches=[];S.stats.clear();matchesDiv.innerHTML='';statsBody.innerHTML='';updateCount();};
-
-  function build(){
-  if(S.players.length<2){alert("Need at least 2 players");return;}
-
-  S.meta.name = tName.value || 'Tournament';
-  S.meta.date = tDate.value || new Date().toISOString().slice(0,10);
-  S.meta.mode = modeSel.value;
-  S.meta.format = formatSel.value;
-  title.textContent = `🏸 ${S.meta.name} (${S.meta.date})`;
-
-  // ✅ keep full player objects, not just strings
-  let entries = [...S.players];
-
-  if(shuffle.checked) shuffleArr(entries);
-
-  if(S.meta.mode==="auto_doubles"){
-    const teams=[];
-    for(let i=0;i<entries.length;i+=2){
-      if(i+1<entries.length){
-        teams.push({name:`${entries[i].name} & ${entries[i+1].name}`,photo:null});
-      }else{
-        teams.push({name:`${entries[i].name} (bye)`,photo:null});
-      }
-    }
-    entries=teams;
+  function loadDB() {
+    return new Promise(resolve => {
+      if (!db) return resolve();
+      const tx = db.transaction(DB_STORE, "readonly");
+      const req = tx.objectStore(DB_STORE).get("data");
+      req.onsuccess = e => {
+        if (e.target.result) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            for (const [k, v] of Object.entries(parsed)) {
+              TOURNAMENTS[k] = {
+                players: v.players || [],
+                matches: v.matches || [],
+                stats: new Map(Object.entries(v.stats || {})),
+                meta: v.meta || {}
+              };
+            }
+          } catch {}
+        }
+        resolve();
+      };
+      req.onerror = () => resolve();
+    });
   }
 
-  S.matches=[];
-  for(let i=0;i<entries.length;i++){
-    for(let j=i+1;j<entries.length;j++){
-      if(entries[i].name.includes("(bye)")||entries[j].name.includes("(bye)")) continue;
-      S.matches.push({A:entries[i],B:entries[j],scoreA:null,scoreB:null});
+  // ---------- Category/Gender helpers ----------
+  function keyFrom(cat, gen) {
+    const isU = /^U\d+$/i.test(cat);
+    return isU ? `${cat}-${gen}` : cat;
+  }
+  function getKey() {
+    return keyFrom(categorySelect.value, genderSelect.value);
+  }
+  function getState() {
+    const k = getKey();
+    if (!TOURNAMENTS[k]) {
+      TOURNAMENTS[k] = { players: [], matches: [], stats: new Map(), meta: {} };
     }
+    return TOURNAMENTS[k];
+  }
+  function updateGenderVisibility() {
+    const show = /^U\d+$/i.test(categorySelect.value);
+    genderLabel.style.display = show ? 'inline-block' : 'none';
+    genderSelect.style.display = show ? 'inline-block' : 'none';
+  }
+  function updateKeyTag() {
+    currentKeyTag.textContent = `Now editing: ${getKey()}`;
   }
 
-  // stats
-  S.stats.clear();
-  entries.forEach(p=>{
-    if(!p.name.includes("(bye)")) S.stats.set(p.name,{P:0,W:0,L:0,PF:0,PA:0});
+  // Restore last selection
+  const lastKey = localStorage.getItem('lastCategoryKey');
+  if (lastKey) {
+    const [cat, sub] = lastKey.split('-');
+    categorySelect.value = cat || 'U11';
+    if (sub) genderSelect.value = sub;
+  } else {
+    categorySelect.value = 'U11';
+    genderSelect.value = 'Boys';
+  }
+  updateGenderVisibility();
+  updateKeyTag();
+
+ on(categorySelect, 'change', () => {
+  saveDB();
+  updateGenderVisibility();
+  localStorage.setItem('lastCategoryKey', getKey());
+  updateKeyTag();
+  maybeAutoBuild();
+  renderAll();
+});
+
+on(genderSelect, 'change', () => {
+  saveDB();
+  localStorage.setItem('lastCategoryKey', getKey());
+  updateKeyTag();
+  maybeAutoBuild();
+  renderAll();
+});
+
+
+  // ---------- Sidebar toggle ----------
+  on(togglePlayersBtn, 'click', () => playerSidebar.classList.add('active'));
+  on(closeSidebarBtn,  'click', () => playerSidebar.classList.remove('active'));
+
+  // ---------- Players ----------
+  on(addBtn, 'click', () => {
+    const v = playerName.value.trim();
+    if (!v) return;
+    const st = getState();
+    st.players.push({ name: v, id:'', aadhar:'', age:'', country:'', bio:'', video:'', photo:'' });
+    playerName.value = '';
+    renderPlayersSidebar();
+    updateCount();
+    saveDB();
   });
 
-  renderMatches();
-  renderStats();
-  renderPlayersSidebar();
+  on(playerName, 'keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+  on(bulkBtn, 'click', () => {
+    const names = bulk.value.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+    if (!names.length) return;
+    const st = getState();
+    names.forEach(n => st.players.push({ name: n, id:'', aadhar:'', age:'', country:'', bio:'', video:'', photo:'' }));
+    bulk.value = '';
+    renderPlayersSidebar();
+    updateCount();
+    saveDB();
+  });
+
+  on(clearBtn, 'click', () => {
+    if (!confirm('Clear all players in this tournament?')) return;
+    const st = getState();
+    st.players = [];
+    st.matches = [];
+    st.stats = new Map();
+    renderAll();
+    updateCount();
+    saveDB();
+  });
+
+  function updateCount() {
+    const st = getState();
+    count.textContent = `${st.players.length} player${st.players.length === 1 ? '' : 's'}`;
+    saveDB();
+  }
+
+  function renderPlayersSidebar() {
+    const st = getState();
+    playerList.innerHTML = '';
+    st.players.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'player-card';
+
+      const img = document.createElement('img');
+      img.src = p.photo || 'https://via.placeholder.com/80';
+
+      const info = document.createElement('div');
+      info.className = 'player-info';
+      const nm = document.createElement('div');
+      nm.className = 'player-name';
+      nm.textContent = p.name || '(no name)';
+      const meta = document.createElement('div');
+      meta.className = 'player-meta';
+      const s = getStatsFor(p.name);
+      meta.textContent = `P:${s.P} • W:${s.W} • L:${s.L}`;
+
+      info.appendChild(nm);
+      info.appendChild(meta);
+
+      const del = document.createElement('button');
+      del.className = 'player-del';
+      del.textContent = '❌';
+      del.onclick = (e) => {
+        e.stopPropagation();
+        if (!confirm(`Delete ${p.name || 'this player'}?`)) return;
+        st.players.splice(i, 1);
+        // remove matches involving this player
+        st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
+        recomputeStats();
+        renderAll();
+        saveDB();
+      };
+
+      card.appendChild(img);
+      card.appendChild(info);
+      card.appendChild(del);
+
+      card.onclick = () => showPlayerDetails(i);
+      playerList.appendChild(card);
+    });
+  }
+
+  // ---------- Matches (Round Robin) ----------
+  function generateRoundRobin(names) {
+  const arr = names.slice();
+  if (arr.length < 2) return [];
+  if (arr.length % 2 === 1) arr.push("BYE");
+
+  const rounds = [];
+  const n = arr.length;
+  const half = n / 2;
+
+  const fixed = arr[0];
+  let rest = arr.slice(1);
+
+  for (let r = 0; r < n - 1; r++) {
+    const pairs = [];
+
+    const left = [fixed, ...rest.slice(0, half - 1)];
+    const right = rest.slice(half - 1).reverse();
+
+    for (let i = 0; i < half; i++) {
+      const a = left[i], b = right[i];
+      if (a !== "BYE" && b !== "BYE") {
+        pairs.push({ a, b, sa: "", sb: "", saved: false, round: r + 1 });
+      }
+    }
+
+    rounds.push(...pairs);
+
+    // ✅ rotate rest right by 1
+    rest.unshift(rest.pop());
+  }
+
+  return rounds;
 }
 
 
+  on(buildBtn, 'click', () => {
+    const st = getState();
+    const names = st.players.map(p => p.name).filter(Boolean);
+    if (names.length < 2) {
+      alert('Add at least 2 players');
+      return;
+    }
+    st.matches = generateRoundRobin(names);
+    recomputeStats();
+    renderMatches();
+    renderStats();
+    saveDB();
+  });
 
-  function renderMatches(){
-    matchesDiv.innerHTML='';
-    const tbl=document.createElement('table'); tbl.className='matches';
-    tbl.innerHTML='<thead><tr><th>Match</th><th>Scores</th><th>Action</th></tr></thead>';
-    const tb=document.createElement('tbody');
-    S.matches.forEach((m,idx)=>{
-      const tr=document.createElement('tr');
-    tr.innerHTML = `<td>${m.A.name} vs ${m.B.name}</td>`;
-      const tdScore=document.createElement('td');
-      const A=document.createElement('input'); A.type='number'; A.min=0; A.value=m.scoreA??'';
-      const B=document.createElement('input'); B.type='number'; B.min=0; B.value=m.scoreB??'';
-      tdScore.append(A,document.createTextNode(' - '),B);
-      const tdAct=document.createElement('td');
-      const save=document.createElement('button'); save.className='btn'; save.textContent='Save';
-      save.onclick=()=>{
-        const a=parseInt(A.value,10), b=parseInt(B.value,10);
-        if(isNaN(a)||isNaN(b)||a===b){alert('Enter valid scores');return;}
-        m.scoreA=a;m.scoreB=b;
-        updateStats(m);
-        renderStats();
-        save.disabled=true; A.disabled=true; B.disabled=true;
-      };
-      tdAct.appendChild(save);
-      tr.append(tdScore,tdAct); tb.appendChild(tr);
-    });
-    tbl.appendChild(tb); matchesDiv.appendChild(tbl);
+  on(resetBtn, 'click', () => {
+    const st = getState();
+    if (!confirm('Reset all match scores for this tournament?')) return;
+    st.matches.forEach(m => { m.sa=''; m.sb=''; m.saved=false; });
+    recomputeStats();
+    renderMatches();
+    renderStats();
+    saveDB();
+  });
+
+  on(printBtn, 'click', () => window.print());
+
+  function renderMatches() {
+    const st = getState();
+    matchesTitle.textContent = `Matches — ${getKey()}`;
+    const tbl = matchesTable;
+    tbl.innerHTML = '';
+
+    if (!st.matches.length) {
+      tbl.innerHTML = '<tr><td>No matches. Click "Generate Matches".</td></tr>';
+      return;
+    }
+
+    // group by round number
+    const byRound = new Map();
+    for (const m of st.matches) {
+      if (!byRound.has(m.round)) byRound.set(m.round, []);
+      byRound.get(m.round).push(m);
+    }
+
+    let html = `
+      <tr>
+        <th style="text-align:left">S.No</th>
+        <th style="text-align:left">Round</th>
+        <th style="text-align:left">Match</th>
+        <th style="text-align:center">A</th>
+        <th style="text-align:center">B</th>
+        <th style="text-align:center">Save</th>
+      </tr>
+    `;
+    let idx = 1;
+
+    for (const [rnd, arr] of [...byRound.entries()].sort((a,b)=>a[0]-b[0])) {
+      for (const m of arr) {
+        const rowId = `m_${rnd}_${idx}`;
+        html += `
+          <tr data-row="${rowId}">
+            <td>${idx}</td>
+            <td>R${rnd}</td>
+            <td>${esc(m.a)} vs ${esc(m.b)}</td>
+            <td style="text-align:center">
+              <input type="number" min="0" step="1" data-a value="${m.sa ?? ''}" ${m.saved?'disabled':''}>
+            </td>
+            <td style="text-align:center">
+              <input type="number" min="0" step="1" data-b value="${m.sb ?? ''}" ${m.saved?'disabled':''}>
+            </td>
+            <td style="text-align:center">
+              <button class="btn" data-save ${m.saved?'disabled':''}>Save</button>
+            </td>
+          </tr>
+        `;
+        idx++;
+      }
+    }
+
+    tbl.innerHTML = html;
+
+    // wire save buttons
+    let rowIdx = 0;
+    for (const [rnd, arr] of [...byRound.entries()].sort((a,b)=>a[0]-b[0])) {
+      for (const m of arr) {
+        const tr = tbl.querySelectorAll('tr[data-row]')[rowIdx];
+        const inA = tr.querySelector('input[data-a]');
+        const inB = tr.querySelector('input[data-b]');
+        const btn = tr.querySelector('button[data-save]');
+
+        btn.onclick = () => {
+          const a = inA.value.trim();
+          const b = inB.value.trim();
+          if (a === '' || b === '') { alert('Enter both scores'); return; }
+          const na = parseInt(a, 10), nb = parseInt(b, 10);
+          if (Number.isNaN(na) || Number.isNaN(nb)) { alert('Scores must be numbers'); return; }
+          if (na === nb) { alert('No ties allowed'); return; }
+
+          m.sa = na; m.sb = nb; m.saved = true;
+          inA.disabled = true; inB.disabled = true; btn.disabled = true;
+
+          recomputeStats();
+          renderStats();
+          saveDB(); // persist scores immediately
+        };
+
+        rowIdx++;
+      }
+    }
   }
 
-  function updateStats(m){
-    const {A,B,scoreA,scoreB}=m;
-    const SA=S.stats.get(A), SB=S.stats.get(B);
-    SA.P++; SB.P++;
-    SA.PF+=scoreA; SA.PA+=scoreB;
-    SB.PF+=scoreB; SB.PA+=scoreA;
-    if(scoreA>scoreB){SA.W++; SB.L++;} else {SB.W++; SA.L++;}
-    S.stats.set(A,SA); S.stats.set(B,SB);
+  // ---------- Stats ----------
+  function getStatsFor(name) {
+    const st = getState();
+    return st.stats.get(name) || { P:0, W:0, L:0, PF:0, PA:0 };
   }
 
-  function renderStats(){
-    statsBody.innerHTML='';
-    const sorted=[...S.stats.entries()].sort((a,b)=>
-      (b[1].W-a[1].W)||((b[1].PF-b[1].PA)-(a[1].PF-a[1].PA))||(b[1].PF-a[1].PF));
-    sorted.forEach(([name,s],i)=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${i+1}</td><td>${name}</td><td>${s.P}</td>
-      <td class="win">${s.W}</td><td class="loss">${s.L}</td>
-      <td>${s.PF}</td><td>${s.PA}</td><td>${s.PF-s.PA}</td>`;
-      if(i===0) tr.classList.add('champ');
+  function recomputeStats() {
+    const st = getState();
+    st.stats = new Map();
+    for (const p of st.players) st.stats.set(p.name, { P:0, W:0, L:0, PF:0, PA:0 });
+
+    for (const m of st.matches) {
+      if (!m.saved) continue;
+      const a = st.stats.get(m.a) || { P:0, W:0, L:0, PF:0, PA:0 };
+      const b = st.stats.get(m.b) || { P:0, W:0, L:0, PF:0, PA:0 };
+
+      a.P++; b.P++;
+      a.PF += m.sa; a.PA += m.sb;
+      b.PF += m.sb; b.PA += m.sa;
+      if (m.sa > m.sb) { a.W++; b.L++; } else { b.W++; a.L++; }
+
+      st.stats.set(m.a, a); st.stats.set(m.b, b);
+    }
+  }
+
+  function renderStats() {
+    const st = getState();
+    const rows = [...st.stats.entries()]
+      .map(([name, s]) => ({ name, ...s }))
+      .sort((x,y) =>
+        (y.W - x.W) ||
+        ((y.PF - y.PA) - (x.PF - x.PA)) ||
+        (y.PF - x.PF)
+      );
+
+    statsBody.innerHTML = '';
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${esc(r.name)}</td>
+        <td>${r.P}</td>
+        <td class="win">${r.W}</td>
+        <td class="loss">${r.L}</td>
+        <td>${r.PF}</td>
+        <td>${r.PA}</td>
+        <td>${r.PF - r.PA}</td>
+      `;
       statsBody.appendChild(tr);
     });
-    const modal = document.getElementById('playerModal');
-  if (modal && modal.classList.contains('open')) {
-    const currentName = document.getElementById('modalName')?.value;
-    const current = S.players.find(pl => pl.name === currentName);
-    if (current) updatePlayerStatsInModal(current);
-  }
   }
 
-  // Export / Import
-  exportBtn.onclick=()=>{
-  if(!S.meta.name){ 
-    // fallback: take from input box
-    S.meta.name = tName.value.trim(); 
-  }
-  if(!S.meta.name){
-    alert("Please enter a Tournament Name before saving!");
-    return;
-  }
-  const data=JSON.stringify({
-  players: S.players,
-  matches: S.matches.map(m=>({
-    A:m.A.name, B:m.B.name, scoreA:m.scoreA, scoreB:m.scoreB
-  })),
-  meta: S.meta,
-  stats: [...S.stats]
-},null,2);
+  // ---------- Modal (Edit Player) ----------
+  let currentPlayerIndex = -1;
 
+  function showPlayerDetails(idx) {
+    const st = getState();
+    if (idx < 0 || idx >= st.players.length) return;
+    currentPlayerIndex = idx;
 
-  const blob=new Blob([data],{type:'application/json'});
-  const a=document.createElement('a'); 
-  a.href=URL.createObjectURL(blob);
-  // use clean name (replace spaces with underscores)
-  a.download=`${S.meta.name.replace(/\s+/g,'_')}.json`;  
-  a.click();
-};
+    const p = st.players[idx];
 
+    // Fill fields
+    if (!modal) return;
+    modalPhoto.src     = p.photo || 'https://via.placeholder.com/160';
+    modalId.value      = p.id || '';
+    modalAadhar.value  = p.aadhar || '';
+    modalNameInput.value = p.name || '';
+    modalAge.value     = p.age || '';
+    modalCountry.value = p.country || '';
+    modalVideo.value   = p.video || '';
+    modalBio.value     = p.bio || '';
 
+    const s = getStatsFor(p.name);
+    modalStats.innerHTML = `
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr><td style="text-align:left;">Played</td><td>${s.P}</td></tr>
+        <tr><td style="text-align:left; color:var(--win);">Wins</td><td>${s.W}</td></tr>
+        <tr><td style="text-align:left; color:var(--loss);">Losses</td><td>${s.L}</td></tr>
+        <tr><td style="text-align:left;">Points For</td><td>${s.PF}</td></tr>
+        <tr><td style="text-align:left;">Points Against</td><td>${s.PA}</td></tr>
+        <tr><td style="text-align:left;">± Diff</td><td>${s.PF - s.PA}</td></tr>
+      </table>
+    `;
 
- importBtn.onclick = () => importFile.click();
-importFile.onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const o = JSON.parse(ev.target.result);
+    // Photo change
+    modalPhotoInput.value = '';
+    modalPhotoInput.onchange = () => {
+      if (modalPhotoInput.files && modalPhotoInput.files[0]) {
+        const rd = new FileReader();
+        rd.onload = e => {
+          st.players[idx].photo = e.target.result;
+          modalPhoto.src = e.target.result;
+          renderPlayersSidebar();
+          saveDB();
+        };
+        rd.readAsDataURL(modalPhotoInput.files[0]);
+      }
+    };
 
-      // players: normalize to objects with {name, photo}
-     S.players = Array.isArray(o.players)
-  ? o.players.map(p=>typeof p==="string"?{name:p,photo:null}:p)
-  : [];
+    // Save
+    modalSaveBtn.onclick = () => {
+      const oldName = p.name;
+      const newName = modalNameInput.value.trim() || oldName;
 
-S.matches = Array.isArray(o.matches)
-  ? o.matches.map(m=>{
-      const A = S.players.find(p=>p.name===m.A) || {name:m.A,photo:null};
-      const B = S.players.find(p=>p.name===m.B) || {name:m.B,photo:null};
-      return {A,B,scoreA:m.scoreA,scoreB:m.scoreB};
-    })
-  : [];
+      p.id      = modalId.value.trim();
+      p.aadhar  = modalAadhar.value.trim();
+      p.name    = newName;
+      p.age     = modalAge.value.trim();
+      p.country = modalCountry.value.trim();
+      p.video   = modalVideo.value.trim();
+      p.bio     = modalBio.value.trim();
 
+      if (newName !== oldName) {
+        for (const m of st.matches) {
+          if (m.a === oldName) m.a = newName;
+          if (m.b === oldName) m.b = newName;
+        }
+        const oldStats = st.stats.get(oldName);
+        if (oldStats) {
+          st.stats.delete(oldName);
+          st.stats.set(newName, oldStats);
+        }
+      }
 
-      // ✅ restore matches
-      S.matches = Array.isArray(o.matches) ? o.matches : [];
-
-      // meta + stats
-      S.meta  = Object.assign({ mode: "singles", format: "single" }, o.meta || {});
-      S.stats = new Map(o.stats || []);
-
-      // restore UI fields
-      tName.value       = S.meta.name || "";
-      tDate.value       = S.meta.date || "";
-      modeSel.value     = S.meta.mode || "singles";
-      formatSel.value   = S.meta.format || "single";
-      title.textContent = `🏸 ${S.meta.name || 'Badminton Round Robin'} (${S.meta.date || ''})`;
-
-      updateCount();
+      st.players[idx] = p;
+      recomputeStats();
+      renderPlayersSidebar();
       renderMatches();
       renderStats();
-      renderPlayersSidebar();
+      closeModal();
+      saveDB();
+    };
 
-    } catch (err) {
-      alert('Bad file');
+    // Prev/Next
+    modalPrevBtn.onclick = () => { if (currentPlayerIndex > 0) showPlayerDetails(currentPlayerIndex - 1); };
+    modalNextBtn.onclick = () => { if (currentPlayerIndex < getState().players.length - 1) showPlayerDetails(currentPlayerIndex + 1); };
+
+    // Delete
+    modalDeleteBtn.onclick = () => {
+      if (!confirm(`Delete ${p.name || 'this player'}?`)) return;
+      st.players.splice(idx, 1);
+      st.matches = st.matches.filter(m => m.a !== p.name && m.b !== p.name);
+      recomputeStats();
+      renderPlayersSidebar();
+      renderMatches();
+      renderStats();
+      closeModal();
+      saveDB();
+    };
+
+    modalCancelBtn.onclick = closeModal;
+    if (modalX) modalX.onclick = closeModal; // works for either .close or #modalX
+
+    modal.classList.add('open');
+    modal.style.display = 'flex';
+  }
+
+  window.closeModal = function(){
+    if (modal) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
     }
   };
-  r.readAsText(f);
-};
 
+  // ---------- Import / Export (ENTIRE DB) ----------
+  on(exportBtn, 'click', () => {
+    const out = {};
+    for (const [k, v] of Object.entries(TOURNAMENTS)) {
+      out[k] = {
+        players: v.players,
+        matches: v.matches,
+        stats: Object.fromEntries(v.stats),
+        meta: v.meta || {}
+      };
+    }
+  const fileName = prompt("Enter filename to save:", "round_robin_database.json");
+if (!fileName) return; // user cancelled
+
+const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = fileName.endsWith(".json") ? fileName : fileName + ".json";
+a.click();
+});
+
+
+  on(importBtn, 'click', () => importFile.click());
+  on(importFile, 'change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        for (const k of Object.keys(TOURNAMENTS)) delete TOURNAMENTS[k];
+        for (const [k, v] of Object.entries(data)) {
+          TOURNAMENTS[k] = {
+            players: Array.isArray(v.players) ? v.players : [],
+            matches: Array.isArray(v.matches) ? v.matches : [],
+            stats: new Map(Object.entries(v.stats || {})),
+            meta: v.meta || {}
+          };
+        }
+        renderAll();
+        saveDB();
+        alert('Imported entire database successfully.');
+      } catch (err) {
+        alert('Invalid file.');
+      }
+    };
+    r.readAsText(f);
+  });
+
+  // ---------- Initial render ----------
+  function renderAll() {
+    renderPlayersSidebar();
+    updateCount();
+    renderMatches();
+    renderStats();
+    saveDB();
+  }
+
+  openDB().then(() => loadDB()).then(() => { renderAll(); });
 
 })();
+
+
+
+function saveTournaments(t) {
+  localStorage.setItem("tournaments", JSON.stringify(t));
+}
+
+function loadTournaments() {
+  return JSON.parse(localStorage.getItem("tournaments") || "[]");
+}
+
 </script>
 
+<script>
+  const header = document.querySelector("header");
+  const toggleBtn = document.getElementById("toggleHeaderBtn");
 
+  let headerVisible = true;
 
-
-
-
-
-<!-- Player Edit Modal -->
-<div id="playerModal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Edit Player</h2>
-
-    <div class="player-editor">
-      <!-- LEFT: photo -->
-      <div class="player-avatar">
-        <img id="modalPhoto" src="https://via.placeholder.com/160" alt="Player Photo">
-        <input type="file" id="modalPhotoInput" accept="image/*"  style="width: 200px;">
-      </div>
-
-      <!-- RIGHT: form -->
-      <div class="player-form">
-        <div class="f span-3"><label>ID</label><input id="modalId" type="text"></div>
-        <div class="f span-4"><label>Aadhaar</label><input id="modalAadhar" type="text"></div>
-        <div class="f span-5"><label>Name</label><input id="modalNameInput" type="text"></div>
-
-        <div class="f span-3"><label>Age</label><input id="modalAge" type="number"></div>
-        <div class="f span-4"><label>Country</label><input id="modalCountry" type="text"></div>
-        <div class="f span-5"><label>Video URL</label><input id="modalVideo" type="text"></div>
-
-        <div class="f span-12"><label>Bio</label><textarea id="modalBio"></textarea></div>
-
-        <div class="span-12"><div id="modalStats"></div></div>
-
-        <div class="modal-actions">
-          <button id="modalSaveBtn">💾 Save</button>
-          <button id="modalCancelBtn">❌ Cancel</button>
-          <button id="modalDeleteBtn">🗑️ Delete</button>
-          <button id="modalPrevBtn">⬅️ Prev</button>
-          <button id="modalNextBtn">➡️ Next</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
+  toggleBtn.addEventListener("click", () => {
+    headerVisible = !headerVisible;
+    header.style.display = headerVisible ? "flex" : "none";
+    toggleBtn.textContent = headerVisible ? "Hide Header" : "Show Header";
+  });
+</script>
 
 </body>
+<script src="tournament.js"></script> 
 </html>

@@ -221,6 +221,7 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
 
 
   <header>
+    <button id="toggleHeaderBtn">Hide Header</button>
     <h1>Tournament-Round Robin</h1>
 
     <div class="controls">
@@ -343,6 +344,10 @@ td.win{color:var(--win)} td.loss{color:var(--loss)}
 
     </div>
   </div>
+
+
+  <script src="db.js"></script>
+
 
 <script>
 (() => {
@@ -1045,6 +1050,17 @@ a.click();
   openDB().then(() => loadDB()).then(() => { renderAll(); });
 
 })();
+
+
+
+function saveTournaments(t) {
+  localStorage.setItem("tournaments", JSON.stringify(t));
+}
+
+function loadTournaments() {
+  return JSON.parse(localStorage.getItem("tournaments") || "[]");
+}
+
 </script>
 
 <script>

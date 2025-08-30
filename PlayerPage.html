@@ -4,39 +4,15 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>🏸 Player Manager</title>
-<style>
-  body { margin:0; font-family:system-ui,Arial; background:#0c0f13; color:#f2f5f9; }
-  header { padding:14px; background:#131826; position:sticky; top:0; z-index:5; }
-  h1 { margin:0; font-size:20px; }
-  .form { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-top:10px; }
-  input,textarea { padding:6px; border-radius:8px; border:1px solid #1f2738; background:#0e1320; color:#fff; }
-  textarea { min-width:200px; min-height:60px; }
-  .btn { padding:6px 12px; border-radius:8px; border:none; cursor:pointer; background:#2a82ff; color:#fff; }
-  main { padding:16px; }
-  table { width:100%; border-collapse:collapse; }
-  th,td { padding:8px; border-bottom:1px solid #2a2f40; text-align:left; }
-  tr:hover { background:#1c2335; cursor:pointer; }
-  /* Popup */
-  #profilePopup { position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-    background:rgba(0,0,0,0.65); z-index:1000; }
-  .profile-card { background:#131826; border-radius:16px; padding:20px; width:360px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.5); text-align:center; animation: pop 0.3s ease-out; }
-  .profile-card img { width:140px; height:140px; border-radius:50%; object-fit:cover;
-    border:4px solid #2a82ff; margin-bottom:10px; }
-  .profile-card h2 { margin:10px 0 4px; }
-  .profile-card small { color:#aaa; }
-  .stats { margin-top:10px; text-align:left; }
-  .stats table { width:100%; }
-  .stats th, .stats td { padding:4px; font-size:13px; }
-  #closePopup { margin-top:14px; background:#ef4444; width:100%; }
-  @keyframes pop { from{ transform:scale(0.8); opacity:0; } to{ transform:scale(1); opacity:1; } }
-</style>
+
+<link rel="stylesheet" href="theme.css">
+<script src="db.js"></script>
 </head>
 <body>
 
 <header>
   <h1>🏸 Player Manager</h1>
-  <div class="form">
+  <div class="controls">
     <input id="pId" placeholder="Player ID">
     <input id="pAadhar" placeholder="Aadhaar No.">
     <input id="pName" placeholder="Name">
@@ -45,30 +21,31 @@
     <input id="pPhoto" type="file" accept="image/*">
     <textarea id="pBio" placeholder="Short Bio"></textarea>
     <input id="pVideo" placeholder="Video URL">
-    <button class="btn" id="addBtn">＋ Add Player</button>
-    <button class="btn" id="saveEditBtn" style="display:none">💾 Save Edit</button>
+    <button class="btn primary" id="addBtn">＋ Add Player</button>
+    <button class="btn primary" id="saveEditBtn" style="display:none">💾 Save Edit</button>
     <input id="fileName" placeholder="File name (without .json)">
     <button class="btn" id="exportBtn">Export Players</button>
     <input id="importFile" type="file" accept="application/json" style="display:none">
     <button class="btn" id="importBtn">Import</button>
     <button class="btn" id="exportAttendanceBtn">Export Attendance</button>
   </div>
-  <input id="searchBar" placeholder="🔍 Search players..." style="margin-top:10px; width:100%; padding:8px; border-radius:8px; border:1px solid #1f2738; background:#0e1320; color:#fff;">
+  <input id="searchBar" placeholder="🔍 Search players..." style="margin-top:10px; width:100%;">
 </header>
 
-<main>
+<main class="card">
+  <div class="card-header"><h2 class="card-title">Players</h2></div>
   <table id="playerTable">
     <thead>
-      <tr><th>ID</th><th>Name</th><th>Country</th><th>Age</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>✏️</th></tr>
+      <tr><th>ID</th><th>Name</th><th>Country</th><th>Age</th><th>P</th><th>W</th><th>L</th><th>PF</th><th>PA</th><th>Edit</th></tr>
     </thead>
     <tbody></tbody>
   </table>
 </main>
 
 <!-- Profile Popup -->
-<div id="profilePopup">
-  <div class="profile-card">
-    <img id="profilePhoto" src="">
+<div id="profilePopup" class="modal">
+  <div class="profile-card modal-content">
+    <img id="profilePhoto" src="" style="width:140px; height:140px; border-radius:50%; object-fit:cover; margin-bottom:10px;">
     <h2 id="profileName"></h2>
     <small id="profileMeta"></small>
     <p id="profileBio"></p>
@@ -84,8 +61,8 @@
     </div>
     <div id="profileVideo"></div>
     <button class="btn" id="markPresent">✔ Mark Present</button>
-    <button class="btn" id="markAbsent" style="background:#f59e0b">✖ Mark Absent</button>
-    <button class="btn" id="closePopup">Close</button>
+    <button class="btn" id="markAbsent">✖ Mark Absent</button>
+    <button class="btn" id="closePopup" style="background:var(--loss);color:#fff">Close</button>
   </div>
 </div>
 
@@ -95,46 +72,23 @@ let editIndex=null;
 const tableBody=document.querySelector("#playerTable tbody");
 const popup=document.getElementById("profilePopup");
 
-// ---------------- IndexedDB ----------------
-let db;
-function initDB(){
-  const req=indexedDB.open("playerDB",1);
-  req.onupgradeneeded=e=>{
-    db=e.target.result;
-    if(!db.objectStoreNames.contains("players")){
-      db.createObjectStore("players",{keyPath:"id"});
-    }
-  };
-  req.onsuccess=e=>{ db=e.target.result; loadPlayers(); };
-  req.onerror=e=>console.error("DB error",e.target.error);
-}
+// -------- Init ----------
+(async()=>{
+  await openDB();
+  S.players = await getAll("players");
+  renderPlayers();
+})();
 
-function savePlayers(){
-  if(!db) return;
-  const tx=db.transaction("players","readwrite");
-  const store=tx.objectStore("players");
-  store.clear();
-  S.players.forEach(p=>store.put(p));
-}
-
-function loadPlayers(){
-  if(!db) return;
-  const tx=db.transaction("players","readonly");
-  const store=tx.objectStore("players");
-  const req=store.getAll();
-  req.onsuccess=()=>{ S.players=req.result||[]; renderPlayers(); };
-}
-// -------------------------------------------
-
+// -------- Render ----------
 function renderPlayers(filter=""){
   tableBody.innerHTML="";
   S.players
-     .filter(p => p && p.name && p.name.toLowerCase().includes(filter.toLowerCase()))
+    .filter(p => p && p.name && p.name.toLowerCase().includes(filter.toLowerCase()))
     .forEach((p,idx)=>{
       const tr=document.createElement("tr");
       tr.innerHTML=`
         <td>${p.id||"-"}</td>
-        <td style="color:#49a8ff; text-decoration:underline">${p.name}</td>
+        <td style="color:var(--accent); cursor:pointer;">${p.name}</td>
         <td>${p.country||""}</td>
         <td>${p.age||""}</td>
         <td>${p.stats?.matchesPlayed||0}</td>
@@ -142,7 +96,7 @@ function renderPlayers(filter=""){
         <td>${p.stats?.losses||0}</td>
         <td>${p.stats?.pointsFor||0}</td>
         <td>${p.stats?.pointsAgainst||0}</td>
-        <td><button class="btn" style="padding:2px 6px;font-size:12px">✏️</button></td>
+        <td><button class="btn">✏️</button></td>
       `;
       tr.querySelector("td:nth-child(2)").onclick=()=>showProfile(p,idx);
       tr.querySelector("button").onclick=(e)=>{ e.stopPropagation(); loadEdit(idx); };
@@ -150,59 +104,49 @@ function renderPlayers(filter=""){
     });
 }
 
-function showProfile(p,index){
-  document.getElementById("profilePhoto").src = p.photo || "";
-  document.getElementById("profileName").textContent = p.name;
-  document.getElementById("profileMeta").textContent =
-    `ID: ${p.id||"-"} | Aadhaar: ${p.aadhar||"-"} | Age: ${p.age||"-"} | ${p.country||"-"}`;
-  document.getElementById("profileBio").textContent = p.bio || "";
-  document.getElementById("profileMatches").textContent = p.stats?.matchesPlayed||0;
-  document.getElementById("profileWins").textContent = p.stats?.wins||0;
-  document.getElementById("profileLosses").textContent = p.stats?.losses||0;
-  document.getElementById("profilePF").textContent = p.stats?.pointsFor||0;
-  document.getElementById("profilePA").textContent = p.stats?.pointsAgainst||0;
-  document.getElementById("profileVideo").innerHTML =
-    p.videos && p.videos.length ? `<p><a href="${p.videos[0]}" target="_blank">🎥 Watch Video</a></p>` : "";
-  popup.style.display="flex";
-
-  document.getElementById("markPresent").onclick=()=>markAttendance(index,"Present");
-  document.getElementById("markAbsent").onclick=()=>markAttendance(index,"Absent");
-}
-document.getElementById("closePopup").onclick=()=>popup.style.display="none";
-
-function markAttendance(index,status){
-  const today=new Date().toISOString().slice(0,10);
-  if(!S.players[index].attendance) S.players[index].attendance=[];
-  S.players[index].attendance.push({date:today,status});
-  savePlayers();
-  alert(`${S.players[index].name} marked ${status} (${today})`);
-}
-
-// Add Player
-document.getElementById("addBtn").onclick=()=>{
+// -------- Add Player ----------
+document.getElementById("addBtn").onclick=async()=>{
   const p=getFormValues();
   if(!p.name) return;
-  if(!p.id) p.id=Date.now();
+  if(!p.id) p.id=crypto.randomUUID();
+  await put("players",p);
   S.players.push(p);
-  clearForm();
   renderPlayers();
-  savePlayers();
+  clearForm();
+  broadcast("playerAdded",p);
 };
 
-// Save Edit
-document.getElementById("saveEditBtn").onclick=()=>{
+// -------- Save Edit ----------
+document.getElementById("saveEditBtn").onclick=async()=>{
   if(editIndex===null) return;
   const updated=getFormValues(S.players[editIndex].photo);
-  updated.id=S.players[editIndex].id; // keep same ID
+  updated.id=S.players[editIndex].id;
   S.players[editIndex]=updated;
+  await put("players",updated);
+  renderPlayers();
   clearForm();
   editIndex=null;
   document.getElementById("addBtn").style.display="inline-block";
   document.getElementById("saveEditBtn").style.display="none";
-  renderPlayers();
-  savePlayers();
+  broadcast("playerUpdated",updated);
 };
 
+// -------- Helpers ----------
+function getFormValues(oldPhoto=""){
+  return {
+    id: document.getElementById("pId").value.trim(),
+    aadhar: document.getElementById("pAadhar").value.trim(),
+    name: document.getElementById("pName").value.trim(),
+    age: parseInt(document.getElementById("pAge").value)||"",
+    country: document.getElementById("pCountry").value.trim(),
+    bio: document.getElementById("pBio").value.trim(),
+    photo: oldPhoto,
+    videos: document.getElementById("pVideo").value ? [document.getElementById("pVideo").value] : [],
+    stats:{matchesPlayed:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0},
+    attendance:[]
+  };
+}
+function clearForm(){ ["pId","pAadhar","pName","pAge","pCountry","pBio","pVideo"].forEach(id=>document.getElementById(id).value=""); document.getElementById("pPhoto").value=""; }
 function loadEdit(idx){
   editIndex=idx;
   const p=S.players[idx];
@@ -217,102 +161,71 @@ function loadEdit(idx){
   document.getElementById("saveEditBtn").style.display="inline-block";
 }
 
-function getFormValues(oldPhoto=""){
-  const id=document.getElementById("pId").value.trim();
-  const aadhar=document.getElementById("pAadhar").value.trim();
-  const name=document.getElementById("pName").value.trim();
-  const age=document.getElementById("pAge").value.trim();
-  const country=document.getElementById("pCountry").value.trim();
-  const bio=document.getElementById("pBio").value.trim();
-  const video=document.getElementById("pVideo").value.trim();
-  const file=document.getElementById("pPhoto").files[0];
-
-  const base={
-    id,aadhar,name,age,country,bio,
-    photo:oldPhoto,videos:video?[video]:[],
-    stats:{matchesPlayed:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0},
-    attendance:[]
-  };
-
-  if(file){
-    const reader=new FileReader();
-    reader.onload=e=>{ base.photo=e.target.result; savePlayers(); };
-    reader.readAsDataURL(file);
-  }
-  return base;
+// -------- Profile Popup ----------
+function showProfile(p,index){
+  document.getElementById("profilePhoto").src=p.photo||"";
+  document.getElementById("profileName").textContent=p.name;
+  document.getElementById("profileMeta").textContent=`ID: ${p.id||"-"} | Aadhaar: ${p.aadhar||"-"} | Age: ${p.age||"-"} | ${p.country||"-"}`;
+  document.getElementById("profileBio").textContent=p.bio||"";
+  document.getElementById("profileMatches").textContent=p.stats?.matchesPlayed||0;
+  document.getElementById("profileWins").textContent=p.stats?.wins||0;
+  document.getElementById("profileLosses").textContent=p.stats?.losses||0;
+  document.getElementById("profilePF").textContent=p.stats?.pointsFor||0;
+  document.getElementById("profilePA").textContent=p.stats?.pointsAgainst||0;
+  document.getElementById("profileVideo").innerHTML=p.videos?.length?`<p><a href="${p.videos[0]}" target="_blank">🎥 Watch Video</a></p>`:"";
+  popup.style.display="flex";
+  document.getElementById("markPresent").onclick=()=>markAttendance(index,"Present");
+  document.getElementById("markAbsent").onclick=()=>markAttendance(index,"Absent");
 }
-function clearForm(){ ["pId","pAadhar","pName","pAge","pCountry","pBio","pVideo","pPhoto"].forEach(id=>document.getElementById(id).value=""); }
+document.getElementById("closePopup").onclick=()=>popup.style.display="none";
 
-// Export Players
+async function markAttendance(index,status){
+  const today=new Date().toISOString().slice(0,10);
+  if(!S.players[index].attendance) S.players[index].attendance=[];
+  S.players[index].attendance.push({date:today,status});
+  await put("players",S.players[index]);
+  alert(`${S.players[index].name} marked ${status} (${today})`);
+  broadcast("playerUpdated",S.players[index]);
+}
+
+// -------- Export / Import ----------
 document.getElementById("exportBtn").onclick=()=>{
   const fname=document.getElementById("fileName").value.trim() || "players";
   const data=JSON.stringify({players:S.players},null,2);
-  const blob=new Blob([data],{type:"application/json"});
   const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${fname}.json`;
-  a.click();
+  a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  a.download=`${fname}.json`; a.click();
 };
-// Export Attendance
 document.getElementById("exportAttendanceBtn").onclick=()=>{
-  const fname="attendance";
-  const attendance=S.players.map(p=>({name:p.name,attendance:p.attendance||[]}));
-  const data=JSON.stringify({attendance},null,2);
-  const blob=new Blob([data],{type:"application/json"});
+  const data=JSON.stringify({attendance:S.players.map(p=>({name:p.name,attendance:p.attendance||[]}))},null,2);
   const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=`${fname}.json`;
-  a.click();
+  a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  a.download="attendance.json"; a.click();
 };
-
-// Import
-const importFile=document.getElementById("importFile");
-document.getElementById("importBtn").onclick=()=>importFile.click();
-importFile.onchange = e => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = ev => {
-    try {
-      const o = JSON.parse(ev.target.result);
-      const fileType = prompt("What type of file is this? (players / attendance)", "players");
-
-      if (fileType === "players") {
-        if (Array.isArray(o.players)) {
-          S.players = o.players;
-        } else if (Array.isArray(o)) {
-          S.players = o;
-        } else {
-          alert("❌ Not a valid players file");
-          return;
-        }
-        renderPlayers();
-        savePlayers();
-
-      } else if (fileType === "attendance") {
-        if (o.attendance) {
-          o.attendance.forEach(att => {
-            const p = S.players.find(x => x.name === att.name);
-            if (p) p.attendance = att.attendance;
-          });
-          renderPlayers();
-          savePlayers();
-        } else {
-          alert("❌ Not a valid attendance file");
-        }
-      }
-    } catch (err) {
-      alert("Bad file: " + err.message);
-    }
+document.getElementById("importBtn").onclick=()=>document.getElementById("importFile").click();
+document.getElementById("importFile").onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{
+      const o=JSON.parse(ev.target.result);
+      if(o.players){ for(const p of o.players) await put("players",p); }
+      if(o.attendance){ o.attendance.forEach(att=>{ const pl=S.players.find(x=>x.name===att.name); if(pl) pl.attendance=att.attendance; }); }
+      S.players=await getAll("players"); renderPlayers();
+    }catch(err){ alert("Bad file: "+err.message); }
   };
   r.readAsText(f);
 };
 
-// Search
+// -------- Search ----------
 document.getElementById("searchBar").oninput=(e)=>{ renderPlayers(e.target.value); };
 
-// Init
-initDB();
+// -------- Sync ----------
+channel.onmessage = e=>{
+  if(["playerAdded","playerUpdated"].includes(e.data.type)){
+    openDB().then(()=>getAll("players")).then(players=>{ S.players=players; renderPlayers(); });
+  }
+};
 </script>
 </body>
 </html>
