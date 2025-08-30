@@ -817,6 +817,11 @@ on(genderSelect, 'change', () => {
           recomputeStats();
           renderStats();
           saveDB(); // persist scores immediately
+
+
+           // 🔑 Save into global DB
+  put("matches", {mid: m.round+"_"+m.a+"_"+m.b, p1:m.a, p2:m.b, s1:na, s2:nb, status:"completed", date:new Date().toISOString().slice(0,10)})
+    .then(() => broadcast("matchUpdated", m));
         };
 
         rowIdx++;
