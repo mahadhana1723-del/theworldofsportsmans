@@ -70,15 +70,4 @@ async function addPlayer(player){
   await put("players", player);
   broadcast("playerAdded", player);
 }
-async function updateMatchResult(m, na, nb){
-          m.s1 = na; m.s2 = nb; m.status = "completed";
-          renderMatch(m);   
-            saveMatches(); // persist scores immediately    
-            if(na>nb){ m.winner = m.a; m.loser = m.b; } else { m.winner = m.b; m.loser = m.a; }     
-              if(m.nextMatch){  
-                if(!m.nextMatch.a) m.nextMatch.a = m.winner;
-                else if(!m.nextMatch.b) m.nextMatch.b = m.winner;   
-                renderMatch(m.nextMatch);
-                saveMatches(); // persist scores immediately
-                }   }
 
