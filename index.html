@@ -4,6 +4,9 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Badminton Manager - Practice</title>
+
+  <link rel="icon" href="data:,">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
@@ -179,7 +182,7 @@
 </div>
 
 <script>
-  const FILES={
+  const FILES = {
     dashboard:'dashboard.html',
     players:'PlayerPage.html',
     tournament:'TournamentPage.html',
@@ -193,23 +196,29 @@
   const tabs=document.querySelectorAll('.tab');
   const currentUser=document.getElementById('currentUser');
 
-  // Tabs toggle
+  // Tabs toggle buttons
   const tS=document.getElementById('tabSignIn');
   const tU=document.getElementById('tabSignUp');
   const fS=document.getElementById('signInForm');
   const fU=document.getElementById('signUpForm');
 
-  tS.onclick=()=>{tS.classList.add('active');tU.classList.remove('active');fS.classList.remove('hidden');fU.classList.add('hidden');};
-  tU.onclick=()=>{tU.classList.add('active');tS.classList.remove('active');fU.classList.remove('hidden');fS.classList.add('hidden');};
+  tS.onclick=()=>{
+    tS.classList.add('active');
+    tU.classList.remove('active');
+    fS.classList.remove('hidden');
+    fU.classList.add('hidden');
+  };
+  tU.onclick=()=>{
+    tU.classList.add('active');
+    tS.classList.remove('active');
+    fU.classList.remove('hidden');
+    fS.classList.add('hidden');
+  };
 
-  // LocalStorage users
-  function getUsers(){return JSON.parse(localStorage.getItem('users')||'[]');}
-  function saveUsers(u){localStorage.setItem('users',JSON.stringify(u));}
+  // ✅ API endpoint
+  const API_URL = "http://localhost:5000/api"; 
 
-  // Ensure default admin exists
-  let users=getUsers();
-  if(!users.find(u=>u.username==='admin')){users.push({username:'admin',email:'admin@local',password:'1234'});saveUsers(users);}
-
+  // ---- AUTH HELPERS ----
   function doSignIn(u){
     authView.style.display='none';
     appView.style.display='flex';
@@ -217,46 +226,104 @@
     loadTab('dashboard');
   }
 
-  document.getElementById('signInBtn').onclick=()=>{
-    const uname=document.getElementById('username').value.trim();
-    const pass=document.getElementById('password').value.trim();
-    const user=getUsers().find(u=>u.username===uname && u.password===pass);
-    if(user){doSignIn(user);}else alert("Invalid credentials");
+  function doSignOut(){
+    localStorage.removeItem("token"); // clear JWT
+    appView.style.display='none';
+    authView.style.display='flex';
+    document.getElementById('contentFrame').src='';
+  }
+
+  // ---- SESSION CHECK ON PAGE LOAD ----
+  window.onload = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const res = await fetch(`${API_URL}/profile`, {
+          headers: { "Authorization": "Bearer " + token }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          doSignIn(data.user);
+        } else {
+          localStorage.removeItem("token");
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        localStorage.removeItem("token");
+      }
+    }
   };
 
-  document.getElementById('signUpBtn').onclick=()=>{
+  // ---- SIGN IN ----
+  document.getElementById('signInBtn').onclick=async ()=>{
+    const uname=document.getElementById('username').value.trim();
+    const pass=document.getElementById('password').value.trim();
+    try {
+      const res = await fetch(`${API_URL}/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: uname, password: pass })
+      });
+      const data = await res.json();
+      if(res.ok){
+        localStorage.setItem("token", data.token); // save JWT
+        doSignIn(data.user);
+      } else {
+        alert(data.msg);
+      }
+    } catch(err){
+      alert("Server error, try again later");
+    }
+  };
+
+  // ---- SIGN UP ----
+  document.getElementById('signUpBtn').onclick=async ()=>{
     const n=document.getElementById('newName').value.trim();
     const e=document.getElementById('newEmail').value.trim();
     const p=document.getElementById('newPass').value.trim();
     const c=document.getElementById('newPass2').value.trim();
+
     if(!n||!e||!p){alert("Fill all fields");return;}
     if(p!==c){alert("Passwords do not match");return;}
-    let users=getUsers();
-    if(users.find(u=>u.username===n)){alert("User already exists");return;}
-    users.push({username:n,email:e,password:p});
-    saveUsers(users);
-    alert("Account created! You can now log in.");
-    tS.click();
+
+    try {
+      const res = await fetch(`${API_URL}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username:n, email:e, password:p })
+      });
+      const data = await res.json();
+      if(res.ok){
+        alert(data.msg);
+        tS.click(); // switch back to login form
+      } else {
+        alert(data.msg);
+      }
+    } catch(err){
+      alert("Server error, try again later");
+    }
   };
 
-  document.getElementById('signOutBtn').onclick=()=>{
-    appView.style.display='none';
-    authView.style.display='flex';
-    document.getElementById('contentFrame').src='';
-  };
+  // ---- SIGN OUT ----
+  document.getElementById('signOutBtn').onclick=doSignOut;
 
-  tabs.forEach(tab=>tab.onclick=()=>{
+  // ---- TABS ----
+  tabs.forEach(tab => tab.onclick=()=>{
     tabs.forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
     loadTab(tab.dataset.target);
   });
 
-  function loadTab(t){if(FILES[t])document.getElementById('contentFrame').src=FILES[t];}
+  function loadTab(t){
+    if(FILES[t]) document.getElementById('contentFrame').src=FILES[t];
+  }
 
-  // Theme toggle
+  // ---- THEME TOGGLE ----
   document.getElementById('themeBtn').onclick=()=>{
     document.documentElement.classList.toggle('dark');
   };
 </script>
+
+
 </body>
 </html>
