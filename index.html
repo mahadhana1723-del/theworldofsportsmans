@@ -183,19 +183,21 @@
 <script src="config.js"></script>
 
 <script>
-  const FILES = {
-    dashboard:'dashboard.html',
-    players:'PlayerPage.html',
-    tournament:'TournamentPage.html',
-    roundrobin:'Round_Robin_updated.html',
-    attendance:'Attendance_book.html',
-    bracket:'Bracket_tournament.html'
-  };
+   const FILES = {
+      dashboard: "dashboard.html",
+      players: "PlayerPage.html",
+      tournament: "TournamentPage.html",
+      roundrobin: "Round_Robin_updated.html",
+      attendance: "Attendance_book.html",
+      bracket: "Bracket_tournament.html",
+    };
 
-  const authView=document.getElementById('authView');
-  const appView=document.getElementById('appView');
-  const tabs=document.querySelectorAll('.tab');
-  const currentUser=document.getElementById('currentUser');
+    const authView = document.getElementById("authView");
+    const appView = document.getElementById("appView");
+    const tabs = document.querySelectorAll(".tab");
+    const currentUser = document.getElementById("currentUser");
+
+    // const API_URL = CONFIG.API_URL; // ✅ use config.js; (removed duplicate)
 
   // Tabs toggle buttons
   const tS=document.getElementById('tabSignIn');
@@ -217,7 +219,9 @@
   };
 
   // ✅ API endpoint
-const API_URL = CONFIG.API_URL;
+// Replace with your real ngrok URL
+   const API_URL = CONFIG.API_URL; // ✅ read from config.js
+
 
 
 
