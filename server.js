@@ -12,7 +12,19 @@ require("dotenv").config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+const corsOptions = {
+  origin: [
+    "http://localhost:5000",                   // local dev
+    "http://127.0.0.1:5500",                   // VSCode Live Server (if you use it)
+    "https://mahadhana1723-del.github.io"      // your GitHub Pages site
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+
 
 // ✅ connect MongoDB
 mongoose.connect(process.env.MONGO_URI, )
