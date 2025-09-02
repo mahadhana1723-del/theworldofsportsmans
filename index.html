@@ -180,6 +180,7 @@
   </div>
   <div class="pane"><iframe id="contentFrame"></iframe></div>
 </div>
+<script src="config.js"></script>
 
 <script>
   const FILES = {
@@ -216,7 +217,8 @@
   };
 
   // ✅ API endpoint
-const API_URL = "https://5ee1db778988.ngrok-free.app/api";
+const API_URL = CONFIG.API_URL;
+
 
 
   // ---- AUTH HELPERS ----
