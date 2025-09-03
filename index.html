@@ -142,7 +142,6 @@
 </div>
 
 <script>
-  // ✅ Your Render Backend URL
   const API_URL = "https://theworldofsportsmans.onrender.com/api";
 
   const authView = document.getElementById("authView");
@@ -150,7 +149,26 @@
   const tabs = document.querySelectorAll(".tab");
   const currentUser = document.getElementById("currentUser");
 
-  // ---- AUTH HELPERS ----
+  // Tabs reference
+  const tS=document.getElementById('tabSignIn');
+  const tU=document.getElementById('tabSignUp');
+  const fS=document.getElementById('signInForm');
+  const fU=document.getElementById('signUpForm');
+
+  // Toggle tab functions
+  tS.onclick=()=>{
+    tS.classList.add('active');
+    tU.classList.remove('active');
+    fS.classList.remove('hidden');
+    fU.classList.add('hidden');
+  };
+  tU.onclick=()=>{
+    tU.classList.add('active');
+    tS.classList.remove('active');
+    fU.classList.remove('hidden');
+    fS.classList.add('hidden');
+  };
+
   function doSignIn(u){
     authView.style.display='none';
     appView.style.display='flex';
@@ -165,7 +183,7 @@
     document.getElementById('contentFrame').src='';
   }
 
-  // ---- SESSION CHECK ----
+  // Session check
   window.onload = async () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -186,7 +204,7 @@
     }
   };
 
-  // ---- SIGN IN ----
+  // Sign In
   document.getElementById('signInBtn').onclick=async ()=>{
     const uname=document.getElementById('username').value.trim();
     const pass=document.getElementById('password').value.trim();
@@ -208,7 +226,7 @@
     }
   };
 
-  // ---- SIGN UP ----
+  // Sign Up
   document.getElementById('signUpBtn').onclick=async ()=>{
     const n=document.getElementById('newName').value.trim();
     const e=document.getElementById('newEmail').value.trim();
@@ -226,20 +244,27 @@
       });
       const data = await res.json();
       if(res.ok){
-        alert(data.msg);
-        document.getElementById('tabSignIn').click();
+        alert("✅ " + data.msg);
+        // Clear form
+        document.getElementById('newName').value="";
+        document.getElementById('newEmail').value="";
+        document.getElementById('newPass').value="";
+        document.getElementById('newPass2').value="";
+        // ✅ Switch back to SignIn tab directly
+        tS.classList.add('active');
+        tU.classList.remove('active');
+        fS.classList.remove('hidden');
+        fU.classList.add('hidden');
       } else {
-        alert(data.msg);
+        alert("⚠️ " + data.msg);
       }
     } catch(err){
       alert("Server error, try again later");
     }
   };
 
-  // ---- SIGN OUT ----
   document.getElementById('signOutBtn').onclick=doSignOut;
 
-  // ---- TABS ----
   tabs.forEach(tab => tab.onclick=()=>{
     tabs.forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
@@ -258,12 +283,11 @@
     if(FILES[t]) document.getElementById('contentFrame').src=FILES[t];
   }
 
-  // ---- THEME ----
   document.getElementById('themeBtn').onclick=()=>{
     document.documentElement.classList.toggle('dark');
   };
 
-  // ✅ Test backend connection
+  // Test backend
   fetch(`${API_URL}/test`)
     .then(res => res.json())
     .then(data => {
