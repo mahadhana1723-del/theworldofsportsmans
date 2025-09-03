@@ -329,8 +329,22 @@
   document.getElementById('themeBtn').onclick=()=>{
     document.documentElement.classList.toggle('dark');
   };
+
+
+  // Fetch test from backend
+fetch("https://theworldofsportsmans.onrender.com/api/test")
+  .then(res => res.json())
+  .then(data => {
+    console.log("Response from backend:", data);
+    document.getElementById("output").innerText = JSON.stringify(data);
+  })
+  .catch(err => console.error("Error:", err));
+
 </script>
 
+<div id="output" style="padding:10px; background:#fff; border:1px solid #ccc; margin:10px;">
+  Waiting for backend response...
+</div>
 
 </body>
 </html>

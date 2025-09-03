@@ -182,6 +182,11 @@ app.get("/api/auth/facebook/callback", passport.authenticate("facebook", { failu
   }
 );
 
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API working fine ✅" });
+});
+
+
 // ------------------- END OAUTH -------------------
 
 const PORT = process.env.PORT || 5000;
