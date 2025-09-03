@@ -6,10 +6,8 @@
   <title>Badminton Manager - Practice</title>
 
   <link rel="icon" href="data:,">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-
   <style>
     :root{
       --bg:#fdf4ff; --card:#ffffff; --text:#1f1029; --muted:#6b5a86;
@@ -21,19 +19,14 @@
       --primary:#a855f7; --accent:#ec4899; --danger:#ef4444;
       --warn:#f59e0b; --line:#293250;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font:14px/1.5 system-ui,Segoe UI,Roboto,Arial}
     body{background:var(--bg);color:var(--text);transition:background .3s,color .3s}
-
     .hidden{display:none}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.12)}
-
     .btn{border:1px solid var(--line);background:transparent;padding:10px 14px;border-radius:10px;cursor:pointer}
     .btn.primary{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;border-color:transparent;width:100%}
     .btn:hover{opacity:.9}
-
-    /* Floating label form fields */
     .form-group { position: relative; margin: 16px 0; }
     .form-group input {
       width: 100%; padding: 14px 12px; border-radius: 10px;
@@ -52,49 +45,14 @@
     .form-group input:not(:placeholder-shown) + label {
       top: -8px; left: 10px; font-size: .75rem; color: var(--primary);
     }
-
-    /* Auth layout */
-    #authView {
-      display:flex; align-items:center; justify-content:center;
-      height:100vh; padding:20px;
-    }
-    .auth-wrap {
-      display:flex; align-items:center; justify-content:center;
-      gap:40px; max-width:1000px; width:100%;
-    }
-    .auth-anim {
-      flex:1; display:flex; align-items:center; justify-content:center;
-    }
-    .auth-anim lottie-player {
-      width:100%; max-width:420px;
-    }
+    #authView {display:flex; align-items:center; justify-content:center; height:100vh; padding:20px;}
+    .auth-wrap {display:flex; align-items:center; justify-content:center; gap:40px; max-width:1000px; width:100%;}
+    .auth-anim {flex:1; display:flex; align-items:center; justify-content:center;}
+    .auth-anim lottie-player {width:100%; max-width:420px;}
     .auth-box { width:360px; flex-shrink:0; }
     .auth-tabs{display:flex;gap:8px;margin-bottom:12px}
     .auth-tabs .chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);cursor:pointer}
     .auth-tabs .chip.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border-color:transparent}
-
-    /* Titles */
- .auth-box h2 {
-  margin: 0 0 6px;
-  font-size: 1.5rem;
-  color: var(--text); /* always normal text color */
-}
-
-.auth-box p.lead {
-  margin: 0 0 16px;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-/* Gradient only for Sign Up subtitle */
-#signUpForm p.lead {
-  background: linear-gradient(90deg,var(--primary),var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-
-    /* App shell */
     #appView{display:none;flex-direction:column;height:100vh;width:100%}
     .topbar{background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
     .tabs{display:flex;gap:8px;margin:0}
@@ -110,9 +68,7 @@
 <div id="authView">
   <div class="auth-wrap">
     <div class="auth-anim">
-      <!-- Typing animation -->
-              <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_kyu7xb1v.json"  background="transparent"  speed="1"  loop autoplay></lottie-player>
-
+      <lottie-player src="https://assets9.lottiefiles.com/packages/lf20_kyu7xb1v.json" background="transparent" speed="1" loop autoplay></lottie-player>
     </div>
     <div class="auth-box card">
       <div class="auth-tabs">
@@ -180,50 +136,19 @@
   </div>
   <div class="pane"><iframe id="contentFrame"></iframe></div>
 </div>
-<script src="config.js"></script>
+
+<div id="output" style="margin:10px; padding:10px; background:#fff; border:1px solid #ccc;">
+  Waiting for backend response...
+</div>
 
 <script>
-   const FILES = {
-      dashboard: "dashboard.html",
-      players: "PlayerPage.html",
-      tournament: "TournamentPage.html",
-      roundrobin: "Round_Robin_updated.html",
-      attendance: "Attendance_book.html",
-      bracket: "Bracket_tournament.html",
-    };
+  // ✅ Your Render Backend URL
+  const API_URL = "https://theworldofsportsmans.onrender.com/api";
 
-    const authView = document.getElementById("authView");
-    const appView = document.getElementById("appView");
-    const tabs = document.querySelectorAll(".tab");
-    const currentUser = document.getElementById("currentUser");
-
-    // const API_URL = CONFIG.API_URL; // ✅ use config.js; (removed duplicate)
-
-  // Tabs toggle buttons
-  const tS=document.getElementById('tabSignIn');
-  const tU=document.getElementById('tabSignUp');
-  const fS=document.getElementById('signInForm');
-  const fU=document.getElementById('signUpForm');
-
-  tS.onclick=()=>{
-    tS.classList.add('active');
-    tU.classList.remove('active');
-    fS.classList.remove('hidden');
-    fU.classList.add('hidden');
-  };
-  tU.onclick=()=>{
-    tU.classList.add('active');
-    tS.classList.remove('active');
-    fU.classList.remove('hidden');
-    fS.classList.add('hidden');
-  };
-
-  // ✅ API endpoint
-// Replace with your real ngrok URL
-   const API_URL = CONFIG.API_URL; // ✅ read from config.js
-
-
-
+  const authView = document.getElementById("authView");
+  const appView = document.getElementById("appView");
+  const tabs = document.querySelectorAll(".tab");
+  const currentUser = document.getElementById("currentUser");
 
   // ---- AUTH HELPERS ----
   function doSignIn(u){
@@ -234,13 +159,13 @@
   }
 
   function doSignOut(){
-    localStorage.removeItem("token"); // clear JWT
+    localStorage.removeItem("token");
     appView.style.display='none';
     authView.style.display='flex';
     document.getElementById('contentFrame').src='';
   }
 
-  // ---- SESSION CHECK ON PAGE LOAD ----
+  // ---- SESSION CHECK ----
   window.onload = async () => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -273,7 +198,7 @@
       });
       const data = await res.json();
       if(res.ok){
-        localStorage.setItem("token", data.token); // save JWT
+        localStorage.setItem("token", data.token);
         doSignIn(data.user);
       } else {
         alert(data.msg);
@@ -302,7 +227,7 @@
       const data = await res.json();
       if(res.ok){
         alert(data.msg);
-        tS.click(); // switch back to login form
+        document.getElementById('tabSignIn').click();
       } else {
         alert(data.msg);
       }
@@ -322,29 +247,30 @@
   });
 
   function loadTab(t){
+    const FILES = {
+      dashboard: "dashboard.html",
+      players: "PlayerPage.html",
+      tournament: "TournamentPage.html",
+      roundrobin: "Round_Robin_updated.html",
+      attendance: "Attendance_book.html",
+      bracket: "Bracket_tournament.html",
+    };
     if(FILES[t]) document.getElementById('contentFrame').src=FILES[t];
   }
 
-  // ---- THEME TOGGLE ----
+  // ---- THEME ----
   document.getElementById('themeBtn').onclick=()=>{
     document.documentElement.classList.toggle('dark');
   };
 
-
-  // Fetch test from backend
-fetch("https://theworldofsportsmans.onrender.com/api/test")
-  .then(res => res.json())
-  .then(data => {
-    console.log("Response from backend:", data);
-    document.getElementById("output").innerText = JSON.stringify(data);
-  })
-  .catch(err => console.error("Error:", err));
-
+  // ✅ Test backend connection
+  fetch(`${API_URL}/test`)
+    .then(res => res.json())
+    .then(data => {
+      console.log("Response from backend:", data);
+      document.getElementById("output").innerText = JSON.stringify(data);
+    })
+    .catch(err => console.error("Error:", err));
 </script>
-
-<div id="output" style="padding:10px; background:#fff; border:1px solid #ccc; margin:10px;">
-  Waiting for backend response...
-</div>
-
 </body>
 </html>
