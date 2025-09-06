@@ -53,13 +53,90 @@
     .auth-tabs{display:flex;gap:8px;margin-bottom:12px}
     .auth-tabs .chip{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);cursor:pointer}
     .auth-tabs .chip.active{background:linear-gradient(90deg,var(--primary),var(--accent));color:#fff;border-color:transparent}
-    #appView{display:none;flex-direction:column;height:100vh;width:100%}
-    .topbar{background:var(--card);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center}
+    #appView{
+    display:none;
+    flex-direction:column;
+    height:100vh;
+    width:100%}
+    .topbar{
+      background:var(--card);
+      border-bottom:1px solid var(--line);
+      padding:10px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center}
     .tabs{display:flex;gap:8px;margin:0}
     .tabs .tab{padding:10px 12px;border:1px solid var(--line);border-bottom:2px solid transparent;border-radius:10px;cursor:pointer;background:transparent}
     .tabs .tab.active{border-bottom-color:var(--primary);box-shadow:inset 0 -2px 0 var(--primary);color:var(--primary)}
     .pane{flex:1;display:flex}
     .pane iframe{flex:1;border:none;background:var(--card)}
+    /* ===== Very compact top tabs for small mobile screens ===== */
+@media (max-width: 640px) {
+  /* make topbar fixed at top so tabs always visible */
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 6px 8px;
+    height: 48px; /* topbar height used below in calc */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  }
+
+  /* shrink logo/user area text */
+  .topbar [style], #currentUser { font-size: 12px; }
+
+  /* tabs area: allow horizontal scroll and very compact tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 2px;
+    margin: 0;
+    align-items: center;
+  }
+
+  /* each tab compact: smaller padding, small radius, single-line */
+  .tabs .tab {
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8px;
+    border-width: 1px;
+    min-width: 0;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* active tab: keep accent but smaller */
+  .tabs .tab.active{
+    color: #fff;
+    background: linear-gradient(90deg,var(--primary),var(--accent));
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    border-color: transparent;
+  }
+
+  /* icons smaller, text slightly reduced */
+  .tabs .tab i { font-size: 14px; margin-right: 6px; vertical-align: middle; }
+  .tabs .tab { display: inline-flex; align-items: center; gap:6px; }
+
+  /* content pane must start below fixed topbar */
+  .pane { margin-top: 48px; /* same as topbar height */ }
+  .pane iframe { height: calc(100vh - 48px); }
+
+  /* hide extra gaps/paddings across the app */
+  .card, .panel, .auth-wrap { padding: 8px; margin: 6px; }
+  .btn, button { padding: 6px 8px; font-size: 12px; }
+
+  /* if you have sidebars, hide them to keep compact top-only layout */
+  .sidebar { display: none !important; }
+}
+
   </style>
 </head>
 <body>
