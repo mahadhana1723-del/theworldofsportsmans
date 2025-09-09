@@ -219,6 +219,17 @@ header.hidden { display: none !important; }
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
+/* Mobile adjustment */
+@media (max-width:600px) {
+  #toggleHeaderBtn {
+    top: auto;       /* remove top fixed */
+    bottom: 10px;    /* place near bottom */
+    right: 10px;     /* keep right side */
+    font-size: 12px; /* smaller text */
+    padding: 5px 10px;
+    border-radius: 6px;
+  }
+}
 
 
 
